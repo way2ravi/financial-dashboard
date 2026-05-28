@@ -77,10 +77,10 @@ npm.cmd run check
 
 Deploy through Vercel. Add all environment variables above to the Vercel project.
 
-`vercel.json` registers a weekday cron refresh:
+`vercel.json` registers a once-daily weekday cron refresh, which is compatible with Vercel Hobby limits:
 
 ```txt
-0 */4 * * 1-5
+0 8 * * 1-5
 ```
 
 Vercel sends `CRON_SECRET` as `Authorization: Bearer <secret>` when configured.

@@ -336,10 +336,10 @@ The optional `modules` parameter can limit refreshes to `quote`, `analystRatings
 The Vercel deployment schedule is configured in `vercel.json`:
 
 ```txt
-0 */4 * * 1-5
+0 8 * * 1-5
 ```
 
-This runs every four hours on weekdays. Keep the schedule conservative until provider API limits are confirmed.
+This runs once per weekday, which is compatible with Vercel Hobby cron limits. Manual admin `Quick` and `Full` refresh controls can be used for more frequent refreshes.
 
 ## Local Seed Data
 
