@@ -34,6 +34,41 @@ create table if not exists public.user_watchlist (
 
 create index if not exists user_watchlist_user_id_idx on public.user_watchlist (user_id);
 
+create table if not exists public.portfolios (
+  id bigserial primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  name text not null,
+  base_currency text not null default 'USD',
+  description text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (id, user_id),
+  unique (user_id, name)
+);
+
+create index if not exists portfolios_user_id_idx on public.portfolios (user_id);
+
+create table if not exists public.portfolio_transactions (
+  id bigserial primary key,
+  portfolio_id bigint not null references public.portfolios(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  ticker_id bigint not null references public.tickers(id) on delete restrict,
+  transaction_type text not null check (transaction_type in ('buy', 'sell')),
+  trade_date date not null,
+  quantity numeric not null check (quantity > 0),
+  price numeric not null check (price >= 0),
+  fees numeric not null default 0 check (fees >= 0),
+  notes text,
+  created_at timestamptz not null default now(),
+  foreign key (portfolio_id, user_id) references public.portfolios(id, user_id) on delete cascade
+);
+
+create index if not exists portfolio_transactions_portfolio_id_idx
+  on public.portfolio_transactions (portfolio_id, trade_date desc, id desc);
+
+create index if not exists portfolio_transactions_user_id_idx
+  on public.portfolio_transactions (user_id);
+
 create table if not exists public.quotes_latest (
   ticker_id bigint primary key references public.tickers(id) on delete cascade,
   price numeric,

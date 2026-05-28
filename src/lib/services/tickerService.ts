@@ -30,6 +30,13 @@ export async function searchTickerDirectory(
     return [];
   }
 
-  return searchTickers(supabase, normalizedQuery, Math.min(Math.max(limit, 1), 25));
+  return searchTickers(supabase, normalizedQuery, normalizeLimit(limit));
 }
 
+function normalizeLimit(limit: number) {
+  if (!Number.isFinite(limit)) {
+    return 10;
+  }
+
+  return Math.min(Math.max(Math.trunc(limit), 1), 25);
+}

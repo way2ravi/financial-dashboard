@@ -8,6 +8,9 @@ The dashboard should support:
 
 - Ticker search
 - User watchlists
+- User portfolios
+- Buy/sell transaction tracking
+- Portfolio holdings and performance summaries
 - Latest quote overview
 - Analyst ratings
 - Analyst price targets
@@ -16,6 +19,8 @@ The dashboard should support:
 - OHLC price chart data
 - Cached market data through Supabase
 - External provider refresh through isolated provider modules
+- Light and dark-blue screen themes
+- Admin-controlled manual refresh
 
 ## Stack
 
@@ -59,6 +64,8 @@ src/
 
   components/
     dashboard/
+      AppNav.tsx
+      DataFreshness.tsx
 
   lib/
     providers/
@@ -168,6 +175,8 @@ Never expose the service role key to the browser.
 
 - `users_profile`
 - `user_watchlist`
+- `portfolios`
+- `portfolio_transactions`
 
 ### Market Data Tables
 
@@ -222,6 +231,7 @@ GET /api/watchlist
 POST /api/watchlist
 DELETE /api/watchlist
 POST /api/admin/refresh/[symbol]
+GET /api/cron/refresh
 ```
 
 Avoid creating separate public routes for every panel too early.
@@ -286,15 +296,50 @@ POST /api/admin/refresh/[symbol]
 Initial scope:
 
 - Requires a signed-in user with `users_profile.role = 'admin'`
-- Fetches latest quote from Finnhub
-- Upserts `quotes_latest`
-- Writes a `provider_fetch_log` row
+- Uses the user-session Supabase client only for the admin check
+- Uses the server-only service-role Supabase client for market-data writes
+- Fetches Finnhub quote, analyst ratings, price targets, earnings, fundamentals, and daily OHLC
+- Upserts `quotes_latest`, `analyst_ratings_snapshot`, `analyst_price_targets_snapshot`, `earnings_quarterly`, `fundamentals_snapshot`, and `ohlc_daily`
+- Writes one `provider_fetch_log` row per refreshed module
+- Returns per-module success/error results so one provider failure does not hide the rest
 
 Required environment variable:
 
 ```txt
 FINNHUB_API_KEY
 ```
+
+The scheduled refresh route is:
+
+```txt
+GET /api/cron/refresh?limit=5
+GET /api/cron/refresh?symbols=AAPL,MSFT
+GET /api/cron/refresh?symbols=AAPL&modules=quote,ohlc
+```
+
+It requires either:
+
+```txt
+Authorization: Bearer CRON_SECRET
+```
+
+or:
+
+```txt
+x-cron-secret: CRON_SECRET
+```
+
+It uses the server-only Supabase service-role client and refreshes a bounded set of active tickers sequentially to reduce provider rate-limit pressure.
+Symbol-level failures are returned in the response and logged without stopping the rest of the batch.
+The optional `modules` parameter can limit refreshes to `quote`, `analystRatings`, `priceTargets`, `earnings`, `fundamentals`, and/or `ohlc`.
+
+The Vercel deployment schedule is configured in `vercel.json`:
+
+```txt
+0 */4 * * 1-5
+```
+
+This runs every four hours on weekdays. Keep the schedule conservative until provider API limits are confirmed.
 
 ## Local Seed Data
 
@@ -306,6 +351,12 @@ src/lib/supabase/rls.sql
 src/lib/supabase/seed.sql
 ```
 
+For an existing project that already has the original schema, the portfolio-only upgrade can be applied with:
+
+```txt
+src/lib/supabase/portfolio.sql
+```
+
 The seed file inserts manual AAPL sample data for:
 
 - ticker metadata
@@ -315,6 +366,38 @@ The seed file inserts manual AAPL sample data for:
 - quarterly earnings
 - fundamentals
 - daily OHLC
+
+## Portfolio Module
+
+Users can create multiple portfolios and record a buy/sell ledger per portfolio.
+
+Initial portfolio scope:
+
+- Multiple named portfolios per signed-in user
+- Buy and sell transactions by ticker
+- Quantity, trade date, execution price, fees, and notes
+- Holdings calculated from transactions using average-cost accounting
+- Current market value from cached `quotes_latest`
+- Realized gain from sell transactions
+- Unrealized gain and return percent for open holdings
+- Portfolio total value, invested capital, realized gain, unrealized gain, and total return
+
+Portfolio data is private to the owning user through RLS. Market prices still come from the shared market-data cache.
+The database also enforces portfolio ownership at the transaction level with a composite `(portfolio_id, user_id)` foreign key, so a transaction cannot be attached to another user's portfolio even if application code is wrong.
+
+## Dashboard UI
+
+The dashboard and portfolio pages share common shell controls:
+
+- Segmented app navigation for Dashboard and Portfolio
+- Light and Dark Blue theme selector
+- Compact signed-in user pill with sign-out action
+- Source and last-updated freshness chips on market-data panels
+
+Admin users see two refresh actions on the dashboard:
+
+- `Quick`: quote and OHLC chart data
+- `Full`: quote, analyst ratings, price targets, earnings, fundamentals, and OHLC
 
 ## External Providers
 
@@ -330,10 +413,21 @@ Provider choice should remain swappable.
 
 - Users can read and update only their own profile.
 - Users can read, add, and remove only their own watchlist items.
+- Users can read and mutate only their own portfolios and portfolio transactions.
 - Market data is publicly readable.
 - Market data writes happen through server/admin paths only.
 - Provider logs are admin-readable only.
 - Service-role key must remain server-only.
+
+## Verification
+
+Use the combined local verification command before commits and deployment:
+
+```txt
+npm.cmd run check
+```
+
+It runs lint, TypeScript checking, and the production Next.js build.
 
 ## Non-Goals For Initial Version
 

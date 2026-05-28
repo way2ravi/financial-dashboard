@@ -1,4 +1,5 @@
 import type { AnalystPriceTargetsSnapshot, AnalystRatingsSnapshot, QuoteLatest } from "@/lib/types";
+import { DataFreshness } from "./DataFreshness";
 import { formatCurrency, formatNumber } from "./format";
 
 type Props = {
@@ -22,38 +23,44 @@ export function AnalystPanel({ ratings, targets, quote }: Props) {
   ];
 
   return (
-    <section className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-      <div className="rounded-lg border border-slate-200 bg-white p-5">
+    <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+      <div className="rounded-lg border app-surface p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-base font-semibold text-slate-950">Analyst Rating</h2>
-            <p className="mt-1 text-sm text-slate-500">{ratings?.analystCount ?? 0} analysts</p>
+            <h2 className="text-base font-semibold app-heading">Analyst Rating</h2>
+            <p className="mt-1 text-sm app-muted">{ratings?.analystCount ?? 0} analysts</p>
+            <div className="mt-3">
+              <DataFreshness fetchedAt={ratings?.fetchedAt} source={ratings?.source} />
+            </div>
           </div>
-          <div className="rounded-lg bg-emerald-50 px-3 py-2 text-right">
-            <div className="text-xs font-medium text-emerald-700">Consensus</div>
-            <div className="text-xl font-semibold text-emerald-800">{ratings?.consensus ?? "-"}</div>
+          <div className="rounded-lg bg-[color-mix(in_srgb,var(--app-positive)_12%,transparent)] px-3 py-2 text-right">
+            <div className="text-xs font-medium app-positive">Consensus</div>
+            <div className="text-xl font-semibold app-positive">{ratings?.consensus ?? "-"}</div>
           </div>
         </div>
 
-        <div className="mt-5 grid grid-cols-5 gap-2">
+        <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
           {ratingItems.map(([label, count]) => (
-            <div key={label} className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-center">
-              <div className="text-lg font-semibold text-slate-950">{count}</div>
-              <div className="mt-1 text-xs text-slate-500">{label}</div>
+            <div key={label} className="rounded-lg border app-subtle p-3 text-center">
+              <div className="text-lg font-semibold app-heading">{count}</div>
+              <div className="mt-1 text-xs app-muted">{label}</div>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="rounded-lg border border-slate-200 bg-white p-5">
-        <h2 className="text-base font-semibold text-slate-950">Price Targets</h2>
-        <div className="mt-5 grid grid-cols-3 gap-2">
+      <div className="rounded-lg border app-surface p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <h2 className="text-base font-semibold app-heading">Price Targets</h2>
+          <DataFreshness fetchedAt={targets?.fetchedAt} source={targets?.source} />
+        </div>
+        <div className="mt-5 grid gap-2 sm:grid-cols-3">
           <Target label="Low" value={formatCurrency(targets?.targetLow)} />
           <Target label="Mean" value={formatCurrency(targets?.targetMean)} />
           <Target label="High" value={formatCurrency(targets?.targetHigh)} />
         </div>
-        <div className="mt-4 rounded-lg bg-slate-950 px-4 py-3 text-white">
-          <div className="text-xs text-slate-300">Implied upside</div>
+        <div className="mt-4 rounded-lg bg-[var(--app-primary)] px-4 py-3 text-[var(--app-primary-text)]">
+          <div className="text-xs opacity-75">Implied upside</div>
           <div className="text-2xl font-semibold">{upside === null ? "-" : `${formatNumber(upside)}%`}</div>
         </div>
       </div>
@@ -63,10 +70,9 @@ export function AnalystPanel({ ratings, targets, quote }: Props) {
 
 function Target({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-      <div className="text-xs font-medium text-slate-500">{label}</div>
-      <div className="mt-1 text-lg font-semibold text-slate-950">{value}</div>
+    <div className="rounded-lg border app-subtle p-3">
+      <div className="text-xs font-medium app-muted">{label}</div>
+      <div className="mt-1 text-lg font-semibold app-heading">{value}</div>
     </div>
   );
 }
-

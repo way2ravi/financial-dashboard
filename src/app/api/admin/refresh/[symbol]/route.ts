@@ -1,9 +1,15 @@
 import { jsonError } from "@/app/api/_shared/jsonError";
-import { refreshQuoteForSymbol, requireAdmin } from "@/lib/services";
+import {
+  parseRefreshScope,
+  refreshMarketDataForSymbol,
+  requireAdmin,
+  summarizeRefreshResults,
+} from "@/lib/services";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ symbol: string }> }
 ) {
   try {
@@ -12,11 +18,14 @@ export async function POST(
 
     await requireAdmin(supabase);
 
-    const quote = await refreshQuoteForSymbol(supabase, symbol);
+    const scope = await getScope(request);
+    const adminSupabase = createAdminClient();
+    const results = await refreshMarketDataForSymbol(adminSupabase, symbol, scope);
 
     return Response.json({
       data: {
-        quote,
+        summary: summarizeRefreshResults(results),
+        results,
       },
     });
   } catch (error) {
@@ -24,3 +33,19 @@ export async function POST(
   }
 }
 
+async function getScope(request: Request) {
+  const body = await getBody(request);
+  const modules = Array.isArray(body.modules)
+    ? body.modules.filter((module): module is string => typeof module === "string")
+    : [];
+
+  return parseRefreshScope(modules);
+}
+
+async function getBody(request: Request): Promise<{ modules?: unknown }> {
+  try {
+    return (await request.json()) as { modules?: unknown };
+  } catch {
+    return {};
+  }
+}

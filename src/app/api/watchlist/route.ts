@@ -1,6 +1,7 @@
 import { jsonError } from "@/app/api/_shared/jsonError";
 import {
   addSymbolToWatchlist,
+  AppError,
   getWatchlistForUser,
   removeSymbolFromWatchlist,
 } from "@/lib/services";
@@ -23,7 +24,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { symbol } = await request.json();
+    const { symbol } = await getBody(request);
     const supabase = await createClient();
     const {
       data: { user },
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const { symbol } = await request.json();
+    const { symbol } = await getBody(request);
     const supabase = await createClient();
     const {
       data: { user },
@@ -53,3 +54,10 @@ export async function DELETE(request: Request) {
   }
 }
 
+async function getBody(request: Request): Promise<{ symbol?: unknown }> {
+  try {
+    return (await request.json()) as { symbol?: unknown };
+  } catch {
+    throw new AppError("Request body must be valid JSON", 400);
+  }
+}

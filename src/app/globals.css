@@ -3,6 +3,61 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --app-bg: #f1f5f9;
+  --app-surface: #ffffff;
+  --app-surface-muted: #f8fafc;
+  --app-border: #e2e8f0;
+  --app-border-soft: #f1f5f9;
+  --app-text: #020617;
+  --app-text-muted: #64748b;
+  --app-text-soft: #94a3b8;
+  --app-primary: #0f172a;
+  --app-primary-hover: #1e293b;
+  --app-primary-text: #ffffff;
+  --app-accent: #0f766e;
+  --app-accent-hover: #115e59;
+  --app-positive: #047857;
+  --app-negative: #be123c;
+}
+
+[data-theme="light"] {
+  --background: #ffffff;
+  --foreground: #171717;
+  --app-bg: #f1f5f9;
+  --app-surface: #ffffff;
+  --app-surface-muted: #f8fafc;
+  --app-border: #e2e8f0;
+  --app-border-soft: #f1f5f9;
+  --app-text: #020617;
+  --app-text-muted: #64748b;
+  --app-text-soft: #94a3b8;
+  --app-primary: #0f172a;
+  --app-primary-hover: #1e293b;
+  --app-primary-text: #ffffff;
+  --app-accent: #0f766e;
+  --app-accent-hover: #115e59;
+  --app-positive: #047857;
+  --app-negative: #be123c;
+}
+
+[data-theme="dark-blue"] {
+  --background: #07111f;
+  --foreground: #e5eefb;
+  --app-bg: #07111f;
+  --app-surface: #0d1b2f;
+  --app-surface-muted: #13243b;
+  --app-border: #28415f;
+  --app-border-soft: #1d314c;
+  --app-text: #e5eefb;
+  --app-text-muted: #9eb4cf;
+  --app-text-soft: #7790af;
+  --app-primary: #38bdf8;
+  --app-primary-hover: #0ea5e9;
+  --app-primary-text: #04111f;
+  --app-accent: #2dd4bf;
+  --app-accent-hover: #14b8a6;
+  --app-positive: #34d399;
+  --app-negative: #fb7185;
 }
 
 @theme inline {
@@ -12,15 +67,102 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer components {
+  .app-bg {
+    background: var(--app-bg);
+    color: var(--app-text);
+  }
+
+  .app-surface {
+    border-color: var(--app-border);
+    background: var(--app-surface);
+    color: var(--app-text);
+  }
+
+  .app-subtle {
+    border-color: var(--app-border);
+    background: var(--app-surface-muted);
+    color: var(--app-text);
+  }
+
+  .app-border-soft {
+    border-color: var(--app-border-soft);
+  }
+
+  .app-heading {
+    color: var(--app-text);
+  }
+
+  .app-muted {
+    color: var(--app-text-muted);
+  }
+
+  .app-soft {
+    color: var(--app-text-soft);
+  }
+
+  .app-input {
+    border-color: var(--app-border);
+    background: var(--app-surface);
+    color: var(--app-text);
+  }
+
+  .app-input:focus {
+    border-color: var(--app-primary);
+  }
+
+  .app-primary-button {
+    background: var(--app-primary);
+    color: var(--app-primary-text);
+  }
+
+  .app-primary-button:hover {
+    background: var(--app-primary-hover);
+  }
+
+  .app-secondary-button {
+    border-color: var(--app-border);
+    background: var(--app-surface);
+    color: var(--app-text);
+  }
+
+  .app-secondary-button:hover {
+    background: var(--app-surface-muted);
+  }
+
+  .app-accent-button {
+    background: var(--app-accent);
+    color: #ffffff;
+  }
+
+  .app-accent-button:hover {
+    background: var(--app-accent-hover);
+  }
+
+  .app-positive {
+    color: var(--app-positive);
+  }
+
+  .app-negative {
+    color: var(--app-negative);
+  }
+
+  .theme-option {
+    color: var(--app-text-muted);
+  }
+
+  .theme-option:hover {
+    background: var(--app-surface-muted);
+  }
+
+  .theme-option[data-active="true"] {
+    background: var(--app-primary);
+    color: var(--app-primary-text);
+  }
 }

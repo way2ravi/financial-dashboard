@@ -59,3 +59,20 @@ export async function searchTickers(
   return (data ?? []).map(mapTicker);
 }
 
+export async function getActiveTickers(
+  supabase: DbClient,
+  limit = 10
+): Promise<Ticker[]> {
+  const { data, error } = await supabase
+    .from("tickers")
+    .select(TICKER_COLUMNS)
+    .eq("is_active", true)
+    .order("symbol", { ascending: true })
+    .limit(limit);
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []).map(mapTicker);
+}

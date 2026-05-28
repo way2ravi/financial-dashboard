@@ -12,20 +12,33 @@ export async function AuthStatus() {
     return (
       <Link
         href="/login"
-        className="h-10 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-50"
+        className="h-10 rounded-lg border app-secondary-button px-4 py-2 text-sm font-semibold"
       >
         Sign in
       </Link>
     );
   }
 
+  const email = user.email ?? "Signed in";
+  const initial = email.slice(0, 1).toUpperCase();
+
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <span className="text-sm text-slate-500">{user.email}</span>
+    <div className="flex min-w-0 flex-wrap items-center gap-2">
+      <span
+        className="flex min-w-0 items-center gap-2 rounded-lg border app-subtle px-2.5 py-1.5"
+        title={email}
+      >
+        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-md bg-[var(--app-primary)] text-xs font-semibold text-white">
+          {initial}
+        </span>
+        <span className="max-w-[150px] truncate text-sm app-muted sm:max-w-[220px]">
+          {email}
+        </span>
+      </span>
       <form action={signOut}>
         <button
           type="submit"
-          className="h-10 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 hover:bg-slate-50"
+          className="h-10 rounded-lg border app-secondary-button px-4 text-sm font-semibold"
         >
           Sign out
         </button>
@@ -33,4 +46,3 @@ export async function AuthStatus() {
     </div>
   );
 }
-

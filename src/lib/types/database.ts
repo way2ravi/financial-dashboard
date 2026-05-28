@@ -267,6 +267,78 @@ export type Database = {
         };
         Relationships: [];
       };
+      portfolio_transactions: {
+        Row: {
+          id: number;
+          portfolio_id: number;
+          user_id: string;
+          ticker_id: number;
+          transaction_type: string;
+          trade_date: string;
+          quantity: number;
+          price: number;
+          fees: number;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: number;
+          portfolio_id: number;
+          user_id: string;
+          ticker_id: number;
+          transaction_type: string;
+          trade_date: string;
+          quantity: number;
+          price: number;
+          fees?: number;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: number;
+          portfolio_id?: number;
+          user_id?: string;
+          ticker_id?: number;
+          transaction_type?: string;
+          trade_date?: string;
+          quantity?: number;
+          price?: number;
+          fees?: number;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      portfolios: {
+        Row: {
+          id: number;
+          user_id: string;
+          name: string;
+          base_currency: string;
+          description: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          user_id: string;
+          name: string;
+          base_currency?: string;
+          description?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          user_id?: string;
+          name?: string;
+          base_currency?: string;
+          description?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       provider_fetch_log: {
         Row: {
           id: number;

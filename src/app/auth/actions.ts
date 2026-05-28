@@ -9,7 +9,7 @@ export async function signIn(formData: FormData) {
   const password = getFormString(formData, "password");
 
   if (!email || !password) {
-    redirect("/login?message=Email%20and%20password%20are%20required");
+    redirect(loginMessageUrl("error", "Email and password are required"));
   }
 
   const supabase = await createClient();
@@ -19,7 +19,7 @@ export async function signIn(formData: FormData) {
   });
 
   if (error) {
-    redirect(`/login?message=${encodeURIComponent(error.message)}`);
+    redirect(loginMessageUrl("error", error.message));
   }
 
   redirect("/dashboard?symbol=AAPL");
@@ -31,7 +31,7 @@ export async function signUp(formData: FormData) {
   const displayName = getFormString(formData, "display_name");
 
   if (!email || !password) {
-    redirect("/login?message=Email%20and%20password%20are%20required");
+    redirect(loginMessageUrl("error", "Email and password are required"));
   }
 
   const supabase = await createClient();
@@ -41,7 +41,7 @@ export async function signUp(formData: FormData) {
   });
 
   if (error) {
-    redirect(`/login?message=${encodeURIComponent(error.message)}`);
+    redirect(loginMessageUrl("error", error.message));
   }
 
   if (data.user) {
@@ -55,7 +55,10 @@ export async function signUp(formData: FormData) {
   }
 
   redirect(
-    "/login?message=Account%20created.%20Check%20your%20email%20if%20confirmation%20is%20enabled,%20then%20sign%20in."
+    loginMessageUrl(
+      "notice",
+      "Account created. Check your email if confirmation is enabled, then sign in."
+    )
   );
 }
 
@@ -63,10 +66,14 @@ export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
 
-  redirect("/login?message=Signed%20out");
+  redirect(loginMessageUrl("notice", "Signed out"));
 }
 
 function getFormString(formData: FormData, key: string) {
   const value = formData.get(key);
   return typeof value === "string" ? value.trim() : "";
+}
+
+function loginMessageUrl(type: "error" | "notice", message: string) {
+  return `/login?${new URLSearchParams({ [type]: message }).toString()}`;
 }

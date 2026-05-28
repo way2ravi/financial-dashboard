@@ -1,4 +1,5 @@
 import type { FundamentalsSnapshot } from "@/lib/types";
+import { DataFreshness } from "./DataFreshness";
 import { formatCurrency, formatNumber, formatPercent } from "./format";
 
 type Props = {
@@ -18,17 +19,22 @@ export function FundamentalsGrid({ fundamentals }: Props) {
   ];
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-5">
-      <h2 className="text-base font-semibold text-slate-950">Fundamentals</h2>
-      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <section className="rounded-lg border app-surface p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <h2 className="text-base font-semibold app-heading">Fundamentals</h2>
+        <DataFreshness
+          fetchedAt={fundamentals?.fetchedAt}
+          source={fundamentals?.source}
+        />
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
         {metrics.map(([label, value]) => (
-          <div key={label} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-            <div className="text-xs font-medium text-slate-500">{label}</div>
-            <div className="mt-1 text-lg font-semibold text-slate-950">{value}</div>
+          <div key={label} className="rounded-lg border app-subtle p-3">
+            <div className="text-xs font-medium app-muted">{label}</div>
+            <div className="mt-1 text-lg font-semibold app-heading">{value}</div>
           </div>
         ))}
       </div>
     </section>
   );
 }
-

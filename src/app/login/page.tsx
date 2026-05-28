@@ -1,8 +1,12 @@
 import { signIn, signUp } from "@/app/auth/actions";
+import { PageMessage } from "@/components/dashboard/PageMessage";
+import { ThemeSwitcher } from "@/components/dashboard/ThemeSwitcher";
 
 type Props = {
   searchParams: Promise<{
+    error?: string | string[];
     message?: string | string[];
+    notice?: string | string[];
   }>;
 };
 
@@ -10,18 +14,21 @@ export default async function LoginPage({ searchParams }: Props) {
   const message = getMessage(await searchParams);
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-10 text-slate-950">
+    <main className="min-h-screen app-bg px-4 py-10">
       <div className="mx-auto max-w-5xl">
-        <div className="mb-8">
-          <p className="text-sm font-medium text-slate-500">Financial Dashboard</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-normal">
-            Sign in to manage your watchlist
-          </h1>
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-sm font-medium app-muted">Financial Dashboard</p>
+            <h1 className="mt-2 text-3xl font-semibold tracking-normal app-heading">
+              Sign in to manage your watchlist
+            </h1>
+          </div>
+          <ThemeSwitcher />
         </div>
 
         {message ? (
-          <div className="mb-5 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
-            {message}
+          <div className="mb-5">
+            <PageMessage message={message} />
           </div>
         ) : null}
 
@@ -59,9 +66,9 @@ function AuthForm({
   showDisplayName?: boolean;
 }) {
   return (
-    <form action={action} className="rounded-lg border border-slate-200 bg-white p-5">
-      <h2 className="text-lg font-semibold text-slate-950">{title}</h2>
-      <p className="mt-1 text-sm text-slate-500">{description}</p>
+    <form action={action} className="rounded-lg border app-surface p-5">
+      <h2 className="text-lg font-semibold app-heading">{title}</h2>
+      <p className="mt-1 text-sm app-muted">{description}</p>
 
       <div className="mt-5 space-y-4">
         {showDisplayName ? (
@@ -84,7 +91,7 @@ function AuthForm({
 
       <button
         type="submit"
-        className="mt-5 h-10 w-full rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white hover:bg-slate-800"
+        className="mt-5 h-10 w-full rounded-lg app-primary-button px-4 text-sm font-semibold"
       >
         {submitLabel}
       </button>
@@ -106,10 +113,10 @@ function Field({
   required?: boolean;
 }) {
   return (
-    <label className="block text-sm font-medium text-slate-700">
+    <label className="block text-sm font-medium app-muted">
       {label}
       <input
-        className="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none focus:border-slate-900"
+        className="mt-1 h-10 w-full rounded-lg border app-input px-3 text-base outline-none"
         name={name}
         type={type}
         autoComplete={autoComplete}
@@ -120,9 +127,23 @@ function Field({
 }
 
 function getMessage(searchParams: Awaited<Props["searchParams"]>) {
+  const error = getSearchParam(searchParams.error);
+  const notice = getSearchParam(searchParams.notice);
   const rawMessage = Array.isArray(searchParams.message)
     ? searchParams.message[0]
     : searchParams.message;
 
-  return rawMessage ?? "";
+  if (error) {
+    return { tone: "error" as const, text: error };
+  }
+
+  if (notice) {
+    return { tone: "notice" as const, text: notice };
+  }
+
+  return rawMessage ? { tone: "notice" as const, text: rawMessage } : null;
+}
+
+function getSearchParam(value?: string | string[]) {
+  return Array.isArray(value) ? value[0] : value;
 }

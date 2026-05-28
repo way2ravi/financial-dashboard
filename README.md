@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Financial Dashboard
 
-## Getting Started
+Next.js, Supabase, and Vercel stock research dashboard with watchlists, analyst data, earnings, fundamentals, OHLC cache refresh, and user portfolio tracking.
 
-First, run the development server:
+## Local Setup
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000/dashboard?symbol=AAPL`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Copy `.env.example` to `.env.local` and fill in the values:
 
-## Learn More
+```txt
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+FINNHUB_API_KEY=
+MARKETDATA_API_KEY=
+CRON_SECRET=
+```
 
-To learn more about Next.js, take a look at the following resources:
+`SUPABASE_SERVICE_ROLE_KEY` and provider keys must stay server-only.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+`FINNHUB_API_KEY` is required for the admin `Full` refresh, `Quick` refresh, and scheduled cron refresh.
+`CRON_SECRET` is required only for `/api/cron/refresh`; use a long random value and set the same value in Vercel.
+`MARKETDATA_API_KEY` is included for the planned secondary provider path and can stay blank for the current Finnhub-only build.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Supabase Setup
 
-## Deploy on Vercel
+Run these SQL files in Supabase:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```txt
+src/lib/supabase/schema.sql
+src/lib/supabase/rls.sql
+src/lib/supabase/seed.sql
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+For an existing database that only needs the portfolio module, run:
+
+```txt
+src/lib/supabase/portfolio.sql
+```
+
+## Main Routes
+
+- `/dashboard?symbol=AAPL`
+- `/portfolio`
+- `/login`
+- `/api/admin/refresh/[symbol]`
+- `/api/cron/refresh`
+
+Admin users see dashboard refresh controls:
+
+- `Quick` refreshes quote and OHLC chart data.
+- `Full` refreshes quote, analyst ratings, price targets, earnings, fundamentals, and OHLC.
+
+## Verification
+
+```bash
+npm.cmd run lint
+npm.cmd run typecheck
+npm.cmd run build
+```
+
+Or run the full verification stack:
+
+```bash
+npm.cmd run check
+```
+
+## Deployment
+
+Deploy through Vercel. Add all environment variables above to the Vercel project.
+
+`vercel.json` registers a weekday cron refresh:
+
+```txt
+0 */4 * * 1-5
+```
+
+Vercel sends `CRON_SECRET` as `Authorization: Bearer <secret>` when configured.

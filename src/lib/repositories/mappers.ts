@@ -5,6 +5,8 @@ import type {
   EarningsQuarterly,
   FundamentalsSnapshot,
   OhlcDaily,
+  Portfolio,
+  PortfolioTransaction,
   QuoteLatest,
   Ticker,
   WatchlistItem,
@@ -152,6 +154,37 @@ export function mapWatchlistItem(
     id: row.id,
     userId: row.user_id,
     ticker,
+    createdAt: row.created_at,
+  };
+}
+
+export function mapPortfolio(row: Tables["portfolios"]["Row"]): Portfolio {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    name: row.name,
+    baseCurrency: row.base_currency,
+    description: row.description,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function mapPortfolioTransaction(
+  row: Tables["portfolio_transactions"]["Row"],
+  ticker: Ticker
+): PortfolioTransaction {
+  return {
+    id: row.id,
+    portfolioId: row.portfolio_id,
+    userId: row.user_id,
+    ticker,
+    transactionType: row.transaction_type as PortfolioTransaction["transactionType"],
+    tradeDate: row.trade_date,
+    quantity: row.quantity,
+    price: row.price,
+    fees: row.fees,
+    notes: row.notes,
     createdAt: row.created_at,
   };
 }
