@@ -436,6 +436,7 @@ The dashboard and portfolio pages share common shell controls:
 - Light and Dark Blue theme selector
 - Compact signed-in user pill with sign-out action
 - Source and last-updated freshness chips on market-data panels
+- Support, resistance, and pivot levels calculated from cached daily OHLC for the selected ticker
 
 The primary dashboard refresh action is the ticker `Load` button. It fetches quote, analyst ratings, price targets, earnings, fundamentals, and OHLC for the requested symbol before navigation.
 
@@ -444,10 +445,14 @@ The primary dashboard refresh action is the ticker `Load` button. It fetches quo
 Initial provider candidates:
 
 - Finnhub for quotes, analyst ratings, price targets, fundamentals, and candles
+- Twelve Data for quote, ticker search, and daily OHLC fallback
+- Alpha Vantage for quote, ticker search, daily OHLC, fundamentals, and quarterly earnings fallback
+- Financial Modeling Prep for quote, OHLC, analyst rating, price target, and fundamentals fallback
 - MarketData.app for analyst data and earnings alternatives
 - EarningsAPI for broad earnings calendar data
 
 Provider choice should remain swappable.
+Refresh services should try providers in module-specific order and cache the first successful normalized response.
 
 ## Security Rules
 

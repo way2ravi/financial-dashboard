@@ -4,6 +4,7 @@ import { AuthStatus } from "./AuthStatus";
 import { DataFreshness } from "./DataFreshness";
 import { formatCurrency, formatNumber, formatPercent } from "./format";
 import { ThemeSwitcher } from "./ThemeSwitcher";
+import { TickerLogo } from "./TickerLogo";
 import { TickerSearch } from "./TickerSearch";
 
 type Props = {
@@ -22,7 +23,9 @@ export function OverviewStrip({ data }: Props) {
     <section className="border-b app-surface">
       <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 py-5 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
+          <div className="flex min-w-0 gap-4">
+            <TickerLogo ticker={data.ticker} size="lg" />
+            <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2 text-sm app-muted">
               <span>{data.ticker.exchange}</span>
               <span className="h-1 w-1 rounded-full bg-[var(--app-border)]" />
@@ -36,6 +39,7 @@ export function OverviewStrip({ data }: Props) {
             </div>
             <div className="mt-3">
               <DataFreshness fetchedAt={quote?.fetchedAt} source={quote?.source} />
+            </div>
             </div>
           </div>
 

@@ -1,4 +1,11 @@
-export type ProviderName = "finnhub" | "marketdata" | "manual" | "unknown";
+export type ProviderName =
+  | "alpha_vantage"
+  | "finnhub"
+  | "fmp"
+  | "marketdata"
+  | "manual"
+  | "twelve_data"
+  | "unknown";
 
 export type StockExchange = "NYSE" | "NASDAQ" | "AMEX" | "OTC" | string;
 
@@ -12,6 +19,7 @@ export type Ticker = {
   sector: string | null;
   industry: string | null;
   currency: string | null;
+  logoUrl: string | null;
   isActive: boolean;
 };
 
@@ -22,6 +30,18 @@ export type ProviderTickerSearchResult = {
   type: string | null;
   exchange: string | null;
   source: ProviderName | string;
+};
+
+export type ProviderCompanyProfile = {
+  symbol: string;
+  name: string | null;
+  exchange: string | null;
+  industry: string | null;
+  currency: string | null;
+  logoUrl: string | null;
+  webUrl: string | null;
+  source: ProviderName | string;
+  sourceUpdatedAt: string | null;
 };
 
 export type QuoteLatest = {
@@ -332,6 +352,7 @@ export type ProviderOhlcDaily = {
 };
 
 export type RefreshModule =
+  | "profile"
   | "quote"
   | "analystRatings"
   | "priceTargets"
@@ -343,6 +364,7 @@ export type RefreshResult = {
   module: RefreshModule;
   status: "success" | "error";
   updated: number;
+  provider?: ProviderName | string;
   error?: string;
 };
 

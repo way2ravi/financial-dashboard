@@ -1,6 +1,7 @@
 import type { RefreshScope } from "@/lib/types";
 
 const refreshModules = [
+  "profile",
   "quote",
   "analystRatings",
   "priceTargets",

@@ -5,6 +5,7 @@ import {
 } from "@/app/watchlist/actions";
 import { getWatchlistForUser } from "@/lib/services";
 import { createClient } from "@/lib/supabase/server";
+import { TickerLogo } from "./TickerLogo";
 
 type Props = {
   currentSymbol: string;
@@ -62,14 +63,17 @@ export async function Watchlist({ currentSymbol }: Props) {
             key={item.id}
             className="flex items-center justify-between gap-3 rounded-lg border app-subtle p-3"
           >
-            <div className="min-w-0">
-              <Link
-                href={`/dashboard?symbol=${item.ticker.symbol}`}
-                className="font-semibold app-heading hover:underline"
-              >
-                {item.ticker.symbol}
-              </Link>
-              <div className="truncate text-xs app-muted">{item.ticker.name}</div>
+            <div className="flex min-w-0 items-center gap-3">
+              <TickerLogo ticker={item.ticker} size="sm" />
+              <div className="min-w-0">
+                <Link
+                  href={`/dashboard?symbol=${item.ticker.symbol}`}
+                  className="font-semibold app-heading hover:underline"
+                >
+                  {item.ticker.symbol}
+                </Link>
+                <div className="truncate text-xs app-muted">{item.ticker.name}</div>
+              </div>
             </div>
             <form action={removeCurrentSymbolFromWatchlist} className="shrink-0">
               <input name="symbol" type="hidden" value={item.ticker.symbol} />

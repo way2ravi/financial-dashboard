@@ -14,8 +14,12 @@ import type {
 } from "@/lib/types/market";
 
 type Tables = Database["public"]["Tables"];
+type TickerRow = Tables["tickers"]["Row"];
+type TickerRowWithOptionalLogo = Omit<TickerRow, "logo_url"> & {
+  logo_url?: string | null;
+};
 
-export function mapTicker(row: Tables["tickers"]["Row"]): Ticker {
+export function mapTicker(row: TickerRowWithOptionalLogo): Ticker {
   return {
     id: row.id,
     symbol: row.symbol,
@@ -24,6 +28,7 @@ export function mapTicker(row: Tables["tickers"]["Row"]): Ticker {
     sector: row.sector,
     industry: row.industry,
     currency: row.currency,
+    logoUrl: row.logo_url ?? null,
     isActive: row.is_active,
   };
 }

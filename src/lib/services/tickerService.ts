@@ -1,5 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { searchFinnhubSymbols } from "@/lib/providers";
+import {
+  searchAlphaVantageSymbols,
+  searchFinnhubSymbols,
+  searchTwelveDataSymbols,
+} from "@/lib/providers";
 import {
   findTickerBySymbol,
   logProviderFetch,
@@ -43,20 +47,46 @@ export async function searchTickerDirectory(
     return cachedResults;
   }
 
-  let providerResults = [];
+  const providerResults = await searchTickerProviders(
+    supabase,
+    normalizedQuery,
+    normalizedLimit
+  );
 
-  try {
-    providerResults = await searchFinnhubSymbols(normalizedQuery, normalizedLimit);
-  } catch (error) {
-    await logSymbolSearch(supabase, normalizedQuery, "error", error);
-
+  if (providerResults.length === 0) {
     return cachedResults;
   }
 
   const tickers = await upsertTickerSearchResults(supabase, providerResults);
-  await logSymbolSearch(supabase, normalizedQuery, "success");
 
   return tickers.slice(0, normalizedLimit);
+}
+
+async function searchTickerProviders(
+  supabase: DbClient,
+  query: string,
+  limit: number
+) {
+  const providers = [
+    { provider: "finnhub", run: () => searchFinnhubSymbols(query, limit) },
+    { provider: "twelve_data", run: () => searchTwelveDataSymbols(query, limit) },
+    { provider: "alpha_vantage", run: () => searchAlphaVantageSymbols(query, limit) },
+  ];
+
+  for (const provider of providers) {
+    try {
+      const results = await provider.run();
+
+      if (results.length > 0) {
+        await logSymbolSearch(supabase, query, "success", undefined, provider.provider);
+        return results;
+      }
+    } catch (error) {
+      await logSymbolSearch(supabase, query, "error", error, provider.provider);
+    }
+  }
+
+  return [];
 }
 
 function normalizeLimit(limit: number) {
@@ -71,11 +101,12 @@ async function logSymbolSearch(
   supabase: DbClient,
   symbol: string,
   status: "success" | "error",
-  error?: unknown
+  error?: unknown,
+  provider = "provider_fallback"
 ) {
   try {
     await logProviderFetch(supabase, {
-      provider: "finnhub",
+      provider,
       endpoint: "symbol-search",
       symbol,
       status,

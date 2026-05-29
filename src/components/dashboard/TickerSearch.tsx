@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { Ticker } from "@/lib/types";
+import { TickerLogo } from "./TickerLogo";
 
 type Props = {
   initialSymbol: string;
@@ -137,9 +138,12 @@ export function TickerSearch({ initialSymbol }: Props) {
                 aria-selected={ticker.symbol === normalizedQuery}
                 onClick={() => setIsOpen(false)}
               >
-                <span className="min-w-0">
-                  <span className="block font-semibold app-heading">{ticker.symbol}</span>
-                  <span className="block truncate text-xs app-muted">{ticker.name}</span>
+                <span className="flex min-w-0 items-center gap-3">
+                  <TickerLogo ticker={ticker} size="sm" />
+                  <span className="min-w-0">
+                    <span className="block font-semibold app-heading">{ticker.symbol}</span>
+                    <span className="block truncate text-xs app-muted">{ticker.name}</span>
+                  </span>
                 </span>
                 <span className="shrink-0 text-xs app-muted">{ticker.exchange}</span>
               </Link>

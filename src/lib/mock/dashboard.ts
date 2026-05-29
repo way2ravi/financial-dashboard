@@ -9,6 +9,7 @@ export const mockDashboardData: DashboardData = {
     sector: "Technology",
     industry: "Consumer Electronics",
     currency: "USD",
+    logoUrl: null,
     isActive: true,
   },
   quote: {

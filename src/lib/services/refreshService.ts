@@ -1,11 +1,23 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
+  getAlphaVantageDailyOhlc,
+  getAlphaVantageEarnings,
+  getAlphaVantageFundamentals,
+  getAlphaVantageQuote,
   getFinnhubAnalystRatings,
+  getFinnhubCompanyProfile,
   getFinnhubDailyOhlc,
   getFinnhubEarnings,
   getFinnhubFundamentals,
   getFinnhubPriceTargets,
   getFinnhubQuote,
+  getFmpAnalystRatings,
+  getFmpDailyOhlc,
+  getFmpFundamentals,
+  getFmpPriceTargets,
+  getFmpQuote,
+  getTwelveDataDailyOhlc,
+  getTwelveDataQuote,
 } from "@/lib/providers";
 import {
   findTickerBySymbol,
@@ -17,10 +29,12 @@ import {
   upsertFundamentalsSnapshot,
   upsertLatestQuote,
   upsertQuarterlyEarnings,
+  updateTickerProfile,
 } from "@/lib/repositories";
 import type { Database } from "@/lib/types/database";
 import type {
   ProviderQuote,
+  ProviderName,
   RefreshModule,
   RefreshResult,
   RefreshScope,
@@ -42,10 +56,15 @@ export async function refreshQuoteForSymbol(
   }
 
   try {
-    const quote = await getFinnhubQuote(normalizedSymbol);
+    const quote = await tryProviderFallbacks(supabase, normalizedSymbol, "quote", [
+      { provider: "finnhub", run: () => getFinnhubQuote(normalizedSymbol) },
+      { provider: "twelve_data", run: () => getTwelveDataQuote(normalizedSymbol) },
+      { provider: "alpha_vantage", run: () => getAlphaVantageQuote(normalizedSymbol) },
+      { provider: "fmp", run: () => getFmpQuote(normalizedSymbol) },
+    ]);
     await upsertLatestQuote(supabase, ticker, quote);
     await logProviderFetch(supabase, {
-      provider: "finnhub",
+      provider: quote.source,
       endpoint: "quote",
       symbol: normalizedSymbol,
       status: "success",
@@ -54,7 +73,7 @@ export async function refreshQuoteForSymbol(
     return quote;
   } catch (error) {
     await logProviderFetch(supabase, {
-      provider: "finnhub",
+      provider: "provider_fallback",
       endpoint: "quote",
       symbol: normalizedSymbol,
       status: "error",
@@ -79,51 +98,145 @@ export async function refreshMarketDataForSymbol(
 
   const tasks: Array<{ module: RefreshModule; run: () => Promise<RefreshResult> }> = [
     {
+      module: "profile",
+      run: async () => {
+        const profile = await getFinnhubCompanyProfile(normalizedSymbol);
+        await updateTickerProfile(supabase, ticker, profile);
+        return { module: "profile", status: "success", updated: 1 };
+      },
+    },
+    {
       module: "quote",
       run: async () => {
-        const quote = await getFinnhubQuote(normalizedSymbol);
+        const quote = await tryProviderFallbacks(supabase, normalizedSymbol, "quote", [
+          { provider: "finnhub", run: () => getFinnhubQuote(normalizedSymbol) },
+          { provider: "twelve_data", run: () => getTwelveDataQuote(normalizedSymbol) },
+          {
+            provider: "alpha_vantage",
+            run: () => getAlphaVantageQuote(normalizedSymbol),
+          },
+          { provider: "fmp", run: () => getFmpQuote(normalizedSymbol) },
+        ]);
         await upsertLatestQuote(supabase, ticker, quote);
-        return { module: "quote", status: "success", updated: 1 };
+        return { module: "quote", status: "success", updated: 1, provider: quote.source };
       },
     },
     {
       module: "analystRatings",
       run: async () => {
-        const ratings = await getFinnhubAnalystRatings(normalizedSymbol);
+        const ratings = await tryProviderFallbacks(
+          supabase,
+          normalizedSymbol,
+          "analystRatings",
+          [
+            {
+              provider: "finnhub",
+              run: () => getFinnhubAnalystRatings(normalizedSymbol),
+            },
+            { provider: "fmp", run: () => getFmpAnalystRatings(normalizedSymbol) },
+          ]
+        );
         await upsertAnalystRatings(supabase, ticker, ratings);
-        return { module: "analystRatings", status: "success", updated: 1 };
+        return {
+          module: "analystRatings",
+          status: "success",
+          updated: 1,
+          provider: ratings.source,
+        };
       },
     },
     {
       module: "priceTargets",
       run: async () => {
-        const targets = await getFinnhubPriceTargets(normalizedSymbol);
+        const targets = await tryProviderFallbacks(
+          supabase,
+          normalizedSymbol,
+          "priceTargets",
+          [
+            { provider: "finnhub", run: () => getFinnhubPriceTargets(normalizedSymbol) },
+            { provider: "fmp", run: () => getFmpPriceTargets(normalizedSymbol) },
+          ]
+        );
         await upsertAnalystPriceTargets(supabase, ticker, targets);
-        return { module: "priceTargets", status: "success", updated: 1 };
+        return {
+          module: "priceTargets",
+          status: "success",
+          updated: 1,
+          provider: targets.source,
+        };
       },
     },
     {
       module: "earnings",
       run: async () => {
-        const earnings = await getFinnhubEarnings(normalizedSymbol);
+        const earnings = await tryProviderFallbacks(
+          supabase,
+          normalizedSymbol,
+          "earnings",
+          [
+            { provider: "finnhub", run: () => getFinnhubEarnings(normalizedSymbol) },
+            {
+              provider: "alpha_vantage",
+              run: () => getAlphaVantageEarnings(normalizedSymbol),
+            },
+          ]
+        );
         await upsertQuarterlyEarnings(supabase, ticker, earnings);
-        return { module: "earnings", status: "success", updated: earnings.length };
+        return {
+          module: "earnings",
+          status: "success",
+          updated: earnings.length,
+          provider: earnings[0]?.source,
+        };
       },
     },
     {
       module: "fundamentals",
       run: async () => {
-        const fundamentals = await getFinnhubFundamentals(normalizedSymbol);
+        const fundamentals = await tryProviderFallbacks(
+          supabase,
+          normalizedSymbol,
+          "fundamentals",
+          [
+            { provider: "fmp", run: () => getFmpFundamentals(normalizedSymbol) },
+            {
+              provider: "alpha_vantage",
+              run: () => getAlphaVantageFundamentals(normalizedSymbol),
+            },
+            { provider: "finnhub", run: () => getFinnhubFundamentals(normalizedSymbol) },
+          ]
+        );
         await upsertFundamentalsSnapshot(supabase, ticker, fundamentals);
-        return { module: "fundamentals", status: "success", updated: 1 };
+        return {
+          module: "fundamentals",
+          status: "success",
+          updated: 1,
+          provider: fundamentals.source,
+        };
       },
     },
     {
       module: "ohlc",
       run: async () => {
-        const candles = await getFinnhubDailyOhlc(normalizedSymbol);
+        const candles = await tryProviderFallbacks(supabase, normalizedSymbol, "ohlc", [
+          {
+            provider: "twelve_data",
+            run: () => getTwelveDataDailyOhlc(normalizedSymbol),
+          },
+          {
+            provider: "alpha_vantage",
+            run: () => getAlphaVantageDailyOhlc(normalizedSymbol),
+          },
+          { provider: "fmp", run: () => getFmpDailyOhlc(normalizedSymbol) },
+          { provider: "finnhub", run: () => getFinnhubDailyOhlc(normalizedSymbol) },
+        ]);
         await upsertDailyOhlc(supabase, ticker, candles);
-        return { module: "ohlc", status: "success", updated: candles.length };
+        return {
+          module: "ohlc",
+          status: "success",
+          updated: candles.length,
+          provider: candles[0]?.source,
+        };
       },
     },
   ];
@@ -172,7 +285,7 @@ async function refreshMarketDataForSymbolSafely(
       error instanceof Error ? error.message : "Unknown symbol refresh error";
 
     await logProviderFetch(supabase, {
-      provider: "finnhub",
+      provider: "provider_fallback",
       endpoint: "symbol",
       symbol,
       status: "error",
@@ -214,7 +327,7 @@ async function runRefreshTask(
   try {
     const result = await task();
     await logProviderFetch(supabase, {
-      provider: "finnhub",
+      provider: result.provider ?? "unknown",
       endpoint: result.module,
       symbol,
       status: "success",
@@ -224,7 +337,7 @@ async function runRefreshTask(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown provider error";
     await logProviderFetch(supabase, {
-      provider: "finnhub",
+      provider: "provider_fallback",
       endpoint: module,
       symbol,
       status: "error",
@@ -237,6 +350,46 @@ async function runRefreshTask(
       updated: 0,
       error: errorMessage,
     };
+  }
+}
+
+async function tryProviderFallbacks<T>(
+  supabase: DbClient,
+  symbol: string,
+  endpoint: string,
+  providers: Array<{ provider: ProviderName | string; run: () => Promise<T> }>
+): Promise<T> {
+  const errors: string[] = [];
+
+  for (const provider of providers) {
+    try {
+      return await provider.run();
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown provider error";
+      errors.push(`${provider.provider}: ${errorMessage}`);
+
+      await logProviderFetchSafely(supabase, {
+        provider: provider.provider,
+        endpoint,
+        symbol,
+        status: "error",
+        errorMessage,
+      });
+    }
+  }
+
+  throw new Error(errors.join(" | "));
+}
+
+async function logProviderFetchSafely(
+  supabase: DbClient,
+  input: Parameters<typeof logProviderFetch>[1]
+) {
+  try {
+    await logProviderFetch(supabase, input);
+  } catch {
+    // Provider fallback should not fail because diagnostic logging is unavailable.
   }
 }
 

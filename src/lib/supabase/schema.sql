@@ -16,6 +16,7 @@ create table if not exists public.tickers (
   sector text,
   industry text,
   currency text default 'USD',
+  logo_url text,
   is_active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

@@ -474,6 +474,7 @@ export type Database = {
           sector: string | null;
           industry: string | null;
           currency: string | null;
+          logo_url: string | null;
           is_active: boolean;
           created_at: string;
           updated_at: string;
@@ -486,6 +487,7 @@ export type Database = {
           sector?: string | null;
           industry?: string | null;
           currency?: string | null;
+          logo_url?: string | null;
           is_active?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -498,6 +500,7 @@ export type Database = {
           sector?: string | null;
           industry?: string | null;
           currency?: string | null;
+          logo_url?: string | null;
           is_active?: boolean;
           created_at?: string;
           updated_at?: string;

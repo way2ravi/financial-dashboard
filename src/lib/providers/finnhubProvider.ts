@@ -4,6 +4,7 @@ import type {
   AnalystRatingConsensus,
   ProviderAnalystPriceTargets,
   ProviderAnalystRatings,
+  ProviderCompanyProfile,
   ProviderEarningsCalendarItem,
   ProviderEarningsQuarterly,
   ProviderFundamentalsSnapshot,
@@ -91,6 +92,16 @@ type FinnhubSymbolSearchResponse = {
   }>;
 };
 
+type FinnhubCompanyProfileResponse = {
+  currency?: string;
+  exchange?: string;
+  finnhubIndustry?: string;
+  logo?: string;
+  name?: string;
+  ticker?: string;
+  weburl?: string;
+};
+
 const FINNHUB_BASE_URL = "https://finnhub.io/api/v1";
 const PROVIDER = "finnhub";
 
@@ -144,6 +155,31 @@ export async function getFinnhubQuote(symbol: string): Promise<ProviderQuote> {
     volume: null,
     source: PROVIDER,
     sourceUpdatedAt: raw.t ? new Date(raw.t * 1000).toISOString() : null,
+  };
+}
+
+export async function getFinnhubCompanyProfile(
+  symbol: string
+): Promise<ProviderCompanyProfile> {
+  const normalizedSymbol = symbol.trim().toUpperCase();
+  const raw = await getFromFinnhub<FinnhubCompanyProfileResponse>("stock/profile2", {
+    symbol: normalizedSymbol,
+  });
+
+  if (!raw || (!raw.name && !raw.logo)) {
+    throw new Error("Finnhub company profile response was empty");
+  }
+
+  return {
+    symbol: normalizedSymbol,
+    name: raw.name ?? null,
+    exchange: raw.exchange ?? null,
+    industry: raw.finnhubIndustry ?? null,
+    currency: raw.currency ?? null,
+    logoUrl: raw.logo ?? null,
+    webUrl: raw.weburl ?? null,
+    source: PROVIDER,
+    sourceUpdatedAt: todayDate(),
   };
 }
 
@@ -485,6 +521,7 @@ function inferExchange(symbol: string | undefined) {
 
 export const finnhubProvider = {
   searchSymbols: searchFinnhubSymbols,
+  getCompanyProfile: getFinnhubCompanyProfile,
   getQuote: getFinnhubQuote,
   getAnalystRatings: getFinnhubAnalystRatings,
   getPriceTargets: getFinnhubPriceTargets,

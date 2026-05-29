@@ -5,6 +5,7 @@ import { FundamentalsGrid } from "@/components/dashboard/FundamentalsGrid";
 import { OverviewStrip } from "@/components/dashboard/OverviewStrip";
 import { PageMessage } from "@/components/dashboard/PageMessage";
 import { PriceChart } from "@/components/dashboard/PriceChart";
+import { SupportResistancePanel } from "@/components/dashboard/SupportResistancePanel";
 import { Watchlist } from "@/components/dashboard/Watchlist";
 import { mockDashboardData } from "@/lib/mock/dashboard";
 import {
@@ -12,7 +13,6 @@ import {
   getTickerBySymbol,
   refreshMarketDataForSymbol,
   searchTickerDirectory,
-  summarizeRefreshResults,
 } from "@/lib/services";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -57,6 +57,7 @@ export default async function DashboardPage({ searchParams }: Props) {
           />
           <EarningsTable earnings={data.earnings} />
           <FundamentalsGrid fundamentals={data.fundamentals} />
+          <SupportResistancePanel ohlc={data.ohlc} />
           <PriceChart ohlc={data.ohlc} />
         </div>
       </div>
@@ -76,16 +77,9 @@ async function maybeAutoloadDashboardData(
     const supabase = createAdminClient();
 
     await searchTickerDirectory(supabase, symbol, 6);
-    const results = await refreshMarketDataForSymbol(supabase, symbol);
-    const summary = summarizeRefreshResults(results);
+    await refreshMarketDataForSymbol(supabase, symbol);
 
-    return {
-      tone: summary.failed > 0 ? "notice" : "notice",
-      text:
-        summary.failed > 0
-          ? `Loaded ${summary.updated} rows for ${symbol}; some provider modules were unavailable.`
-          : `Loaded data for ${symbol}.`,
-    };
+    return null;
   } catch (error) {
     return {
       tone: "error",
@@ -165,6 +159,7 @@ async function loadFallbackDashboardData(symbol: string): Promise<DashboardData>
         exchange: null,
         sector: null,
         industry: null,
+        logoUrl: null,
       },
       quote: null,
       analystRatings: null,
