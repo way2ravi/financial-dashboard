@@ -1,6 +1,7 @@
 import type { DashboardData } from "@/lib/types";
 import { AppNav } from "./AppNav";
 import { AuthStatus } from "./AuthStatus";
+import { BrandMark } from "./BrandMark";
 import { DataFreshness } from "./DataFreshness";
 import { formatCurrency, formatNumber, formatPercent } from "./format";
 import { ThemeSwitcher } from "./ThemeSwitcher";
@@ -22,33 +23,38 @@ export function OverviewStrip({ data }: Props) {
   return (
     <section className="border-b app-surface">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <BrandMark />
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:justify-end">
+            <AppNav current="dashboard" />
+            <ThemeSwitcher />
+            <AuthStatus />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3 border-t app-border-soft pt-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex min-w-0 gap-3">
             <TickerLogo ticker={data.ticker} size="lg" />
             <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2 text-xs app-muted">
-              <span>{data.ticker.exchange}</span>
-              <span className="h-1 w-1 rounded-full bg-[var(--app-border)]" />
-              <span>{data.ticker.sector}</span>
-            </div>
-            <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-              <h1 className="text-2xl font-semibold tracking-normal app-heading">
-                {data.ticker.symbol}
-              </h1>
-              <p className="text-sm app-muted">{data.ticker.name}</p>
-            </div>
-            <div className="mt-2">
-              <DataFreshness fetchedAt={quote?.fetchedAt} source={quote?.source} />
-            </div>
+              <div className="flex flex-wrap items-center gap-2 text-xs app-muted">
+                <span>{data.ticker.exchange}</span>
+                <span className="h-1 w-1 rounded-full bg-[var(--app-border)]" />
+                <span>{data.ticker.sector}</span>
+              </div>
+              <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                <h1 className="text-2xl font-semibold tracking-normal app-heading">
+                  {data.ticker.symbol}
+                </h1>
+                <p className="text-sm app-muted">{data.ticker.name}</p>
+              </div>
+              <div className="mt-2">
+                <DataFreshness fetchedAt={quote?.fetchedAt} source={quote?.source} />
+              </div>
             </div>
           </div>
 
           <div className="flex w-full flex-col gap-2 lg:w-auto lg:items-end">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:justify-end">
-              <AppNav current="dashboard" />
-              <ThemeSwitcher />
-              <AuthStatus />
-            </div>
             <TickerSearch initialSymbol={data.ticker.symbol} />
           </div>
         </div>
