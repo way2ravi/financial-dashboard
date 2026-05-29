@@ -8,6 +8,7 @@ const refreshModules = [
   "earnings",
   "fundamentals",
   "ohlc",
+  "news",
 ] as const;
 
 export function parseRefreshScope(modules: string[]): RefreshScope | undefined {

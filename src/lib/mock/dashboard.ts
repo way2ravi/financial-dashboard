@@ -155,4 +155,5 @@ export const mockDashboardData: DashboardData = {
     { id: 6, tickerId: 1, date: "2026-05-22", open: 188, high: 190, low: 187, close: 189, adjustedClose: 189, volume: 50200000, source: "manual", sourceUpdatedAt: null, fetchedAt: "2026-05-28T00:05:00Z" },
     { id: 7, tickerId: 1, date: "2026-05-23", open: 189, high: 191, low: 188, close: 190, adjustedClose: 190, volume: 52300000, source: "manual", sourceUpdatedAt: null, fetchedAt: "2026-05-28T00:05:00Z" },
   ],
+  news: [],
 };

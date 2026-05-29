@@ -7,6 +7,7 @@ import type {
   ProviderFundamentalsSnapshot,
   ProviderOhlcDaily,
   ProviderQuote,
+  ScreenerResult,
 } from "@/lib/types";
 
 type FmpQuoteResponse = Array<{
@@ -75,6 +76,27 @@ type FmpRatingResponse = Array<{
   date?: string;
   rating?: string;
   recommendationScore?: number;
+}>;
+
+type FmpScreenerResponse = Array<{
+  symbol?: string;
+  companyName?: string;
+  company_name?: string;
+  exchange?: string;
+  exchangeShortName?: string;
+  price?: number;
+  changes?: number;
+  change?: number;
+  changesPercentage?: number;
+  changePercentage?: number;
+  volume?: number;
+  mktCap?: number;
+  marketCap?: number;
+  pe?: number;
+  priceEarningsRatio?: number;
+  yearHigh?: number;
+  yearLow?: number;
+  range?: string;
 }>;
 
 const FMP_BASE_URL = "https://financialmodelingprep.com/api/v3";
@@ -224,6 +246,28 @@ export async function getFmpFundamentals(
   };
 }
 
+export async function getFmpScreener(
+  params: Record<string, string> = {}
+): Promise<ScreenerResult[]> {
+  const rows = await getFromFmp<FmpScreenerResponse>("stock-screener", {
+    isActivelyTrading: "true",
+    isEtf: "false",
+    isFund: "false",
+    limit: "50",
+    ...params,
+  });
+
+  return rows.filter((row) => row.symbol).map(mapFmpScreenerRow);
+}
+
+export async function getFmpMarketList(
+  kind: "gainers" | "losers" | "actives"
+): Promise<ScreenerResult[]> {
+  const rows = await getFromFmp<FmpScreenerResponse>(`stock_market/${kind}`);
+
+  return rows.filter((row) => row.symbol).slice(0, 50).map(mapFmpScreenerRow);
+}
+
 async function getFromFmp<T>(
   path: string,
   params: Record<string, string> = {}
@@ -306,6 +350,35 @@ function isFmpError(data: unknown) {
   );
 }
 
+function mapFmpScreenerRow(row: FmpScreenerResponse[number]): ScreenerResult {
+  const parsedRange = parseRange(row.range);
+
+  return {
+    symbol: row.symbol!.toUpperCase(),
+    name: row.companyName ?? row.company_name ?? null,
+    exchange: row.exchangeShortName ?? row.exchange ?? null,
+    price: toNumber(row.price),
+    change: toNumber(row.change ?? row.changes),
+    changePercent: toNumber(row.changePercentage ?? row.changesPercentage),
+    volume: toNumber(row.volume),
+    marketCap: toNumber(row.marketCap ?? row.mktCap),
+    pe: toNumber(row.pe ?? row.priceEarningsRatio),
+    yearHigh: toNumber(row.yearHigh ?? parsedRange.high),
+    yearLow: toNumber(row.yearLow ?? parsedRange.low),
+    source: PROVIDER,
+  };
+}
+
+function parseRange(value: string | undefined) {
+  if (!value) {
+    return { low: null, high: null };
+  }
+
+  const [low, high] = value.split("-").map((part) => toNumber(part.trim()));
+
+  return { low, high };
+}
+
 function hasAnyNumber(...values: Array<number | null | undefined>) {
   return values.some((value) => toNumber(value) !== null);
 }
@@ -356,4 +429,6 @@ export const fmpProvider = {
   getAnalystRatings: getFmpAnalystRatings,
   getPriceTargets: getFmpPriceTargets,
   getFundamentals: getFmpFundamentals,
+  getScreener: getFmpScreener,
+  getMarketList: getFmpMarketList,
 };

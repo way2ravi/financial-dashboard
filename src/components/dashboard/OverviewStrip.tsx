@@ -21,29 +21,29 @@ export function OverviewStrip({ data }: Props) {
 
   return (
     <section className="border-b app-surface">
-      <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 py-5 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex min-w-0 gap-4">
+      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex min-w-0 gap-3">
             <TickerLogo ticker={data.ticker} size="lg" />
             <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2 text-sm app-muted">
+            <div className="flex flex-wrap items-center gap-2 text-xs app-muted">
               <span>{data.ticker.exchange}</span>
               <span className="h-1 w-1 rounded-full bg-[var(--app-border)]" />
               <span>{data.ticker.sector}</span>
             </div>
-            <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <h1 className="text-3xl font-semibold tracking-normal app-heading">
+            <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              <h1 className="text-2xl font-semibold tracking-normal app-heading">
                 {data.ticker.symbol}
               </h1>
-              <p className="text-lg app-muted">{data.ticker.name}</p>
+              <p className="text-sm app-muted">{data.ticker.name}</p>
             </div>
-            <div className="mt-3">
+            <div className="mt-2">
               <DataFreshness fetchedAt={quote?.fetchedAt} source={quote?.source} />
             </div>
             </div>
           </div>
 
-          <div className="flex w-full flex-col gap-3 lg:w-auto lg:items-end">
+          <div className="flex w-full flex-col gap-2 lg:w-auto lg:items-end">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:justify-end">
               <AppNav current="dashboard" />
               <ThemeSwitcher />
@@ -53,7 +53,7 @@ export function OverviewStrip({ data }: Props) {
           </div>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
           <Metric label="Last price" value={formatCurrency(quote?.price)} />
           <Metric
             label="Day change"
@@ -86,9 +86,9 @@ function Metric({
         : "app-heading";
 
   return (
-    <div className="rounded-lg border app-subtle px-4 py-3">
-      <div className="text-xs font-medium uppercase tracking-normal app-muted">{label}</div>
-      <div className={`mt-1 text-lg font-semibold ${toneClass}`}>{value}</div>
+    <div className="rounded-lg border app-subtle px-3 py-2.5">
+      <div className="text-[11px] font-medium uppercase tracking-normal app-muted">{label}</div>
+      <div className={`mt-1 text-base font-semibold ${toneClass}`}>{value}</div>
     </div>
   );
 }

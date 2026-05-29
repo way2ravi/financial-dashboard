@@ -33,7 +33,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               try {
-                var theme = localStorage.getItem("financial-dashboard-theme") || "light";
+                var theme = localStorage.getItem("financial-dashboard-theme") || "black";
                 document.documentElement.dataset.theme = theme;
                 function syncThemeButtons() {
                   document.querySelectorAll("[data-theme-option]").forEach(function (button) {
@@ -48,13 +48,13 @@ export default function RootLayout({
                     ? event.target.closest("[data-theme-option]")
                     : null;
                   if (!target) return;
-                  theme = target.getAttribute("data-theme-option") || "light";
+                  theme = target.getAttribute("data-theme-option") || "black";
                   document.documentElement.dataset.theme = theme;
                   localStorage.setItem("financial-dashboard-theme", theme);
                   syncThemeButtons();
                 });
               } catch (_) {
-                document.documentElement.dataset.theme = "light";
+                document.documentElement.dataset.theme = "black";
               }
             `,
           }}

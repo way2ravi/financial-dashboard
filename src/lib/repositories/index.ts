@@ -4,5 +4,6 @@ export * from "./marketDataWriteRepository";
 export * from "./portfolioRepository";
 export * from "./providerLogRepository";
 export * from "./quoteRepository";
+export * from "./screenerRepository";
 export * from "./tickerRepository";
 export * from "./watchlistRepository";

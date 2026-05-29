@@ -1,11 +1,10 @@
-import { AnalystPanel } from "@/components/dashboard/AnalystPanel";
 import { DailyEarningsBlock } from "@/components/dashboard/DailyEarningsBlock";
-import { EarningsTable } from "@/components/dashboard/EarningsTable";
-import { FundamentalsGrid } from "@/components/dashboard/FundamentalsGrid";
+import {
+  DashboardTabs,
+  type DashboardTabId,
+} from "@/components/dashboard/DashboardTabs";
 import { OverviewStrip } from "@/components/dashboard/OverviewStrip";
 import { PageMessage } from "@/components/dashboard/PageMessage";
-import { PriceChart } from "@/components/dashboard/PriceChart";
-import { SupportResistancePanel } from "@/components/dashboard/SupportResistancePanel";
 import { Watchlist } from "@/components/dashboard/Watchlist";
 import { mockDashboardData } from "@/lib/mock/dashboard";
 import {
@@ -25,12 +24,14 @@ type Props = {
     error?: string | string[];
     notice?: string | string[];
     symbol?: string | string[];
+    tab?: string | string[];
   }>;
 };
 
 export default async function DashboardPage({ searchParams }: Props) {
   const resolvedSearchParams = await searchParams;
   const selectedSymbol = getSelectedSymbol(resolvedSearchParams);
+  const selectedTab = getSelectedTab(resolvedSearchParams);
   const message = getPageMessage(resolvedSearchParams);
   const autoloadMessage = await maybeAutoloadDashboardData(
     selectedSymbol,
@@ -43,22 +44,14 @@ export default async function DashboardPage({ searchParams }: Props) {
     <main className="min-h-screen app-bg">
       <OverviewStrip data={data} />
 
-      <div className="mx-auto grid max-w-7xl gap-4 px-4 py-5 sm:px-6 lg:grid-cols-[280px_1fr] lg:px-8">
-        <aside className="min-w-0 self-start space-y-4 lg:sticky lg:top-4">
+      <div className="mx-auto grid max-w-7xl gap-3 px-4 py-4 sm:px-6 lg:grid-cols-[280px_1fr] lg:px-8">
+        <aside className="min-w-0 self-start space-y-3 lg:sticky lg:top-4">
           <Watchlist currentSymbol={data.ticker.symbol} />
           <DailyEarningsBlock currentSymbol={data.ticker.symbol} />
         </aside>
-        <div className="min-w-0 space-y-4">
+        <div className="min-w-0 space-y-3">
           <PageMessage message={pageMessage} />
-          <AnalystPanel
-            ratings={data.analystRatings}
-            targets={data.analystPriceTargets}
-            quote={data.quote}
-          />
-          <EarningsTable earnings={data.earnings} />
-          <FundamentalsGrid fundamentals={data.fundamentals} />
-          <SupportResistancePanel ohlc={data.ohlc} />
-          <PriceChart ohlc={data.ohlc} />
+          <DashboardTabs activeTab={selectedTab} data={data} />
         </div>
       </div>
     </main>
@@ -148,6 +141,7 @@ async function loadFallbackDashboardData(symbol: string): Promise<DashboardData>
       earnings: [],
       fundamentals: null,
       ohlc: [],
+      news: [],
     };
   } catch {
     return {
@@ -167,6 +161,7 @@ async function loadFallbackDashboardData(symbol: string): Promise<DashboardData>
       earnings: [],
       fundamentals: null,
       ohlc: [],
+      news: [],
     };
   }
 }
@@ -177,6 +172,21 @@ function getSelectedSymbol(searchParams: Awaited<Props["searchParams"]>) {
     : searchParams.symbol;
 
   return (rawSymbol || mockDashboardData.ticker.symbol).trim().toUpperCase();
+}
+
+function getSelectedTab(searchParams: Awaited<Props["searchParams"]>): DashboardTabId {
+  const tab = getSearchParam(searchParams.tab);
+
+  if (
+    tab === "earnings" ||
+    tab === "fundamentals" ||
+    tab === "chart" ||
+    tab === "news"
+  ) {
+    return tab;
+  }
+
+  return "analyst";
 }
 
 function getPageMessage(searchParams: Awaited<Props["searchParams"]>) {

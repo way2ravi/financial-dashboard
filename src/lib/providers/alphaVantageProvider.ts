@@ -3,8 +3,10 @@ import "server-only";
 import type {
   ProviderEarningsQuarterly,
   ProviderFundamentalsSnapshot,
+  ProviderNewsArticle,
   ProviderOhlcDaily,
   ProviderQuote,
+  ScreenerResult,
   ProviderTickerSearchResult,
 } from "@/lib/types";
 
@@ -35,6 +37,43 @@ type AlphaVantageEarningsResponse = {
   quarterlyEarnings?: Array<Record<string, string | undefined>>;
   Note?: string;
   Information?: string;
+};
+
+type AlphaVantageNewsSentimentResponse = {
+  feed?: Array<{
+    title?: string;
+    url?: string;
+    time_published?: string;
+    authors?: string[];
+    summary?: string;
+    banner_image?: string;
+    source?: string;
+    overall_sentiment_score?: number;
+    overall_sentiment_label?: string;
+    ticker_sentiment?: Array<{
+      ticker?: string;
+      ticker_sentiment_score?: string;
+      ticker_sentiment_label?: string;
+    }>;
+  }>;
+  Note?: string;
+  Information?: string;
+};
+
+type AlphaVantageTopGainersLosersResponse = {
+  top_gainers?: AlphaVantageMover[];
+  top_losers?: AlphaVantageMover[];
+  most_actively_traded?: AlphaVantageMover[];
+  Note?: string;
+  Information?: string;
+};
+
+type AlphaVantageMover = {
+  ticker?: string;
+  price?: string;
+  change_amount?: string;
+  change_percentage?: string;
+  volume?: string;
 };
 
 const ALPHA_VANTAGE_BASE_URL = "https://www.alphavantage.co/query";
@@ -206,6 +245,68 @@ export async function getAlphaVantageEarnings(
   return earnings.slice(0, 8);
 }
 
+export async function getAlphaVantageNews(
+  symbol: string,
+  limit = 12
+): Promise<ProviderNewsArticle[]> {
+  const normalizedSymbol = symbol.trim().toUpperCase();
+  const raw = await getFromAlphaVantage<AlphaVantageNewsSentimentResponse>({
+    function: "NEWS_SENTIMENT",
+    tickers: normalizedSymbol,
+    limit: String(limit),
+    sort: "LATEST",
+  });
+
+  if (!Array.isArray(raw.feed) || raw.feed.length === 0) {
+    throw new Error("Alpha Vantage news response was empty");
+  }
+
+  return raw.feed
+    .filter((article) => article.title && article.url && article.time_published)
+    .slice(0, limit)
+    .map((article) => {
+      const tickerSentiment = article.ticker_sentiment?.find(
+        (item) => item.ticker?.toUpperCase() === normalizedSymbol
+      );
+      const publishedAt = parseAlphaVantageDate(article.time_published!);
+
+      return {
+        symbol: normalizedSymbol,
+        headline: article.title!,
+        summary: article.summary ?? null,
+        url: article.url!,
+        imageUrl: article.banner_image ?? null,
+        sourceName: article.source ?? null,
+        publishedAt,
+        sentimentLabel:
+          tickerSentiment?.ticker_sentiment_label ??
+          article.overall_sentiment_label ??
+          null,
+        sentimentScore:
+          toNumber(tickerSentiment?.ticker_sentiment_score) ??
+          toNumber(article.overall_sentiment_score),
+        source: PROVIDER,
+        sourceUpdatedAt: publishedAt,
+      };
+    });
+}
+
+export async function getAlphaVantageMarketMovers(): Promise<{
+  topGainers: ScreenerResult[];
+  topLosers: ScreenerResult[];
+  mostActive: ScreenerResult[];
+}> {
+  const raw = await getFromAlphaVantage<AlphaVantageTopGainersLosersResponse>({
+    function: "TOP_GAINERS_LOSERS",
+  });
+
+  return {
+    topGainers: mapAlphaVantageMovers(raw.top_gainers ?? []),
+    topLosers: mapAlphaVantageMovers(raw.top_losers ?? []),
+    mostActive: mapAlphaVantageMovers(raw.most_actively_traded ?? []),
+  };
+}
+
 async function getFromAlphaVantage<T>(params: Record<string, string>): Promise<T> {
   const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
 
@@ -266,6 +367,25 @@ function toPercentNumber(value: string | number | null | undefined) {
   return toNumber(value);
 }
 
+function mapAlphaVantageMovers(items: AlphaVantageMover[]): ScreenerResult[] {
+  return items
+    .filter((item) => item.ticker)
+    .map((item) => ({
+      symbol: item.ticker!.toUpperCase(),
+      name: null,
+      exchange: null,
+      price: toNumber(item.price),
+      change: toNumber(item.change_amount),
+      changePercent: toPercentNumber(item.change_percentage),
+      volume: toNumber(item.volume),
+      marketCap: null,
+      pe: null,
+      yearHigh: null,
+      yearLow: null,
+      source: PROVIDER,
+    }));
+}
+
 function inferQuarter(date: string): 1 | 2 | 3 | 4 | null {
   const month = Number(date.slice(5, 7));
 
@@ -280,10 +400,25 @@ function todayDate() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function parseAlphaVantageDate(value: string) {
+  const match = value.match(
+    /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})$/
+  );
+
+  if (!match) {
+    return new Date(value).toISOString();
+  }
+
+  const [, year, month, day, hour, minute, second] = match;
+  return new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}Z`).toISOString();
+}
+
 export const alphaVantageProvider = {
   searchSymbols: searchAlphaVantageSymbols,
   getQuote: getAlphaVantageQuote,
   getDailyOhlc: getAlphaVantageDailyOhlc,
   getFundamentals: getAlphaVantageFundamentals,
   getEarnings: getAlphaVantageEarnings,
+  getCompanyNews: getAlphaVantageNews,
+  getMarketMovers: getAlphaVantageMarketMovers,
 };

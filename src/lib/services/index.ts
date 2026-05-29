@@ -6,5 +6,6 @@ export * from "./portfolioService";
 export * from "./refreshService";
 export * from "./refreshScope";
 export * from "./refreshSummary";
+export * from "./screenerService";
 export * from "./tickerService";
 export * from "./watchlistService";

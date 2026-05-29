@@ -8,6 +8,7 @@ import type {
   ProviderEarningsCalendarItem,
   ProviderEarningsQuarterly,
   ProviderFundamentalsSnapshot,
+  ProviderNewsArticle,
   ProviderOhlcDaily,
   ProviderQuote,
   ProviderTickerSearchResult,
@@ -101,6 +102,18 @@ type FinnhubCompanyProfileResponse = {
   ticker?: string;
   weburl?: string;
 };
+
+type FinnhubCompanyNewsResponse = Array<{
+  category?: string;
+  datetime?: number;
+  headline?: string;
+  id?: number;
+  image?: string;
+  related?: string;
+  source?: string;
+  summary?: string;
+  url?: string;
+}>;
 
 const FINNHUB_BASE_URL = "https://finnhub.io/api/v1";
 const PROVIDER = "finnhub";
@@ -388,6 +401,41 @@ export async function getFinnhubDailyOhlc(
   }));
 }
 
+export async function getFinnhubCompanyNews(
+  symbol: string,
+  days = 14
+): Promise<ProviderNewsArticle[]> {
+  const normalizedSymbol = symbol.trim().toUpperCase();
+  const to = todayDate();
+  const from = dateDaysAgo(days);
+  const rows = await getFromFinnhub<FinnhubCompanyNewsResponse>("company-news", {
+    symbol: normalizedSymbol,
+    from,
+    to,
+  });
+
+  if (!Array.isArray(rows) || rows.length === 0) {
+    throw new Error("Finnhub company news response was empty");
+  }
+
+  return rows
+    .filter((row) => row.headline && row.url && row.datetime)
+    .slice(0, 12)
+    .map((row) => ({
+      symbol: normalizedSymbol,
+      headline: row.headline!,
+      summary: row.summary ?? null,
+      url: row.url!,
+      imageUrl: row.image ?? null,
+      sourceName: row.source ?? null,
+      publishedAt: new Date(row.datetime! * 1000).toISOString(),
+      sentimentLabel: null,
+      sentimentScore: null,
+      source: PROVIDER,
+      sourceUpdatedAt: new Date(row.datetime! * 1000).toISOString(),
+    }));
+}
+
 async function getFromFinnhub<T>(
   endpoint: string,
   params: Record<string, string>
@@ -468,6 +516,12 @@ function todayDate() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function dateDaysAgo(days: number) {
+  const date = new Date();
+  date.setDate(date.getDate() - days);
+  return date.toISOString().slice(0, 10);
+}
+
 function normalizeDateInput(value: string) {
   const parsed = toDateOnly(value);
 
@@ -529,4 +583,5 @@ export const finnhubProvider = {
   getEarningsCalendar: getFinnhubEarningsCalendar,
   getFundamentals: getFinnhubFundamentals,
   getDailyOhlc: getFinnhubDailyOhlc,
+  getCompanyNews: getFinnhubCompanyNews,
 };

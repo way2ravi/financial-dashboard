@@ -18,19 +18,19 @@ export function SupportResistancePanel({ ohlc }: Props) {
 
   if (!levels) {
     return (
-      <section className="rounded-lg border app-surface p-5">
+      <section className="rounded-lg border app-surface p-4 shadow-sm">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h2 className="text-base font-semibold app-heading">Support / Resistance</h2>
-            <p className="mt-1 text-sm app-muted">
+            <h2 className="text-sm font-semibold app-heading">Support / Resistance</h2>
+            <p className="mt-1 text-xs leading-5 app-muted">
               Daily OHLC history is needed to calculate technical levels.
             </p>
-            <div className="mt-3">
+            <div className="mt-2">
               <DataFreshness fetchedAt={freshness?.fetchedAt} source={freshness?.source} />
             </div>
           </div>
         </div>
-        <div className="mt-4 rounded-lg border app-subtle p-4 text-sm app-muted">
+        <div className="mt-3 rounded-lg border app-subtle p-3 text-xs app-muted">
           Refresh market data to populate support, resistance, and pivot levels.
         </div>
       </section>
@@ -50,26 +50,26 @@ export function SupportResistancePanel({ ohlc }: Props) {
   ];
 
   return (
-    <section className="rounded-lg border app-surface p-5">
+    <section className="rounded-lg border app-surface p-4 shadow-sm">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-base font-semibold app-heading">Support / Resistance</h2>
-          <p className="mt-1 text-sm app-muted">
+          <h2 className="text-sm font-semibold app-heading">Support / Resistance</h2>
+          <p className="mt-1 text-xs leading-5 app-muted">
             Based on the latest candle and last {levels.lookbackDays} cached trading days.
           </p>
-          <div className="mt-3">
+          <div className="mt-2">
             <DataFreshness fetchedAt={freshness?.fetchedAt} source={freshness?.source} />
           </div>
         </div>
         <div className="text-right">
           <div className="text-xs font-medium app-muted">Last close</div>
-          <div className="text-lg font-semibold app-heading">
+          <div className="text-base font-semibold app-heading">
             {formatCurrency(levels.latestClose)}
           </div>
         </div>
       </div>
 
-      <div className="mt-5 grid gap-3 md:grid-cols-3">
+      <div className="mt-4 grid gap-2 md:grid-cols-3">
         {primaryLevels.map((level) => (
           <LevelCard
             key={level.label}
@@ -81,7 +81,7 @@ export function SupportResistancePanel({ ohlc }: Props) {
         ))}
       </div>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
         {pivotLevels.map((level) => (
           <LevelCard
             key={level.label}
@@ -117,9 +117,9 @@ function LevelCard({
         : "app-heading";
 
   return (
-    <div className="rounded-lg border app-subtle px-4 py-3">
-      <div className="text-xs font-medium uppercase tracking-normal app-muted">{label}</div>
-      <div className={`${compact ? "text-lg" : "text-2xl"} mt-1 font-semibold ${toneClass}`}>
+    <div className="rounded-lg border app-subtle px-3 py-2.5">
+      <div className="text-[11px] font-medium uppercase tracking-normal app-muted">{label}</div>
+      <div className={`${compact ? "text-base" : "text-xl"} mt-1 font-semibold ${toneClass}`}>
         {formatCurrency(value)}
       </div>
       {distance !== undefined ? (

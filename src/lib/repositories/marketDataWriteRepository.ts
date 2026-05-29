@@ -5,6 +5,7 @@ import type {
   ProviderAnalystRatings,
   ProviderEarningsQuarterly,
   ProviderFundamentalsSnapshot,
+  ProviderNewsArticle,
   ProviderOhlcDaily,
   Ticker,
 } from "@/lib/types/market";
@@ -158,6 +159,41 @@ export async function upsertDailyOhlc(
       fetched_at: new Date().toISOString(),
     })),
     { onConflict: "ticker_id,date" }
+  );
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function upsertCompanyNews(
+  supabase: DbClient,
+  ticker: Ticker,
+  articles: ProviderNewsArticle[]
+): Promise<void> {
+  const rows = articles.filter((article) => article.url && article.headline);
+
+  if (rows.length === 0) {
+    return;
+  }
+
+  const fetchedAt = new Date().toISOString();
+  const { error } = await supabase.from("company_news").upsert(
+    rows.map((article) => ({
+      ticker_id: ticker.id,
+      headline: article.headline,
+      summary: article.summary,
+      url: article.url,
+      image_url: article.imageUrl,
+      source_name: article.sourceName,
+      published_at: article.publishedAt,
+      sentiment_label: article.sentimentLabel,
+      sentiment_score: article.sentimentScore,
+      source: article.source,
+      source_updated_at: article.sourceUpdatedAt,
+      fetched_at: fetchedAt,
+    })),
+    { onConflict: "ticker_id,url" }
   );
 
   if (error) {

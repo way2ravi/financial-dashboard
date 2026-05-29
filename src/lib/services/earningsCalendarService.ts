@@ -96,6 +96,7 @@ export async function refreshEarningsCalendarAnalystData(
   items: EarningsCalendarItem[]
 ): Promise<{
   attempted: number;
+  quotesUpdated: number;
   ratingsUpdated: number;
   targetsUpdated: number;
   failed: number;
@@ -106,17 +107,24 @@ export async function refreshEarningsCalendarAnalystData(
 
   await ensureTickersBySymbols(supabase, symbols);
 
+  let quotesUpdated = 0;
   let ratingsUpdated = 0;
   let targetsUpdated = 0;
   let failed = 0;
 
   for (const symbol of symbols) {
     const results = await refreshMarketDataForSymbol(supabase, symbol, {
+      quote: true,
       analystRatings: true,
       priceTargets: true,
     });
+    const quoteResult = results.find((result) => result.module === "quote");
     const ratingsResult = results.find((result) => result.module === "analystRatings");
     const targetsResult = results.find((result) => result.module === "priceTargets");
+
+    if (quoteResult?.status === "success") {
+      quotesUpdated += 1;
+    }
 
     if (ratingsResult?.status === "success") {
       ratingsUpdated += 1;
@@ -127,6 +135,7 @@ export async function refreshEarningsCalendarAnalystData(
     }
 
     if (
+      quoteResult?.status !== "success" &&
       ratingsResult?.status !== "success" &&
       targetsResult?.status !== "success"
     ) {
@@ -136,6 +145,7 @@ export async function refreshEarningsCalendarAnalystData(
 
   return {
     attempted: symbols.length,
+    quotesUpdated,
     ratingsUpdated,
     targetsUpdated,
     failed,

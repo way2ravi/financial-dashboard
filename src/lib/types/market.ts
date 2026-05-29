@@ -169,6 +169,54 @@ export type OhlcDaily = {
   fetchedAt: string;
 };
 
+export type CompanyNewsArticle = {
+  id: number;
+  tickerId: number;
+  headline: string;
+  summary: string | null;
+  url: string;
+  imageUrl: string | null;
+  sourceName: string | null;
+  publishedAt: string;
+  sentimentLabel: string | null;
+  sentimentScore: number | null;
+  source: ProviderName | string | null;
+  sourceUpdatedAt: string | null;
+  fetchedAt: string;
+};
+
+export type ScreenerResult = {
+  symbol: string;
+  name: string | null;
+  exchange: string | null;
+  price: number | null;
+  change: number | null;
+  changePercent: number | null;
+  volume: number | null;
+  marketCap: number | null;
+  pe: number | null;
+  yearHigh: number | null;
+  yearLow: number | null;
+  source: ProviderName | string;
+};
+
+export type ScreenerCategory =
+  | "undervalued"
+  | "overvalued"
+  | "weekHigh"
+  | "weekLow"
+  | "mostActive"
+  | "topGainers"
+  | "topLosers";
+
+export type ScreenerCategoryResult = {
+  category: ScreenerCategory;
+  title: string;
+  description: string;
+  items: ScreenerResult[];
+  error: string | null;
+};
+
 export type WatchlistItem = {
   id: number;
   userId: string;
@@ -239,6 +287,7 @@ export type DashboardData = {
   earnings: EarningsQuarterly[];
   fundamentals: FundamentalsSnapshot | null;
   ohlc: OhlcDaily[];
+  news: CompanyNewsArticle[];
 };
 
 export type DataFreshness = {
@@ -351,6 +400,20 @@ export type ProviderOhlcDaily = {
   sourceUpdatedAt: string | null;
 };
 
+export type ProviderNewsArticle = {
+  symbol: string;
+  headline: string;
+  summary: string | null;
+  url: string;
+  imageUrl: string | null;
+  sourceName: string | null;
+  publishedAt: string;
+  sentimentLabel: string | null;
+  sentimentScore: number | null;
+  source: ProviderName | string;
+  sourceUpdatedAt: string | null;
+};
+
 export type RefreshModule =
   | "profile"
   | "quote"
@@ -358,7 +421,8 @@ export type RefreshModule =
   | "priceTargets"
   | "earnings"
   | "fundamentals"
-  | "ohlc";
+  | "ohlc"
+  | "news";
 
 export type RefreshResult = {
   module: RefreshModule;

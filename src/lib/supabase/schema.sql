@@ -211,6 +211,26 @@ create table if not exists public.ohlc_daily (
 create index if not exists ohlc_daily_ticker_date_idx
   on public.ohlc_daily (ticker_id, date desc);
 
+create table if not exists public.company_news (
+  id bigserial primary key,
+  ticker_id bigint not null references public.tickers(id) on delete cascade,
+  headline text not null,
+  summary text,
+  url text not null,
+  image_url text,
+  source_name text,
+  published_at timestamptz not null,
+  sentiment_label text,
+  sentiment_score numeric,
+  source text,
+  source_updated_at timestamptz,
+  fetched_at timestamptz not null default now(),
+  unique (ticker_id, url)
+);
+
+create index if not exists company_news_ticker_published_idx
+  on public.company_news (ticker_id, published_at desc);
+
 create table if not exists public.provider_fetch_log (
   id bigserial primary key,
   provider text not null,
@@ -224,3 +244,58 @@ create table if not exists public.provider_fetch_log (
 
 create index if not exists provider_fetch_log_symbol_idx
   on public.provider_fetch_log (symbol, fetched_at desc);
+
+create or replace function public.get_cached_screener_rows()
+returns table (
+  ticker_id bigint,
+  symbol text,
+  name text,
+  exchange text,
+  price numeric,
+  change numeric,
+  change_percent numeric,
+  volume numeric,
+  market_cap numeric,
+  pe numeric,
+  year_high numeric,
+  year_low numeric
+)
+language sql
+stable
+as $$
+  with latest_fundamentals as (
+    select distinct on (ticker_id)
+      ticker_id,
+      market_cap,
+      pe
+    from public.fundamentals_snapshot
+    order by ticker_id, as_of_date desc
+  ),
+  ranges as (
+    select
+      ticker_id,
+      max(high) as year_high,
+      min(low) as year_low
+    from public.ohlc_daily
+    where date >= current_date - interval '370 days'
+    group by ticker_id
+  )
+  select
+    t.id as ticker_id,
+    t.symbol,
+    t.name,
+    t.exchange,
+    q.price,
+    q.change,
+    q.change_percent,
+    q.volume,
+    f.market_cap,
+    f.pe,
+    r.year_high,
+    r.year_low
+  from public.tickers t
+  join public.quotes_latest q on q.ticker_id = t.id
+  left join latest_fundamentals f on f.ticker_id = t.id
+  left join ranges r on r.ticker_id = t.id
+  where t.is_active = true;
+$$;

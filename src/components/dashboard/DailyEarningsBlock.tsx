@@ -18,10 +18,10 @@ export async function DailyEarningsBlock({ currentSymbol }: Props) {
   const currentReportsToday = items.some((item) => item.symbol === currentSymbol);
 
   return (
-    <section className="rounded-lg border app-surface p-5">
+    <section className="rounded-lg border app-surface p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold app-heading">Today Earnings</h2>
+          <h2 className="text-sm font-semibold app-heading">Today Earnings</h2>
           <p className="mt-1 text-xs app-muted">
             {items.length > 0
               ? `${formatNumber(items.length, 0)} reports on ${date}`
@@ -37,7 +37,7 @@ export async function DailyEarningsBlock({ currentSymbol }: Props) {
       </div>
 
       {currentReportsToday ? (
-        <div className="mt-3 rounded-lg border app-subtle p-3 text-xs font-semibold app-positive">
+        <div className="mt-3 rounded-lg border app-subtle p-2.5 text-xs font-semibold app-positive">
           {currentSymbol} reports today.
         </div>
       ) : null}
@@ -45,24 +45,24 @@ export async function DailyEarningsBlock({ currentSymbol }: Props) {
       {visibleItems.length === 0 ? (
         <Link
           href={`/earnings?date=${date}&refresh=1`}
-          className="mt-4 block rounded-lg border app-subtle p-3 text-sm font-semibold app-heading hover:bg-[var(--app-surface)]"
+          className="mt-3 block rounded-lg border app-subtle p-3 text-xs font-semibold app-heading hover:bg-[var(--app-surface)]"
         >
           Load today&apos;s earnings
         </Link>
       ) : (
-        <div className="mt-4 space-y-2">
+        <div className="mt-3 space-y-2">
           {visibleItems.map((item) => (
             <Link
               key={item.id}
               href={`/dashboard?symbol=${item.symbol}&autoload=1`}
-              className={`block rounded-lg border p-3 text-sm ${
+              className={`block rounded-lg border p-2.5 text-xs ${
                 item.symbol === currentSymbol
                   ? "app-surface ring-2 ring-[var(--app-primary)]"
                   : "app-subtle hover:bg-[var(--app-surface)]"
               }`}
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="font-semibold app-heading">{item.symbol}</span>
+                <span className="text-sm font-semibold app-heading">{item.symbol}</span>
                 <span className="text-xs app-muted">{formatEarningsHour(item.hour)}</span>
               </div>
               <div className="mt-1 text-xs app-muted">

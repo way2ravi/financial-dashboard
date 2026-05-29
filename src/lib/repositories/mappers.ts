@@ -2,6 +2,7 @@ import type { Database } from "@/lib/types/database";
 import type {
   AnalystPriceTargetsSnapshot,
   AnalystRatingsSnapshot,
+  CompanyNewsArticle,
   EarningsCalendarItem,
   EarningsQuarterly,
   FundamentalsSnapshot,
@@ -166,6 +167,24 @@ export function mapOhlc(row: Tables["ohlc_daily"]["Row"]): OhlcDaily {
     close: row.close,
     adjustedClose: row.adjusted_close,
     volume: row.volume,
+    source: row.source,
+    sourceUpdatedAt: row.source_updated_at,
+    fetchedAt: row.fetched_at,
+  };
+}
+
+export function mapCompanyNews(row: Tables["company_news"]["Row"]): CompanyNewsArticle {
+  return {
+    id: row.id,
+    tickerId: row.ticker_id,
+    headline: row.headline,
+    summary: row.summary,
+    url: row.url,
+    imageUrl: row.image_url,
+    sourceName: row.source_name,
+    publishedAt: row.published_at,
+    sentimentLabel: row.sentiment_label,
+    sentimentScore: row.sentiment_score,
     source: row.source,
     sourceUpdatedAt: row.source_updated_at,
     fetchedAt: row.fetched_at,

@@ -44,12 +44,12 @@ export default async function PortfolioPage({ searchParams }: Props) {
   return (
     <main className="min-h-screen app-bg">
       <header className="border-b app-surface">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-5 sm:px-6 lg:flex-row lg:items-start lg:justify-between lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
           <div>
-            <h1 className="mt-2 text-3xl font-semibold tracking-normal app-heading">
+            <h1 className="text-2xl font-semibold tracking-normal app-heading">
               Portfolio
             </h1>
-            <p className="mt-1 max-w-2xl text-sm app-muted">
+            <p className="mt-1 max-w-2xl text-xs leading-5 app-muted">
               Create portfolios, record buy and sell trades, and track holdings performance.
             </p>
           </div>
@@ -61,9 +61,9 @@ export default async function PortfolioPage({ searchParams }: Props) {
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-7xl gap-4 px-4 py-5 sm:px-6 lg:grid-cols-[320px_1fr] lg:px-8">
-        <aside className="min-w-0 self-start rounded-lg border app-surface p-5 lg:sticky lg:top-4">
-          <h2 className="text-base font-semibold app-heading">Your Portfolios</h2>
+      <div className="mx-auto grid max-w-7xl gap-3 px-4 py-4 sm:px-6 lg:grid-cols-[320px_1fr] lg:px-8">
+        <aside className="min-w-0 self-start rounded-lg border app-surface p-4 shadow-sm lg:sticky lg:top-4">
+          <h2 className="text-sm font-semibold app-heading">Your Portfolios</h2>
           <p className="mt-1 text-sm app-muted">
             {user ? `${summaries.length} portfolios` : "Sign in to create portfolios"}
           </p>
@@ -71,54 +71,54 @@ export default async function PortfolioPage({ searchParams }: Props) {
           {!user ? (
             <Link
               href="/login"
-              className="mt-4 block rounded-lg border app-subtle p-3 text-sm font-semibold app-heading"
+              className="mt-3 block rounded-lg border app-subtle p-3 text-xs font-semibold app-heading"
             >
               Sign in to start tracking
             </Link>
           ) : setupError ? (
-            <div className="mt-4 rounded-lg border app-subtle p-3 text-sm app-muted">
+            <div className="mt-3 rounded-lg border app-subtle p-3 text-xs app-muted">
               Database setup is needed before you can create portfolios.
             </div>
           ) : (
             <>
-              <form action={createPortfolioAction} className="mt-4 space-y-3">
-                <label className="block text-sm font-medium app-muted">
+              <form action={createPortfolioAction} className="mt-3 space-y-2">
+                <label className="block text-xs font-medium app-muted">
                   Portfolio name
                   <input
                     name="name"
                     required
                     placeholder="Long-term holdings"
-                    className="mt-1 h-10 w-full rounded-lg border app-input px-3 text-sm outline-none"
+                    className="mt-1 h-9 w-full rounded-lg border app-input px-3 text-xs outline-none"
                   />
                 </label>
-                <label className="block text-sm font-medium app-muted">
+                <label className="block text-xs font-medium app-muted">
                   Description
                   <input
                     name="description"
                     placeholder="Optional"
-                    className="mt-1 h-10 w-full rounded-lg border app-input px-3 text-sm outline-none"
+                    className="mt-1 h-9 w-full rounded-lg border app-input px-3 text-xs outline-none"
                   />
                 </label>
                 <button
                   type="submit"
-                  className="h-10 w-full rounded-lg app-primary-button px-4 text-sm font-semibold"
+                  className="h-9 w-full rounded-lg app-primary-button px-4 text-xs font-semibold"
                 >
                   Create portfolio
                 </button>
               </form>
 
-              <div className="mt-5 space-y-2">
+              <div className="mt-4 space-y-2">
                 {summaries.map((summary) => (
                   <Link
                     key={summary.portfolio.id}
                     href={`/portfolio?portfolio=${summary.portfolio.id}`}
-                    className={`block rounded-lg border p-3 ${
+                    className={`block rounded-lg border p-2.5 ${
                       selected?.portfolio.id === summary.portfolio.id
                         ? "app-surface ring-2 ring-[var(--app-primary)]"
                         : "app-subtle hover:bg-[var(--app-surface)]"
                     }`}
                   >
-                    <div className="font-semibold app-heading">{summary.portfolio.name}</div>
+                    <div className="text-sm font-semibold app-heading">{summary.portfolio.name}</div>
                     <div className="mt-1 text-xs app-muted">
                       {summary.holdings.length} holdings - {formatCurrency(summary.marketValue)}
                     </div>
@@ -130,11 +130,11 @@ export default async function PortfolioPage({ searchParams }: Props) {
         </aside>
 
         {setupError ? (
-          <section className="rounded-lg border app-surface p-5">
-            <h2 className="text-base font-semibold app-heading">
+          <section className="rounded-lg border app-surface p-4 shadow-sm">
+            <h2 className="text-sm font-semibold app-heading">
               Portfolio database setup needed
             </h2>
-            <p className="mt-2 text-sm app-muted">
+            <p className="mt-2 text-xs app-muted">
               Run the updated Supabase SQL files so portfolios and portfolio transactions exist.
             </p>
             <div className="mt-4 rounded-lg border app-subtle p-3 font-mono text-xs app-muted">
@@ -148,9 +148,9 @@ export default async function PortfolioPage({ searchParams }: Props) {
         ) : (
           <div className="min-w-0 space-y-4">
             <PageMessage message={message} />
-            <section className="rounded-lg border app-surface p-5">
-              <h2 className="text-base font-semibold app-heading">No portfolio yet</h2>
-              <p className="mt-2 text-sm app-muted">
+            <section className="rounded-lg border app-surface p-4 shadow-sm">
+              <h2 className="text-sm font-semibold app-heading">No portfolio yet</h2>
+              <p className="mt-2 text-xs app-muted">
                 Create your first portfolio to start tracking buys, sells, holdings, and gains.
               </p>
             </section>
@@ -220,13 +220,13 @@ function PortfolioDetail({
   message: PageMessageValue;
 }) {
   return (
-    <div className="min-w-0 space-y-4">
+    <div className="min-w-0 space-y-3">
       <PageMessage message={message} />
-      <section className="rounded-lg border app-surface p-5">
-        <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <section className="rounded-lg border app-surface p-4 shadow-sm">
+        <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <h2 className="text-xl font-semibold app-heading">{summary.portfolio.name}</h2>
-            <p className="mt-1 text-sm app-muted">
+            <h2 className="text-lg font-semibold app-heading">{summary.portfolio.name}</h2>
+            <p className="mt-1 text-xs leading-5 app-muted">
               {summary.portfolio.description ||
                 "Performance based on recorded trades and cached quotes."}
             </p>
@@ -234,7 +234,7 @@ function PortfolioDetail({
           <AddTransactionForm portfolioId={summary.portfolio.id} />
         </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
           <Metric label="Market value" value={formatCurrency(summary.marketValue)} />
           <Metric label="Invested" value={formatCurrency(summary.investedCapital)} />
           <Metric
@@ -253,60 +253,62 @@ function PortfolioDetail({
             tone={summary.totalGain >= 0 ? "positive" : "negative"}
           />
         </div>
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+        <div className="mt-2 grid gap-2 sm:grid-cols-3">
           <Metric label="Open positions" value={formatNumber(summary.openPositions, 0)} />
           <Metric label="Closed positions" value={formatNumber(summary.closedPositions, 0)} />
           <Metric label="Trades" value={formatNumber(summary.tradeCount, 0)} />
         </div>
       </section>
 
-      <section className="rounded-lg border app-surface p-5">
-        <h2 className="text-base font-semibold app-heading">Holdings</h2>
+      <section className="overflow-hidden rounded-lg border app-surface shadow-sm">
+        <div className="border-b app-border-soft px-4 py-3">
+          <h2 className="text-sm font-semibold app-heading">Holdings</h2>
+        </div>
         {summary.holdings.length === 0 ? (
-          <div className="mt-4 rounded-lg border app-subtle p-4 text-sm app-muted">
+          <div className="m-4 rounded-lg border app-subtle p-3 text-xs app-muted">
             No open holdings yet. Add a buy transaction to begin.
           </div>
         ) : (
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full min-w-[840px] border-separate border-spacing-0 text-left text-sm">
-              <thead>
-                <tr className="text-xs uppercase tracking-normal app-muted">
-                  <th className="border-b app-border-soft pb-2 font-medium">Symbol</th>
-                  <th className="border-b app-border-soft pb-2 font-medium">Quantity</th>
-                  <th className="border-b app-border-soft pb-2 font-medium">Avg cost</th>
-                  <th className="border-b app-border-soft pb-2 font-medium">Cost basis</th>
-                  <th className="border-b app-border-soft pb-2 font-medium">Last price</th>
-                  <th className="border-b app-border-soft pb-2 font-medium">Value</th>
-                  <th className="border-b app-border-soft pb-2 font-medium">Allocation</th>
-                  <th className="border-b app-border-soft pb-2 font-medium">Unrealized</th>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[840px] border-separate border-spacing-0 text-left text-xs">
+              <thead className="app-subtle">
+                <tr className="uppercase tracking-normal app-muted">
+                  <th className="border-b app-border-soft px-3 py-2 font-semibold">Symbol</th>
+                  <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">Quantity</th>
+                  <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">Avg cost</th>
+                  <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">Cost basis</th>
+                  <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">Last price</th>
+                  <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">Value</th>
+                  <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">Allocation</th>
+                  <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">Unrealized</th>
                 </tr>
               </thead>
               <tbody>
                 {summary.holdings.map((holding) => (
-                  <tr key={holding.ticker.id} className="app-muted">
-                    <td className="border-b app-border-soft py-3 font-semibold app-heading">
+                  <tr key={holding.ticker.id} className="app-muted transition hover:bg-[var(--app-surface-muted)]">
+                    <td className="border-b app-border-soft px-3 py-2.5 font-semibold app-heading">
                       {holding.ticker.symbol}
                     </td>
-                    <td className="border-b app-border-soft py-3">
+                    <td className="border-b app-border-soft px-3 py-2.5 text-right">
                       {formatNumber(holding.quantity, 4)}
                     </td>
-                    <td className="border-b app-border-soft py-3">
+                    <td className="border-b app-border-soft px-3 py-2.5 text-right">
                       {formatCurrency(holding.averageCost)}
                     </td>
-                    <td className="border-b app-border-soft py-3">
+                    <td className="border-b app-border-soft px-3 py-2.5 text-right">
                       {formatCurrency(holding.costBasis)}
                     </td>
-                    <td className="border-b app-border-soft py-3">
+                    <td className="border-b app-border-soft px-3 py-2.5 text-right">
                       {formatCurrency(holding.marketPrice)}
                     </td>
-                    <td className="border-b app-border-soft py-3">
+                    <td className="border-b app-border-soft px-3 py-2.5 text-right">
                       {formatCurrency(holding.marketValue)}
                     </td>
-                    <td className="border-b app-border-soft py-3">
+                    <td className="border-b app-border-soft px-3 py-2.5 text-right">
                       {formatPercent(holding.allocationPercent)}
                     </td>
                     <td
-                      className={`border-b app-border-soft py-3 ${
+                      className={`border-b app-border-soft px-3 py-2.5 text-right ${
                         (holding.unrealizedGain ?? 0) >= 0
                           ? "app-positive"
                           : "app-negative"
@@ -322,18 +324,18 @@ function PortfolioDetail({
         )}
       </section>
 
-      <section className="rounded-lg border app-surface p-5">
-        <h2 className="text-base font-semibold app-heading">Buy / Sell History</h2>
+      <section className="rounded-lg border app-surface p-4 shadow-sm">
+        <h2 className="text-sm font-semibold app-heading">Buy / Sell History</h2>
         {summary.transactions.length === 0 ? (
-          <div className="mt-4 rounded-lg border app-subtle p-4 text-sm app-muted">
+          <div className="mt-3 rounded-lg border app-subtle p-3 text-xs app-muted">
             No trades recorded yet.
           </div>
         ) : (
-          <div className="mt-4 space-y-2">
+          <div className="mt-3 space-y-2">
             {summary.transactions.map((transaction) => (
               <div
                 key={transaction.id}
-                className="grid gap-3 rounded-lg border app-subtle p-3 text-sm sm:grid-cols-[90px_1fr_auto]"
+                className="grid gap-3 rounded-lg border app-subtle p-2.5 text-xs sm:grid-cols-[90px_1fr_auto]"
               >
                 <div className={transaction.transactionType === "buy" ? "app-positive" : "app-negative"}>
                   {transaction.transactionType.toUpperCase()}
@@ -374,7 +376,7 @@ function AddTransactionForm({ portfolioId }: { portfolioId: number }) {
       <input name="portfolio_id" type="hidden" value={portfolioId} />
       <select
         name="transaction_type"
-        className="h-10 rounded-lg border app-input px-3 text-sm outline-none"
+        className="h-9 rounded-lg border app-input px-3 text-xs outline-none"
       >
         <option value="buy">Buy</option>
         <option value="sell">Sell</option>
@@ -383,13 +385,13 @@ function AddTransactionForm({ portfolioId }: { portfolioId: number }) {
         name="symbol"
         placeholder="Symbol"
         required
-        className="h-10 rounded-lg border app-input px-3 text-sm uppercase outline-none"
+        className="h-9 rounded-lg border app-input px-3 text-xs uppercase outline-none"
       />
       <input
         name="trade_date"
         type="date"
         required
-        className="h-10 rounded-lg border app-input px-3 text-sm outline-none"
+        className="h-9 rounded-lg border app-input px-3 text-xs outline-none"
       />
       <input
         name="quantity"
@@ -398,7 +400,7 @@ function AddTransactionForm({ portfolioId }: { portfolioId: number }) {
         min="0"
         placeholder="Quantity"
         required
-        className="h-10 rounded-lg border app-input px-3 text-sm outline-none"
+        className="h-9 rounded-lg border app-input px-3 text-xs outline-none"
       />
       <input
         name="price"
@@ -407,7 +409,7 @@ function AddTransactionForm({ portfolioId }: { portfolioId: number }) {
         min="0"
         placeholder="Price"
         required
-        className="h-10 rounded-lg border app-input px-3 text-sm outline-none"
+        className="h-9 rounded-lg border app-input px-3 text-xs outline-none"
       />
       <input
         name="fees"
@@ -415,16 +417,16 @@ function AddTransactionForm({ portfolioId }: { portfolioId: number }) {
         step="0.01"
         min="0"
         placeholder="Fees"
-        className="h-10 rounded-lg border app-input px-3 text-sm outline-none"
+        className="h-9 rounded-lg border app-input px-3 text-xs outline-none"
       />
       <input
         name="notes"
         placeholder="Notes"
-        className="h-10 rounded-lg border app-input px-3 text-sm outline-none"
+        className="h-9 rounded-lg border app-input px-3 text-xs outline-none"
       />
       <button
         type="submit"
-        className="h-10 rounded-lg app-primary-button px-4 text-sm font-semibold sm:col-span-2"
+        className="h-9 rounded-lg app-primary-button px-4 text-xs font-semibold sm:col-span-2"
       >
         Add trade
       </button>
@@ -449,9 +451,9 @@ function Metric({
         : "app-heading";
 
   return (
-    <div className="rounded-lg border app-subtle px-4 py-3">
-      <div className="text-xs font-medium uppercase tracking-normal app-muted">{label}</div>
-      <div className={`mt-1 text-lg font-semibold ${toneClass}`}>{value}</div>
+    <div className="rounded-lg border app-subtle px-3 py-2.5">
+      <div className="text-[11px] font-medium uppercase tracking-normal app-muted">{label}</div>
+      <div className={`mt-1 text-base font-semibold ${toneClass}`}>{value}</div>
     </div>
   );
 }

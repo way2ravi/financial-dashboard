@@ -99,6 +99,54 @@ export type Database = {
         };
         Relationships: [];
       };
+      company_news: {
+        Row: {
+          id: number;
+          ticker_id: number;
+          headline: string;
+          summary: string | null;
+          url: string;
+          image_url: string | null;
+          source_name: string | null;
+          published_at: string;
+          sentiment_label: string | null;
+          sentiment_score: number | null;
+          source: string | null;
+          source_updated_at: string | null;
+          fetched_at: string;
+        };
+        Insert: {
+          id?: number;
+          ticker_id: number;
+          headline: string;
+          summary?: string | null;
+          url: string;
+          image_url?: string | null;
+          source_name?: string | null;
+          published_at: string;
+          sentiment_label?: string | null;
+          sentiment_score?: number | null;
+          source?: string | null;
+          source_updated_at?: string | null;
+          fetched_at?: string;
+        };
+        Update: {
+          id?: number;
+          ticker_id?: number;
+          headline?: string;
+          summary?: string | null;
+          url?: string;
+          image_url?: string | null;
+          source_name?: string | null;
+          published_at?: string;
+          sentiment_label?: string | null;
+          sentiment_score?: number | null;
+          source?: string | null;
+          source_updated_at?: string | null;
+          fetched_at?: string;
+        };
+        Relationships: [];
+      };
       earnings_quarterly: {
         Row: {
           id: number;

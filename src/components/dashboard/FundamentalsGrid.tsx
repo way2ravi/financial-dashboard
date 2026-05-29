@@ -19,19 +19,19 @@ export function FundamentalsGrid({ fundamentals }: Props) {
   ];
 
   return (
-    <section className="rounded-lg border app-surface p-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <h2 className="text-base font-semibold app-heading">Fundamentals</h2>
+    <section className="rounded-lg border app-surface p-4 shadow-sm">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <h2 className="text-sm font-semibold app-heading">Fundamentals</h2>
         <DataFreshness
           fetchedAt={fundamentals?.fetchedAt}
           source={fundamentals?.source}
         />
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4">
         {metrics.map(([label, value]) => (
-          <div key={label} className="rounded-lg border app-subtle p-3">
-            <div className="text-xs font-medium app-muted">{label}</div>
-            <div className="mt-1 text-lg font-semibold app-heading">{value}</div>
+          <div key={label} className="rounded-lg border app-subtle px-3 py-2.5">
+            <div className="text-[11px] font-medium app-muted">{label}</div>
+            <div className="mt-1 text-base font-semibold app-heading">{value}</div>
           </div>
         ))}
       </div>

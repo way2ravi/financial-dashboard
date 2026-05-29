@@ -3,6 +3,7 @@ import type { Database } from "@/lib/types/database";
 import type {
   AnalystPriceTargetsSnapshot,
   AnalystRatingsSnapshot,
+  CompanyNewsArticle,
   DashboardData,
   EarningsQuarterly,
   FundamentalsSnapshot,
@@ -15,6 +16,7 @@ import {
   mapAnalystRatings,
   mapEarnings,
   mapFundamentals,
+  mapCompanyNews,
   mapOhlc,
   mapQuoteLatest,
 } from "./mappers";
@@ -36,6 +38,7 @@ export async function getCachedDashboardData(
     earnings,
     fundamentals,
     ohlc,
+    news,
   ] = await Promise.all([
     getLatestQuote(supabase, ticker.id),
     getLatestAnalystRatings(supabase, ticker.id),
@@ -43,6 +46,7 @@ export async function getCachedDashboardData(
     getQuarterlyEarnings(supabase, ticker.id, earningsLimit),
     getLatestFundamentals(supabase, ticker.id),
     getDailyOhlc(supabase, ticker.id, ohlcLimit),
+    getCompanyNews(supabase, ticker.id, 8),
   ]);
 
   return {
@@ -53,6 +57,7 @@ export async function getCachedDashboardData(
     earnings,
     fundamentals,
     ohlc,
+    news,
   };
 }
 
@@ -169,3 +174,33 @@ export async function getDailyOhlc(
   return (data ?? []).map(mapOhlc).reverse();
 }
 
+export async function getCompanyNews(
+  supabase: DbClient,
+  tickerId: number,
+  limit = 8
+): Promise<CompanyNewsArticle[]> {
+  const { data, error } = await supabase
+    .from("company_news")
+    .select("*")
+    .eq("ticker_id", tickerId)
+    .order("published_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    if (isMissingCompanyNewsTableError(error)) {
+      return [];
+    }
+
+    throw error;
+  }
+
+  return (data ?? []).map(mapCompanyNews);
+}
+
+function isMissingCompanyNewsTableError(error: { code?: string; message?: string }) {
+  return (
+    error.code === "42P01" ||
+    error.message?.includes("company_news") ||
+    error.message?.includes("schema cache")
+  );
+}

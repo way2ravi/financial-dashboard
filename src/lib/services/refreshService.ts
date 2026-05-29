@@ -3,12 +3,14 @@ import {
   getAlphaVantageDailyOhlc,
   getAlphaVantageEarnings,
   getAlphaVantageFundamentals,
+  getAlphaVantageNews,
   getAlphaVantageQuote,
   getFinnhubAnalystRatings,
   getFinnhubCompanyProfile,
   getFinnhubDailyOhlc,
   getFinnhubEarnings,
   getFinnhubFundamentals,
+  getFinnhubCompanyNews,
   getFinnhubPriceTargets,
   getFinnhubQuote,
   getFmpAnalystRatings,
@@ -27,6 +29,7 @@ import {
   upsertAnalystRatings,
   upsertDailyOhlc,
   upsertFundamentalsSnapshot,
+  upsertCompanyNews,
   upsertLatestQuote,
   upsertQuarterlyEarnings,
   updateTickerProfile,
@@ -236,6 +239,30 @@ export async function refreshMarketDataForSymbol(
           status: "success",
           updated: candles.length,
           provider: candles[0]?.source,
+        };
+      },
+    },
+    {
+      module: "news",
+      run: async () => {
+        const articles = await tryProviderFallbacks(
+          supabase,
+          normalizedSymbol,
+          "news",
+          [
+            { provider: "finnhub", run: () => getFinnhubCompanyNews(normalizedSymbol) },
+            {
+              provider: "alpha_vantage",
+              run: () => getAlphaVantageNews(normalizedSymbol),
+            },
+          ]
+        );
+        await upsertCompanyNews(supabase, ticker, articles);
+        return {
+          module: "news",
+          status: "success",
+          updated: articles.length,
+          provider: articles[0]?.source,
         };
       },
     },

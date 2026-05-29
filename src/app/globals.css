@@ -1,23 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --app-bg: #f1f5f9;
-  --app-surface: #ffffff;
-  --app-surface-muted: #f8fafc;
-  --app-border: #e2e8f0;
-  --app-border-soft: #f1f5f9;
-  --app-text: #020617;
-  --app-text-muted: #64748b;
-  --app-text-soft: #94a3b8;
-  --app-primary: #0f172a;
-  --app-primary-hover: #1e293b;
-  --app-primary-text: #ffffff;
-  --app-accent: #0f766e;
-  --app-accent-hover: #115e59;
-  --app-positive: #047857;
-  --app-negative: #be123c;
+  --background: #020403;
+  --foreground: #f4f7f6;
+  --app-bg: #020403;
+  --app-surface: #090d0b;
+  --app-surface-muted: #111815;
+  --app-border: #26302b;
+  --app-border-soft: #18201c;
+  --app-text: #f4f7f6;
+  --app-text-muted: #a8b5af;
+  --app-text-soft: #737f79;
+  --app-primary: #f4f7f6;
+  --app-primary-hover: #dce5e1;
+  --app-primary-text: #020403;
+  --app-accent: #22c55e;
+  --app-accent-hover: #16a34a;
+  --app-positive: #4ade80;
+  --app-negative: #fb7185;
 }
 
 [data-theme="light"] {
@@ -57,6 +57,26 @@
   --app-accent: #2dd4bf;
   --app-accent-hover: #14b8a6;
   --app-positive: #34d399;
+  --app-negative: #fb7185;
+}
+
+[data-theme="black"] {
+  --background: #020403;
+  --foreground: #f4f7f6;
+  --app-bg: #020403;
+  --app-surface: #090d0b;
+  --app-surface-muted: #111815;
+  --app-border: #26302b;
+  --app-border-soft: #18201c;
+  --app-text: #f4f7f6;
+  --app-text-muted: #a8b5af;
+  --app-text-soft: #737f79;
+  --app-primary: #f4f7f6;
+  --app-primary-hover: #dce5e1;
+  --app-primary-text: #020403;
+  --app-accent: #22c55e;
+  --app-accent-hover: #16a34a;
+  --app-positive: #4ade80;
   --app-negative: #fb7185;
 }
 

@@ -87,14 +87,14 @@ export function TickerSearch({ initialSymbol }: Props) {
       className="relative flex w-full max-w-sm flex-col gap-1"
       onSubmit={() => setIsOpen(false)}
     >
-      <label htmlFor="ticker-symbol" className="text-sm font-medium app-muted">
+      <label htmlFor="ticker-symbol" className="text-xs font-medium app-muted">
         Ticker
       </label>
       <div className="flex gap-2">
         <input
           id="ticker-symbol"
           name="symbol"
-          className="h-10 min-w-0 flex-1 rounded-lg border app-input px-3 text-base font-semibold uppercase outline-none"
+          className="h-9 min-w-0 flex-1 rounded-lg border app-input px-3 text-sm font-semibold uppercase outline-none"
           value={query}
           maxLength={12}
           autoComplete="off"
@@ -112,7 +112,7 @@ export function TickerSearch({ initialSymbol }: Props) {
         <input type="hidden" name="autoload" value="1" />
         <button
           type="submit"
-          className="h-10 rounded-lg app-primary-button px-4 text-sm font-semibold"
+          className="h-9 rounded-lg app-primary-button px-4 text-xs font-semibold"
         >
           Load
         </button>
@@ -125,9 +125,9 @@ export function TickerSearch({ initialSymbol }: Props) {
           role="listbox"
         >
           {isLoading ? (
-            <div className="px-3 py-2 text-sm app-muted">Searching</div>
+            <div className="px-3 py-2 text-xs app-muted">Searching</div>
           ) : error ? (
-            <div className="px-3 py-2 text-sm text-[var(--app-negative)]">{error}</div>
+            <div className="px-3 py-2 text-xs text-[var(--app-negative)]">{error}</div>
           ) : visibleResults.length > 0 ? (
             visibleResults.map((ticker) => (
               <Link
