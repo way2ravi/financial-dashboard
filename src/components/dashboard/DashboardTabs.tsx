@@ -5,6 +5,7 @@ import { FundamentalsGrid } from "@/components/dashboard/FundamentalsGrid";
 import { NewsBlock } from "@/components/dashboard/NewsBlock";
 import { PriceChart } from "@/components/dashboard/PriceChart";
 import { SupportResistancePanel } from "@/components/dashboard/SupportResistancePanel";
+import { TechnicalAnalysisPanel } from "@/components/dashboard/TechnicalAnalysisPanel";
 import type { DashboardData } from "@/lib/types";
 
 type Props = {
@@ -62,6 +63,7 @@ export function DashboardTabs({ activeTab, data }: Props) {
 
       {activeTab === "chart" ? (
         <div className="space-y-3">
+          <TechnicalAnalysisPanel ohlc={data.ohlc} />
           <SupportResistancePanel ohlc={data.ohlc} />
           <PriceChart ohlc={data.ohlc} />
         </div>
