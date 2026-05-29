@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import type { Ticker } from "@/lib/types";
 
 type Props = {
@@ -9,7 +9,6 @@ type Props = {
 };
 
 export function TickerSearch({ initialSymbol }: Props) {
-  const router = useRouter();
   const containerRef = useRef<HTMLFormElement>(null);
   const [query, setQuery] = useState(initialSymbol);
   const [results, setResults] = useState<Ticker[]>([]);
@@ -73,17 +72,6 @@ export function TickerSearch({ initialSymbol }: Props) {
     return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, []);
 
-  function navigateToSymbol(symbol = normalizedQuery) {
-    const nextSymbol = symbol.trim().toUpperCase();
-
-    if (!nextSymbol) {
-      return;
-    }
-
-    setIsOpen(false);
-    router.push(`/dashboard?symbol=${encodeURIComponent(nextSymbol)}`);
-  }
-
   function updateQuery(value: string) {
     setQuery(value.toUpperCase());
     setError(null);
@@ -94,11 +82,9 @@ export function TickerSearch({ initialSymbol }: Props) {
     <form
       ref={containerRef}
       action="/dashboard"
+      method="get"
       className="relative flex w-full max-w-sm flex-col gap-1"
-      onSubmit={(event) => {
-        event.preventDefault();
-        navigateToSymbol();
-      }}
+      onSubmit={() => setIsOpen(false)}
     >
       <label htmlFor="ticker-symbol" className="text-sm font-medium app-muted">
         Ticker
@@ -122,6 +108,7 @@ export function TickerSearch({ initialSymbol }: Props) {
             }
           }}
         />
+        <input type="hidden" name="autoload" value="1" />
         <button
           type="submit"
           className="h-10 rounded-lg app-primary-button px-4 text-sm font-semibold"
@@ -142,23 +129,35 @@ export function TickerSearch({ initialSymbol }: Props) {
             <div className="px-3 py-2 text-sm text-[var(--app-negative)]">{error}</div>
           ) : visibleResults.length > 0 ? (
             visibleResults.map((ticker) => (
-              <button
+              <Link
                 key={ticker.id}
-                type="button"
+                href={`/dashboard?symbol=${encodeURIComponent(ticker.symbol)}&autoload=1`}
                 className="flex w-full items-start justify-between gap-3 border-b app-border-soft px-3 py-2 text-left last:border-b-0 hover:bg-[var(--app-subtle)]"
                 role="option"
                 aria-selected={ticker.symbol === normalizedQuery}
-                onClick={() => navigateToSymbol(ticker.symbol)}
+                onClick={() => setIsOpen(false)}
               >
                 <span className="min-w-0">
                   <span className="block font-semibold app-heading">{ticker.symbol}</span>
                   <span className="block truncate text-xs app-muted">{ticker.name}</span>
                 </span>
                 <span className="shrink-0 text-xs app-muted">{ticker.exchange}</span>
-              </button>
+              </Link>
             ))
           ) : normalizedQuery ? (
-            <div className="px-3 py-2 text-sm app-muted">No matching tickers</div>
+            <Link
+              href={`/dashboard?symbol=${encodeURIComponent(normalizedQuery)}&autoload=1`}
+              className="flex w-full items-start justify-between gap-3 px-3 py-2 text-left hover:bg-[var(--app-subtle)]"
+              role="option"
+              aria-selected="false"
+              onClick={() => setIsOpen(false)}
+            >
+              <span>
+                <span className="block font-semibold app-heading">{normalizedQuery}</span>
+                <span className="block text-xs app-muted">Open typed symbol</span>
+              </span>
+              <span className="shrink-0 text-xs app-muted">Load</span>
+            </Link>
           ) : null}
         </div>
       ) : null}

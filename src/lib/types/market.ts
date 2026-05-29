@@ -15,6 +15,15 @@ export type Ticker = {
   isActive: boolean;
 };
 
+export type ProviderTickerSearchResult = {
+  symbol: string;
+  displaySymbol: string | null;
+  description: string | null;
+  type: string | null;
+  exchange: string | null;
+  source: ProviderName | string;
+};
+
 export type QuoteLatest = {
   tickerId: number;
   price: number | null;
@@ -79,6 +88,22 @@ export type EarningsQuarterly = {
   epsEstimate: number | null;
   epsSurprise: number | null;
   epsSurprisePercent: number | null;
+  revenueActual: number | null;
+  revenueEstimate: number | null;
+  source: ProviderName | string | null;
+  sourceUpdatedAt: string | null;
+  fetchedAt: string;
+};
+
+export type EarningsCalendarItem = {
+  id: number;
+  symbol: string;
+  reportDate: string;
+  hour: string | null;
+  fiscalYear: number | null;
+  fiscalQuarter: number | null;
+  epsActual: number | null;
+  epsEstimate: number | null;
   revenueActual: number | null;
   revenueEstimate: number | null;
   source: ProviderName | string | null;
@@ -252,6 +277,20 @@ export type ProviderEarningsQuarterly = {
   epsEstimate: number | null;
   epsSurprise: number | null;
   epsSurprisePercent: number | null;
+  revenueActual: number | null;
+  revenueEstimate: number | null;
+  source: ProviderName | string;
+  sourceUpdatedAt: string | null;
+};
+
+export type ProviderEarningsCalendarItem = {
+  symbol: string;
+  reportDate: string;
+  hour: string | null;
+  fiscalYear: number | null;
+  fiscalQuarter: number | null;
+  epsActual: number | null;
+  epsEstimate: number | null;
   revenueActual: number | null;
   revenueEstimate: number | null;
   source: ProviderName | string;

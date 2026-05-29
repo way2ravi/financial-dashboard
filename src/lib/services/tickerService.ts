@@ -1,5 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { findTickerBySymbol, searchTickers } from "@/lib/repositories";
+import { searchFinnhubSymbols } from "@/lib/providers";
+import {
+  findTickerBySymbol,
+  logProviderFetch,
+  searchTickers,
+  upsertTickerSearchResults,
+} from "@/lib/repositories";
 import type { Database } from "@/lib/types/database";
 import type { Ticker } from "@/lib/types/market";
 import { AppError } from "./errors";
@@ -30,7 +36,27 @@ export async function searchTickerDirectory(
     return [];
   }
 
-  return searchTickers(supabase, normalizedQuery, normalizeLimit(limit));
+  const normalizedLimit = normalizeLimit(limit);
+  const cachedResults = await searchTickers(supabase, normalizedQuery, normalizedLimit);
+
+  if (cachedResults.length > 0) {
+    return cachedResults;
+  }
+
+  let providerResults = [];
+
+  try {
+    providerResults = await searchFinnhubSymbols(normalizedQuery, normalizedLimit);
+  } catch (error) {
+    await logSymbolSearch(supabase, normalizedQuery, "error", error);
+
+    return cachedResults;
+  }
+
+  const tickers = await upsertTickerSearchResults(supabase, providerResults);
+  await logSymbolSearch(supabase, normalizedQuery, "success");
+
+  return tickers.slice(0, normalizedLimit);
 }
 
 function normalizeLimit(limit: number) {
@@ -39,4 +65,28 @@ function normalizeLimit(limit: number) {
   }
 
   return Math.min(Math.max(Math.trunc(limit), 1), 25);
+}
+
+async function logSymbolSearch(
+  supabase: DbClient,
+  symbol: string,
+  status: "success" | "error",
+  error?: unknown
+) {
+  try {
+    await logProviderFetch(supabase, {
+      provider: "finnhub",
+      endpoint: "symbol-search",
+      symbol,
+      status,
+      errorMessage:
+        status === "error"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown symbol search error"
+          : undefined,
+    });
+  } catch {
+    // Search should not fail just because provider log writes are unavailable.
+  }
 }

@@ -15,6 +15,96 @@ values (
   'Consumer Electronics',
   'USD',
   true
+),
+(
+  'NVDA',
+  'NASDAQ',
+  'NVIDIA Corporation',
+  'Technology',
+  'Semiconductors',
+  'USD',
+  true
+),
+(
+  'MSFT',
+  'NASDAQ',
+  'Microsoft Corporation',
+  'Technology',
+  'Software - Infrastructure',
+  'USD',
+  true
+),
+(
+  'GOOGL',
+  'NASDAQ',
+  'Alphabet Inc.',
+  'Communication Services',
+  'Internet Content & Information',
+  'USD',
+  true
+),
+(
+  'AMZN',
+  'NASDAQ',
+  'Amazon.com, Inc.',
+  'Consumer Cyclical',
+  'Internet Retail',
+  'USD',
+  true
+),
+(
+  'META',
+  'NASDAQ',
+  'Meta Platforms, Inc.',
+  'Communication Services',
+  'Internet Content & Information',
+  'USD',
+  true
+),
+(
+  'TSLA',
+  'NASDAQ',
+  'Tesla, Inc.',
+  'Consumer Cyclical',
+  'Auto Manufacturers',
+  'USD',
+  true
+),
+(
+  'AMD',
+  'NASDAQ',
+  'Advanced Micro Devices, Inc.',
+  'Technology',
+  'Semiconductors',
+  'USD',
+  true
+),
+(
+  'IBM',
+  'NYSE',
+  'International Business Machines Corporation',
+  'Technology',
+  'Information Technology Services',
+  'USD',
+  true
+),
+(
+  'JPM',
+  'NYSE',
+  'JPMorgan Chase & Co.',
+  'Financial Services',
+  'Banks - Diversified',
+  'USD',
+  true
+),
+(
+  'BRK.B',
+  'NYSE',
+  'Berkshire Hathaway Inc.',
+  'Financial Services',
+  'Insurance - Diversified',
+  'USD',
+  true
 )
 on conflict (symbol) do update set
   exchange = excluded.exchange,

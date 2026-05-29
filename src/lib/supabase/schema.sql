@@ -144,6 +144,26 @@ create table if not exists public.earnings_quarterly (
 create index if not exists earnings_ticker_period_idx
   on public.earnings_quarterly (ticker_id, fiscal_year desc, fiscal_quarter desc);
 
+create table if not exists public.earnings_calendar (
+  id bigserial primary key,
+  symbol text not null,
+  report_date date not null,
+  hour text,
+  fiscal_year int,
+  fiscal_quarter int check (fiscal_quarter between 1 and 4),
+  eps_actual numeric,
+  eps_estimate numeric,
+  revenue_actual numeric,
+  revenue_estimate numeric,
+  source text,
+  source_updated_at timestamptz,
+  fetched_at timestamptz not null default now(),
+  unique (symbol, report_date)
+);
+
+create index if not exists earnings_calendar_report_date_idx
+  on public.earnings_calendar (report_date, symbol);
+
 create table if not exists public.fundamentals_snapshot (
   id bigserial primary key,
   ticker_id bigint not null references public.tickers(id) on delete cascade,

@@ -4,10 +4,12 @@ import type {
   AnalystRatingConsensus,
   ProviderAnalystPriceTargets,
   ProviderAnalystRatings,
+  ProviderEarningsCalendarItem,
   ProviderEarningsQuarterly,
   ProviderFundamentalsSnapshot,
   ProviderOhlcDaily,
   ProviderQuote,
+  ProviderTickerSearchResult,
 } from "@/lib/types";
 
 type FinnhubQuoteResponse = {
@@ -51,6 +53,20 @@ type FinnhubEarningsResponse = {
   year?: number;
 };
 
+type FinnhubEarningsCalendarResponse = {
+  earningsCalendar?: Array<{
+    date?: string;
+    epsActual?: number;
+    epsEstimate?: number;
+    hour?: string;
+    quarter?: number;
+    revenueActual?: number;
+    revenueEstimate?: number;
+    symbol?: string;
+    year?: number;
+  }>;
+};
+
 type FinnhubMetricResponse = {
   metric?: Record<string, number | null | undefined>;
 };
@@ -65,8 +81,46 @@ type FinnhubCandleResponse = {
   v?: number[];
 };
 
+type FinnhubSymbolSearchResponse = {
+  count?: number;
+  result?: Array<{
+    description?: string;
+    displaySymbol?: string;
+    symbol?: string;
+    type?: string;
+  }>;
+};
+
 const FINNHUB_BASE_URL = "https://finnhub.io/api/v1";
 const PROVIDER = "finnhub";
+
+export async function searchFinnhubSymbols(
+  query: string,
+  limit = 10
+): Promise<ProviderTickerSearchResult[]> {
+  const normalizedQuery = query.trim();
+
+  if (!normalizedQuery) {
+    return [];
+  }
+
+  const raw = await getFromFinnhub<FinnhubSymbolSearchResponse>("search", {
+    q: normalizedQuery,
+    exchange: "US",
+  });
+
+  return (raw.result ?? [])
+    .filter((item) => item.symbol && item.type !== "Crypto")
+    .slice(0, limit)
+    .map((item) => ({
+      symbol: item.symbol!.toUpperCase(),
+      displaySymbol: item.displaySymbol ?? item.symbol ?? null,
+      description: item.description ?? null,
+      type: item.type ?? null,
+      exchange: inferExchange(item.symbol),
+      source: PROVIDER,
+    }));
+}
 
 export async function getFinnhubQuote(symbol: string): Promise<ProviderQuote> {
   const normalizedSymbol = symbol.trim().toUpperCase();
@@ -187,6 +241,38 @@ export async function getFinnhubEarnings(
       sourceUpdatedAt: row.period ?? null,
     }))
     .slice(0, 8);
+}
+
+export async function getFinnhubEarningsCalendar(
+  date: string
+): Promise<ProviderEarningsCalendarItem[]> {
+  const normalizedDate = normalizeDateInput(date);
+  const raw = await getFromFinnhub<FinnhubEarningsCalendarResponse>(
+    "calendar/earnings",
+    {
+      from: normalizedDate,
+      to: normalizedDate,
+      international: "false",
+    }
+  );
+
+  const rows = raw.earningsCalendar ?? [];
+
+  return rows
+    .filter((row) => row.symbol && row.date)
+    .map((row) => ({
+      symbol: row.symbol!.trim().toUpperCase(),
+      reportDate: row.date!,
+      hour: row.hour ?? null,
+      fiscalYear: toIntOrNull(row.year),
+      fiscalQuarter: toQuarter(row.quarter),
+      epsActual: toNumber(row.epsActual),
+      epsEstimate: toNumber(row.epsEstimate),
+      revenueActual: toNumber(row.revenueActual),
+      revenueEstimate: toNumber(row.revenueEstimate),
+      source: PROVIDER,
+      sourceUpdatedAt: normalizedDate,
+    }));
 }
 
 export async function getFinnhubFundamentals(
@@ -346,6 +432,16 @@ function todayDate() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function normalizeDateInput(value: string) {
+  const parsed = toDateOnly(value);
+
+  if (!parsed) {
+    throw new Error("Date must use YYYY-MM-DD format");
+  }
+
+  return parsed;
+}
+
 function toDateOnly(value: string | null | undefined) {
   if (!value) {
     return null;
@@ -359,6 +455,18 @@ function toDateOnly(value: string | null | undefined) {
   return date.toISOString().slice(0, 10);
 }
 
+function toIntOrNull(value: number | null | undefined) {
+  const number = toNumber(value);
+
+  return number === null ? null : Math.trunc(number);
+}
+
+function toQuarter(value: number | null | undefined) {
+  const quarter = toIntOrNull(value);
+
+  return quarter && quarter >= 1 && quarter <= 4 ? quarter : null;
+}
+
 function normalizeMarketCap(value: number | null) {
   if (value === null) {
     return null;
@@ -367,11 +475,21 @@ function normalizeMarketCap(value: number | null) {
   return value < 1_000_000_000 ? value * 1_000_000 : value;
 }
 
+function inferExchange(symbol: string | undefined) {
+  if (!symbol) {
+    return "US";
+  }
+
+  return symbol.includes(".") ? "US" : "US";
+}
+
 export const finnhubProvider = {
+  searchSymbols: searchFinnhubSymbols,
   getQuote: getFinnhubQuote,
   getAnalystRatings: getFinnhubAnalystRatings,
   getPriceTargets: getFinnhubPriceTargets,
   getEarnings: getFinnhubEarnings,
+  getEarningsCalendar: getFinnhubEarningsCalendar,
   getFundamentals: getFinnhubFundamentals,
   getDailyOhlc: getFinnhubDailyOhlc,
 };

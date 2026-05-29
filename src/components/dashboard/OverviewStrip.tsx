@@ -12,7 +12,11 @@ type Props = {
 
 export function OverviewStrip({ data }: Props) {
   const quote = data.quote;
+  const hasDayChange = quote?.change !== null && quote?.change !== undefined;
   const positive = (quote?.change ?? 0) >= 0;
+  const dayChange = hasDayChange
+    ? `${positive ? "+" : ""}${formatCurrency(quote?.change)} (${positive ? "+" : ""}${formatPercent(quote?.changePercent)})`
+    : "-";
 
   return (
     <section className="border-b app-surface">
@@ -49,7 +53,7 @@ export function OverviewStrip({ data }: Props) {
           <Metric label="Last price" value={formatCurrency(quote?.price)} />
           <Metric
             label="Day change"
-            value={`${positive ? "+" : ""}${formatCurrency(quote?.change)} (${positive ? "+" : ""}${formatPercent(quote?.changePercent)})`}
+            value={dayChange}
             tone={positive ? "positive" : "negative"}
           />
           <Metric label="Open" value={formatCurrency(quote?.open)} />

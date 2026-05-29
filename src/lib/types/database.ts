@@ -153,6 +153,54 @@ export type Database = {
         };
         Relationships: [];
       };
+      earnings_calendar: {
+        Row: {
+          id: number;
+          symbol: string;
+          report_date: string;
+          hour: string | null;
+          fiscal_year: number | null;
+          fiscal_quarter: number | null;
+          eps_actual: number | null;
+          eps_estimate: number | null;
+          revenue_actual: number | null;
+          revenue_estimate: number | null;
+          source: string | null;
+          source_updated_at: string | null;
+          fetched_at: string;
+        };
+        Insert: {
+          id?: number;
+          symbol: string;
+          report_date: string;
+          hour?: string | null;
+          fiscal_year?: number | null;
+          fiscal_quarter?: number | null;
+          eps_actual?: number | null;
+          eps_estimate?: number | null;
+          revenue_actual?: number | null;
+          revenue_estimate?: number | null;
+          source?: string | null;
+          source_updated_at?: string | null;
+          fetched_at?: string;
+        };
+        Update: {
+          id?: number;
+          symbol?: string;
+          report_date?: string;
+          hour?: string | null;
+          fiscal_year?: number | null;
+          fiscal_quarter?: number | null;
+          eps_actual?: number | null;
+          eps_estimate?: number | null;
+          revenue_actual?: number | null;
+          revenue_estimate?: number | null;
+          source?: string | null;
+          source_updated_at?: string | null;
+          fetched_at?: string;
+        };
+        Relationships: [];
+      };
       fundamentals_snapshot: {
         Row: {
           id: number;

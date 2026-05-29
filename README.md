@@ -1,6 +1,6 @@
 # Financial Dashboard
 
-Next.js, Supabase, and Vercel stock research dashboard with watchlists, analyst data, earnings, fundamentals, OHLC cache refresh, and user portfolio tracking.
+Next.js, Supabase, and Vercel stock research dashboard with watchlists, analyst data, daily earnings calendar, quarterly earnings, fundamentals, OHLC cache refresh, and user portfolio tracking.
 
 ## Local Setup
 
@@ -46,18 +46,24 @@ For an existing database that only needs the portfolio module, run:
 src/lib/supabase/portfolio.sql
 ```
 
+For an existing database that only needs the daily earnings calendar module, run:
+
+```txt
+src/lib/supabase/earnings_calendar.sql
+```
+
 ## Main Routes
 
 - `/dashboard?symbol=AAPL`
+- `/earnings`
 - `/portfolio`
 - `/login`
+- `/api/earnings/calendar?date=2026-05-28`
 - `/api/admin/refresh/[symbol]`
 - `/api/cron/refresh`
 
-Admin users see dashboard refresh controls:
-
-- `Quick` refreshes quote and OHLC chart data.
-- `Full` refreshes quote, analyst ratings, price targets, earnings, fundamentals, and OHLC.
+The dashboard ticker `Load` action searches/caches the symbol and refreshes quote, analyst ratings, price targets, earnings, fundamentals, and OHLC before opening the dashboard.
+The earnings page reads the Supabase earnings calendar cache first and refreshes the selected date from Finnhub when no rows are cached or when `refresh=1` is requested.
 
 ## Verification
 

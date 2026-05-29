@@ -19,7 +19,7 @@ export async function Watchlist({ currentSymbol }: Props) {
   const containsCurrent = items.some((item) => item.ticker.symbol === currentSymbol);
 
   return (
-    <aside className="min-w-0 self-start rounded-lg border app-surface p-5 lg:sticky lg:top-4">
+    <section className="min-w-0 rounded-lg border app-surface p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-base font-semibold app-heading">Watchlist</h2>
@@ -83,6 +83,6 @@ export async function Watchlist({ currentSymbol }: Props) {
           </div>
         ))}
       </div>
-    </aside>
+    </section>
   );
 }

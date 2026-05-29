@@ -7,6 +7,7 @@ alter table public.quotes_latest enable row level security;
 alter table public.analyst_ratings_snapshot enable row level security;
 alter table public.analyst_price_targets_snapshot enable row level security;
 alter table public.earnings_quarterly enable row level security;
+alter table public.earnings_calendar enable row level security;
 alter table public.fundamentals_snapshot enable row level security;
 alter table public.ohlc_daily enable row level security;
 alter table public.provider_fetch_log enable row level security;
@@ -29,6 +30,7 @@ drop policy if exists "Public can read latest quotes" on public.quotes_latest;
 drop policy if exists "Public can read analyst ratings" on public.analyst_ratings_snapshot;
 drop policy if exists "Public can read analyst price targets" on public.analyst_price_targets_snapshot;
 drop policy if exists "Public can read earnings" on public.earnings_quarterly;
+drop policy if exists "Public can read earnings calendar" on public.earnings_calendar;
 drop policy if exists "Public can read fundamentals" on public.fundamentals_snapshot;
 drop policy if exists "Public can read daily ohlc" on public.ohlc_daily;
 drop policy if exists "Admins can read provider logs" on public.provider_fetch_log;
@@ -147,6 +149,12 @@ using (true);
 
 create policy "Public can read earnings"
 on public.earnings_quarterly
+for select
+to anon, authenticated
+using (true);
+
+create policy "Public can read earnings calendar"
+on public.earnings_calendar
 for select
 to anon, authenticated
 using (true);

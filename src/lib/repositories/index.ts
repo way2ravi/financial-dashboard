@@ -1,4 +1,5 @@
 export * from "./dashboardRepository";
+export * from "./earningsCalendarRepository";
 export * from "./marketDataWriteRepository";
 export * from "./portfolioRepository";
 export * from "./providerLogRepository";

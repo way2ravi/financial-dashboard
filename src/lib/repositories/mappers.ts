@@ -2,6 +2,7 @@ import type { Database } from "@/lib/types/database";
 import type {
   AnalystPriceTargetsSnapshot,
   AnalystRatingsSnapshot,
+  EarningsCalendarItem,
   EarningsQuarterly,
   FundamentalsSnapshot,
   OhlcDaily,
@@ -94,6 +95,26 @@ export function mapEarnings(row: Tables["earnings_quarterly"]["Row"]): EarningsQ
     epsEstimate: row.eps_estimate,
     epsSurprise: row.eps_surprise,
     epsSurprisePercent: row.eps_surprise_percent,
+    revenueActual: row.revenue_actual,
+    revenueEstimate: row.revenue_estimate,
+    source: row.source,
+    sourceUpdatedAt: row.source_updated_at,
+    fetchedAt: row.fetched_at,
+  };
+}
+
+export function mapEarningsCalendarItem(
+  row: Tables["earnings_calendar"]["Row"]
+): EarningsCalendarItem {
+  return {
+    id: row.id,
+    symbol: row.symbol,
+    reportDate: row.report_date,
+    hour: row.hour,
+    fiscalYear: row.fiscal_year,
+    fiscalQuarter: row.fiscal_quarter,
+    epsActual: row.eps_actual,
+    epsEstimate: row.eps_estimate,
     revenueActual: row.revenue_actual,
     revenueEstimate: row.revenue_estimate,
     source: row.source,

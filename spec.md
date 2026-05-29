@@ -11,6 +11,7 @@ The dashboard should support:
 - User portfolios
 - Buy/sell transaction tracking
 - Portfolio holdings and performance summaries
+- Daily earnings calendar by selected date
 - Latest quote overview
 - Analyst ratings
 - Analyst price targets
@@ -58,7 +59,11 @@ External market data APIs
 src/
   app/
     api/
+      earnings/
+        calendar/
+          route.ts
     dashboard/
+    earnings/
     layout.tsx
     page.tsx
 
@@ -83,6 +88,17 @@ src/
       index.ts
       market.ts
 ```
+
+## Daily Earnings Calendar
+
+The daily earnings module is separate from per-ticker quarterly earnings.
+
+- Page: `/earnings`
+- API: `/api/earnings/calendar?date=YYYY-MM-DD`
+- Cache table: `earnings_calendar`
+- Provider: Finnhub `calendar/earnings`
+
+The page reads cached rows first. If the selected date has no cached rows, it refreshes the date through the server-only provider layer and stores the normalized rows in Supabase. Users can also force a refresh from the page.
 
 ## Layer Responsibilities
 
@@ -227,6 +243,7 @@ Start with a small API surface.
 ```txt
 GET /api/tickers/search?query=AAPL
 GET /api/tickers/[symbol]/dashboard
+POST /api/tickers/[symbol]/load
 GET /api/watchlist
 POST /api/watchlist
 DELETE /api/watchlist
@@ -284,6 +301,32 @@ Render dashboard shell
 ```
 
 After this works, add provider refresh.
+
+## Ticker Search
+
+Ticker search is cache-first and provider-backed:
+
+```txt
+GET /api/tickers/search?query=nvda
+  v
+Search public.tickers
+  v
+If no local matches, call Finnhub /search?q=<query>&exchange=US
+  v
+Cache discovered symbols in public.tickers
+  v
+Return normalized ticker rows to the autocomplete
+```
+
+The search route uses the server-only Supabase admin client so provider-discovered symbols can be cached without granting browser users direct write access to `tickers`.
+
+The dashboard `Load` action navigates to:
+
+```txt
+/dashboard?symbol=<symbol>&autoload=1
+```
+
+The server page searches/caches the ticker, refreshes all market-data modules through the server-only provider path, then renders the populated dashboard. The API endpoint `POST /api/tickers/[symbol]/load` remains available for programmatic refresh.
 
 ## Refresh Flow
 
@@ -394,10 +437,7 @@ The dashboard and portfolio pages share common shell controls:
 - Compact signed-in user pill with sign-out action
 - Source and last-updated freshness chips on market-data panels
 
-Admin users see two refresh actions on the dashboard:
-
-- `Quick`: quote and OHLC chart data
-- `Full`: quote, analyst ratings, price targets, earnings, fundamentals, and OHLC
+The primary dashboard refresh action is the ticker `Load` button. It fetches quote, analyst ratings, price targets, earnings, fundamentals, and OHLC for the requested symbol before navigation.
 
 ## External Providers
 

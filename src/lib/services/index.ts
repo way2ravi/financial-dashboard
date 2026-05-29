@@ -1,5 +1,6 @@
 export * from "./dashboardService";
 export * from "./cronAuth";
+export * from "./earningsCalendarService";
 export * from "./errors";
 export * from "./portfolioService";
 export * from "./refreshService";

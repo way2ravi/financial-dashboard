@@ -1,11 +1,12 @@
 import Link from "next/link";
 
 type Props = {
-  current: "dashboard" | "portfolio";
+  current: "dashboard" | "earnings" | "portfolio";
 };
 
 const links = [
   { key: "dashboard", label: "Dashboard", href: "/dashboard" },
+  { key: "earnings", label: "Earnings", href: "/earnings" },
   { key: "portfolio", label: "Portfolio", href: "/portfolio" },
 ] as const;
 
