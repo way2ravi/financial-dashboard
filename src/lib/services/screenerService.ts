@@ -83,7 +83,7 @@ function getCachedStockScreener(items: ScreenerResult[]): ScreenerCategoryResult
     createCategory(
       "overvalued",
       items
-        .filter((item) => item.price !== null && item.pe !== null)
+        .filter((item) => item.price !== null && item.pe !== null && item.pe > 0)
         .sort((a, b) => (b.pe ?? 0) - (a.pe ?? 0))
         .slice(0, 20)
     ),

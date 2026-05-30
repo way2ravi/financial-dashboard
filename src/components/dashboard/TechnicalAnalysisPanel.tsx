@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { OhlcDaily } from "@/lib/types";
+import { wilderRsi } from "@/lib/technical/indicators";
 import { DataFreshness, latestFreshness } from "./DataFreshness";
 import { formatCurrency, formatNumber, formatPercent } from "./format";
 import { SupportResistancePanel } from "./SupportResistancePanel";
@@ -691,7 +692,7 @@ function buildTechnicalAnalysis(candles: Candle[]) {
   const sma50 = sma(closes, 50);
   const sma200 = sma(closes, 200);
   const ema20 = latestEma(closes, 20);
-  const rsi = latestRsi(closes, 14);
+  const rsi = wilderRsi(closes, 14);
   const macd = calculateMacd(closes);
   const bollinger = calculateBollinger(closes, 20);
   const volumeSignal = calculateVolumeSignal(candles);
@@ -1134,27 +1135,6 @@ function emaSeries(values: number[], period: number) {
   });
 
   return series;
-}
-
-function latestRsi(values: number[], period: number) {
-  if (values.length <= period) return null;
-
-  let gains = 0;
-  let losses = 0;
-
-  for (let index = values.length - period; index < values.length; index += 1) {
-    const change = values[index] - values[index - 1];
-    if (change >= 0) gains += change;
-    else losses += Math.abs(change);
-  }
-
-  const averageGain = gains / period;
-  const averageLoss = losses / period;
-
-  if (averageLoss === 0) return 100;
-
-  const relativeStrength = averageGain / averageLoss;
-  return 100 - 100 / (1 + relativeStrength);
 }
 
 function calculateMacd(values: number[]) {

@@ -147,11 +147,9 @@ async function buildPortfolioSummary(
   const transactions = await getPortfolioTransactions(supabase, userId, portfolio.id);
   const tickerIds = [...new Set(transactions.map((item) => item.ticker.id))];
   const quotes = await getLatestQuotesByTickerId(supabase, tickerIds);
-  const holdingsWithoutAllocation = buildHoldings(transactions, quotes);
-  const marketValue = sum(
-    holdingsWithoutAllocation.map((holding) => holding.marketValue ?? 0)
-  );
-  const holdings = holdingsWithoutAllocation.map((holding) => ({
+  const { openHoldings, totalRealizedGain } = buildHoldings(transactions, quotes);
+  const marketValue = sum(openHoldings.map((holding) => holding.marketValue ?? 0));
+  const holdings = openHoldings.map((holding) => ({
     ...holding,
     allocationPercent:
       holding.marketValue === null || marketValue === 0
@@ -159,7 +157,7 @@ async function buildPortfolioSummary(
         : (holding.marketValue / marketValue) * 100,
   }));
   const unrealizedGain = sum(holdings.map((holding) => holding.unrealizedGain ?? 0));
-  const realizedGain = sum(holdings.map((holding) => holding.realizedGain));
+  const realizedGain = totalRealizedGain;
   const investedCapital = sum(
     transactions
       .filter((transaction) => transaction.transactionType === "buy")
@@ -171,7 +169,6 @@ async function buildPortfolioSummary(
       .map((transaction) => transaction.quantity * transaction.price - transaction.fees)
   );
   const totalGain = realizedGain + unrealizedGain;
-  const openCostBasis = sum(holdings.map((holding) => holding.costBasis));
 
   return {
     portfolio,
@@ -181,7 +178,8 @@ async function buildPortfolioSummary(
     realizedGain,
     unrealizedGain,
     totalGain,
-    totalGainPercent: openCostBasis > 0 ? (totalGain / openCostBasis) * 100 : null,
+    totalGainPercent:
+      investedCapital > 0 ? (totalGain / investedCapital) * 100 : null,
     closedPositions: getClosedPositionCount(transactions, holdings),
     openPositions: holdings.length,
     tradeCount: transactions.length,
@@ -193,7 +191,7 @@ async function buildPortfolioSummary(
 function buildHoldings(
   transactions: PortfolioTransaction[],
   quotes: Awaited<ReturnType<typeof getLatestQuotesByTickerId>>
-): PortfolioHolding[] {
+): { openHoldings: PortfolioHolding[]; totalRealizedGain: number } {
   const byTicker = new Map<
     number,
     {
@@ -234,7 +232,9 @@ function buildHoldings(
       byTicker.set(transaction.ticker.id, existing);
     });
 
-  return [...byTicker.values()]
+  const totalRealizedGain = sum([...byTicker.values()].map((holding) => holding.realizedGain));
+
+  const openHoldings = [...byTicker.values()]
     .filter((holding) => holding.quantity > 0.000001)
     .map((holding) => {
       const marketPrice = quotes.get(holding.ticker.id)?.price ?? null;
@@ -258,6 +258,8 @@ function buildHoldings(
         realizedGain: holding.realizedGain,
       };
     });
+
+  return { openHoldings, totalRealizedGain };
 }
 
 function sum(values: number[]) {

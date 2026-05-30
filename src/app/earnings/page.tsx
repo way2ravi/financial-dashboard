@@ -642,20 +642,20 @@ function scoreEarningsSignal(item: Omit<EarningsCalendarRow, "signal">): Earning
     }
   }
 
-  const reaction = item.quote?.changePercent ?? null;
-  if (reaction !== null) {
-    if (reaction >= 5) {
-      score += 2;
-      reasons.push(`Price up ${formatPercent(reaction, 1)}`);
-    } else if (reaction > 0) {
+  const dailyChange = item.quote?.changePercent ?? null;
+  if (dailyChange !== null) {
+    if (dailyChange >= 5) {
       score += 1;
-      reasons.push(`Price up ${formatPercent(reaction, 1)}`);
-    } else if (reaction <= -5) {
-      score -= 2;
-      reasons.push(`Price down ${formatPercent(reaction, 1)}`);
-    } else if (reaction < 0) {
+      reasons.push(`Latest daily move ${formatPercent(dailyChange, 1)} (not necessarily post-earnings)`);
+    } else if (dailyChange > 0) {
+      score += 1;
+      reasons.push(`Latest daily move ${formatPercent(dailyChange, 1)}`);
+    } else if (dailyChange <= -5) {
       score -= 1;
-      reasons.push(`Price down ${formatPercent(reaction, 1)}`);
+      reasons.push(`Latest daily move ${formatPercent(dailyChange, 1)} (not necessarily post-earnings)`);
+    } else if (dailyChange < 0) {
+      score -= 1;
+      reasons.push(`Latest daily move ${formatPercent(dailyChange, 1)}`);
     }
   }
 

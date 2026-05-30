@@ -203,24 +203,27 @@ function buildWealthDashboard(
       monthlyDebtPayments,
       highInterestDebt,
       liabilities,
-    }),
+    }, settings?.baseCurrency ?? "USD"),
   };
 
   return metrics;
 }
 
-function buildWealthAdvice(input: {
-  settings: WealthUserSettings | null;
-  totalAssets: number;
-  totalLiabilities: number;
-  netWorth: number;
-  liquidAssets: number;
-  fixedAssets: number;
-  investments: number;
-  monthlyDebtPayments: number;
-  highInterestDebt: number;
-  liabilities: WealthItem[];
-}): WealthAdviceItem[] {
+function buildWealthAdvice(
+  input: {
+    settings: WealthUserSettings | null;
+    totalAssets: number;
+    totalLiabilities: number;
+    netWorth: number;
+    liquidAssets: number;
+    fixedAssets: number;
+    investments: number;
+    monthlyDebtPayments: number;
+    highInterestDebt: number;
+    liabilities: WealthItem[];
+  },
+  currency: string
+): WealthAdviceItem[] {
   const advice: WealthAdviceItem[] = [];
 
   if (input.totalAssets === 0 && input.totalLiabilities === 0) {
@@ -247,17 +250,18 @@ function buildWealthAdvice(input: {
   }
 
   const debtRatio =
-    input.totalAssets > 0 ? (input.totalLiabilities / input.totalAssets) * 100 : 100;
+    input.totalAssets > 0 ? (input.totalLiabilities / input.totalAssets) * 100 : null;
 
-  if (debtRatio >= 50) {
+  if (debtRatio !== null && debtRatio >= 50) {
     advice.push({
       id: "high-debt-ratio",
       priority: "high",
       title: "Debt load is elevated",
       summary: `Debt is about ${debtRatio.toFixed(0)}% of total assets. Lowering this ratio improves resilience.`,
-      action: "Target extra payments on the smallest high-interest balance (debt snowball) or highest rate (avalanche).",
+      action:
+        "Use the debt avalanche method (highest APR first) or snowball method (smallest balance first) for extra payments.",
     });
-  } else if (debtRatio >= 30) {
+  } else if (debtRatio !== null && debtRatio >= 30) {
     advice.push({
       id: "moderate-debt-ratio",
       priority: "medium",
@@ -272,7 +276,7 @@ function buildWealthAdvice(input: {
       id: "high-interest-debt",
       priority: "high",
       title: "High-interest debt detected",
-      summary: `${formatCompact(input.highInterestDebt)} is in liabilities at 8%+ APR (cards, overdrafts, personal loans).`,
+      summary: `${formatCompact(input.highInterestDebt, currency)} is in liabilities at 8%+ APR (cards, overdrafts, personal loans).`,
       action: "Prioritize paying these balances before adding to investments.",
     });
   }
@@ -291,7 +295,11 @@ function buildWealthAdvice(input: {
       summary: `Liquid assets cover about ${monthsCovered.toFixed(1)} months of estimated expenses (target: 3–6 months).`,
       action: "Increase cash or savings until you reach your 6-month reserve target.",
     });
-  } else if (input.totalAssets > 0 && input.liquidAssets / input.totalAssets < 0.1) {
+  } else if (
+    input.totalAssets > 0 &&
+    input.liquidAssets / input.totalAssets < 0.1 &&
+    !(emergencyTarget && monthlyExpenses && input.liquidAssets < emergencyTarget)
+  ) {
     advice.push({
       id: "low-liquidity",
       priority: "medium",
@@ -323,6 +331,7 @@ function buildWealthAdvice(input: {
 
   if (
     input.netWorth > 0 &&
+    debtRatio !== null &&
     debtRatio < 25 &&
     input.liquidAssets > 0 &&
     (!emergencyTarget || input.liquidAssets >= emergencyTarget)
@@ -360,7 +369,15 @@ function buildWealthAdvice(input: {
     });
   }
 
-  return advice.slice(0, 6);
+  const priorityRank: Record<WealthAdviceItem["priority"], number> = {
+    high: 0,
+    medium: 1,
+    low: 2,
+  };
+
+  return advice
+    .sort((left, right) => priorityRank[left.priority] - priorityRank[right.priority])
+    .slice(0, 6);
 }
 
 function groupLiabilityTotals(liabilities: WealthItem[]) {
@@ -488,10 +505,10 @@ function normalizeOptionalAmount(value: number | null | undefined) {
   return value;
 }
 
-function formatCompact(value: number) {
+function formatCompact(value: number, currency: string) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "USD",
+    currency: currency || "USD",
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(value);

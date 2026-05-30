@@ -745,7 +745,10 @@ function getVolumePressure(candle: Candle, volumeRatio: number | null) {
 
   if (isBuy) {
     return {
-      label: volumeRatio !== null && volumeRatio >= 1.5 && imbalance >= 15 ? "Strong Buy" : "Buy",
+      label:
+        volumeRatio !== null && volumeRatio >= 1.5 && imbalance >= 15
+          ? "Strong buy pressure"
+          : "Buy pressure",
       buyPercent,
       buyVolume,
       movePercent,
@@ -758,7 +761,10 @@ function getVolumePressure(candle: Candle, volumeRatio: number | null) {
 
   if (isSell) {
     return {
-      label: volumeRatio !== null && volumeRatio >= 1.5 && imbalance >= 15 ? "Strong Sell" : "Sell",
+      label:
+        volumeRatio !== null && volumeRatio >= 1.5 && imbalance >= 15
+          ? "Strong sell pressure"
+          : "Sell pressure",
       buyPercent,
       buyVolume,
       movePercent,

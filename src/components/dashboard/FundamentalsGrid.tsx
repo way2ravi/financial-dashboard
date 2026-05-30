@@ -1,4 +1,5 @@
 import type { FundamentalsSnapshot } from "@/lib/types";
+import { asPercent } from "@/lib/financial/metrics";
 import { DataFreshness } from "./DataFreshness";
 import { formatCurrency, formatNumber, formatPercent } from "./format";
 
@@ -9,13 +10,14 @@ type Props = {
 
 export function FundamentalsGrid({ fundamentals, showDataSource = false }: Props) {
   const peAnalysis = analyzePeRatio(fundamentals);
+  const roe = asPercent(fundamentals?.roe);
   const metrics = [
     metric("Market cap", formatCurrency(fundamentals?.marketCap, true), "neutral", null),
     metric("P/E", formatNumber(fundamentals?.pe), peTone(fundamentals?.pe), scoreRange(fundamentals?.pe, 0, 40, true)),
     metric("Forward P/E", formatNumber(fundamentals?.forwardPe), peTone(fundamentals?.forwardPe), scoreRange(fundamentals?.forwardPe, 0, 40, true)),
     metric("PEG", formatNumber(fundamentals?.peg), pegTone(fundamentals?.peg), scoreRange(fundamentals?.peg, 0, 3, true)),
     metric("P/B", formatNumber(fundamentals?.pb), "neutral", scoreRange(fundamentals?.pb, 0, 10, true)),
-    metric("ROE", formatPercent(fundamentals?.roe), roeTone(fundamentals?.roe), scoreRange(fundamentals?.roe, 0, 30, false)),
+    metric("ROE", formatPercent(roe), roeTone(roe), scoreRange(roe, 0, 30, false)),
     metric("Debt / Equity", formatNumber(fundamentals?.debtToEquity), debtTone(fundamentals?.debtToEquity), scoreRange(fundamentals?.debtToEquity, 0, 3, true)),
     metric("Dividend yield", formatPercent(fundamentals?.dividendYield), "neutral", scoreRange(fundamentals?.dividendYield, 0, 5, false)),
   ];
@@ -147,7 +149,7 @@ function analyzePeRatio(fundamentals: FundamentalsSnapshot | null) {
   const pe = fundamentals?.pe ?? null;
   const forwardPe = fundamentals?.forwardPe ?? null;
   const peg = fundamentals?.peg ?? null;
-  const roe = fundamentals?.roe ?? null;
+  const roe = asPercent(fundamentals?.roe ?? null);
   const debtToEquity = fundamentals?.debtToEquity ?? null;
   const points: string[] = [];
   let cheapEvidence = 0;

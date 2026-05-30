@@ -1,4 +1,6 @@
 import type { DashboardData, OhlcDaily } from "@/lib/types";
+import { asPercent, epsSurprisePercent, surprisePercent } from "@/lib/financial/metrics";
+import { simpleMovingAverage, wilderRsi } from "@/lib/technical/indicators";
 import { formatCurrency, formatNumber, formatPercent } from "./format";
 
 type SignalTone = "positive" | "negative" | "neutral";
@@ -48,6 +50,9 @@ export function SummaryPanel({ data }: Props) {
         <div className="rounded-lg border app-surface p-4 shadow-sm">
           <h2 className="text-sm font-semibold app-heading">Plain English Summary</h2>
           <p className="mt-2 text-sm leading-6 app-heading">{decision.narrative}</p>
+          <p className="mt-2 text-[11px] leading-5 app-muted">
+            Screening summary only — not investment advice. Verify with your own research and risk limits.
+          </p>
           <div className="mt-3 grid gap-2 md:grid-cols-2">
             {signals.map((signal) => (
               <SignalCard key={signal.label} signal={signal} />
@@ -169,10 +174,15 @@ function buildEarningsSignal(data: DashboardData): Signal {
   }
 
   let score = 0;
-  const revenueSurprise = getRevenueSurprisePercent(latest.revenueActual, latest.revenueEstimate);
+  const epsSurprise = epsSurprisePercent({
+    epsActual: latest.epsActual,
+    epsEstimate: latest.epsEstimate,
+    epsSurprisePercent: latest.epsSurprisePercent,
+  });
+  const revenueSurprise = surprisePercent(latest.revenueActual, latest.revenueEstimate);
 
-  if ((latest.epsSurprisePercent ?? latest.epsSurprise ?? 0) > 0) score += 1;
-  if ((latest.epsSurprisePercent ?? latest.epsSurprise ?? 0) < 0) score -= 1;
+  if (epsSurprise !== null && epsSurprise > 0) score += 1;
+  if (epsSurprise !== null && epsSurprise < 0) score -= 1;
   if (revenueSurprise !== null && revenueSurprise > 0) score += 1;
   if (revenueSurprise !== null && revenueSurprise < 0) score -= 1;
 
@@ -181,7 +191,7 @@ function buildEarningsSignal(data: DashboardData): Signal {
     score,
     tone: toTone(score),
     verdict: score > 0 ? "Beat" : score < 0 ? "Miss" : "Mixed",
-    detail: `Latest quarter: EPS surprise ${formatPercent(latest.epsSurprisePercent ?? latest.epsSurprise)}, revenue surprise ${formatPercent(revenueSurprise)}.`,
+    detail: `Latest quarter: EPS surprise ${formatPercent(epsSurprise)}, revenue surprise ${formatPercent(revenueSurprise)}.`,
   };
 }
 
@@ -199,12 +209,14 @@ function buildFundamentalSignal(data: DashboardData): Signal {
   }
 
   let score = 0;
+  const roe = asPercent(f.roe);
 
   if (f.pe !== null && f.pe > 0 && f.pe <= 20) score += 1;
   if (f.pe !== null && f.pe > 35) score -= 1;
   if (f.peg !== null && f.peg > 0 && f.peg <= 1.5) score += 1;
   if (f.peg !== null && f.peg >= 2.5) score -= 1;
-  if (f.roe !== null && f.roe >= 15) score += 1;
+  if (roe !== null && roe >= 15) score += 1;
+  if (roe !== null && roe < 5) score -= 1;
   if (f.debtToEquity !== null && f.debtToEquity > 2) score -= 1;
 
   return {
@@ -212,7 +224,7 @@ function buildFundamentalSignal(data: DashboardData): Signal {
     score,
     tone: toTone(score),
     verdict: score > 0 ? "Healthy" : score < 0 ? "Stretched" : "Mixed",
-    detail: `P/E ${formatNumber(f.pe)}, PEG ${formatNumber(f.peg)}, ROE ${formatPercent(f.roe)}, debt/equity ${formatNumber(f.debtToEquity)}.`,
+    detail: `P/E ${formatNumber(f.pe)}, PEG ${formatNumber(f.peg)}, ROE ${formatPercent(roe)}, debt/equity ${formatNumber(f.debtToEquity)}.`,
   };
 }
 
@@ -232,15 +244,21 @@ function buildTechnicalSignal(ohlc: OhlcDaily[]): Signal {
   }
 
   const close = closes.at(-1)!;
-  const sma20 = average(closes.slice(-20));
-  const sma50 = closes.length >= 50 ? average(closes.slice(-50)) : null;
-  const rsi = latestRsi(closes, 14);
+  const sma20 = simpleMovingAverage(closes, 20);
+  const sma50 = simpleMovingAverage(closes, 50);
+  const rsi = wilderRsi(closes, 14);
   let score = 0;
 
-  if (close > sma20) score += 1;
-  else score -= 1;
-  if (sma50 !== null && close > sma50) score += 1;
-  if (sma50 !== null && close < sma50) score -= 1;
+  if (sma20 !== null) {
+    if (close > sma20) score += 1;
+    else score -= 1;
+  }
+
+  if (sma50 !== null) {
+    if (close > sma50) score += 1;
+    else score -= 1;
+  }
+
   if (rsi !== null && rsi < 30) score += 1;
   if (rsi !== null && rsi > 70) score -= 1;
 
@@ -328,38 +346,6 @@ function getToneClass(tone: SignalTone) {
   if (tone === "positive") return "app-positive";
   if (tone === "negative") return "app-negative";
   return "app-heading";
-}
-
-function getRevenueSurprisePercent(actual: number | null, estimate: number | null) {
-  if (actual === null || estimate === null || estimate === 0) {
-    return null;
-  }
-
-  return ((actual - estimate) / Math.abs(estimate)) * 100;
-}
-
-function average(values: number[]) {
-  return values.reduce((sum, value) => sum + value, 0) / values.length;
-}
-
-function latestRsi(values: number[], period: number) {
-  if (values.length <= period) return null;
-
-  let gains = 0;
-  let losses = 0;
-
-  for (let index = values.length - period; index < values.length; index += 1) {
-    const change = values[index] - values[index - 1];
-    if (change >= 0) gains += change;
-    else losses += Math.abs(change);
-  }
-
-  const averageGain = gains / period;
-  const averageLoss = losses / period;
-
-  if (averageLoss === 0) return 100;
-
-  return 100 - 100 / (1 + averageGain / averageLoss);
 }
 
 function formatSignedScore(value: number) {

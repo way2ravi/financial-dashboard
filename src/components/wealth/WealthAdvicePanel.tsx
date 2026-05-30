@@ -21,7 +21,8 @@ export function WealthAdvicePanel({ advice }: Props) {
     <section className="rounded-lg border app-surface p-4 shadow-sm">
       <h2 className="text-sm font-semibold app-heading">Personalized guidance</h2>
       <p className="mt-1 text-xs app-muted">
-        Rule-based recommendations from your balances, debt mix, and liquidity. Not financial advice.
+        Rule-based suggestions from your balances, debt mix, and liquidity. Educational only — not
+        financial, tax, or legal advice.
       </p>
 
       {advice.length === 0 ? (
