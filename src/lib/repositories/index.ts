@@ -7,3 +7,4 @@ export * from "./quoteRepository";
 export * from "./screenerRepository";
 export * from "./tickerRepository";
 export * from "./watchlistRepository";
+export * from "./wealthRepository";

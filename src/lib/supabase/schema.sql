@@ -70,6 +70,50 @@ create index if not exists portfolio_transactions_portfolio_id_idx
 create index if not exists portfolio_transactions_user_id_idx
   on public.portfolio_transactions (user_id);
 
+create table if not exists public.wealth_user_settings (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  base_currency text not null default 'USD',
+  monthly_expenses_estimate numeric check (monthly_expenses_estimate is null or monthly_expenses_estimate >= 0),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.wealth_items (
+  id bigserial primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  record_type text not null check (record_type in ('asset', 'liability')),
+  category text not null check (
+    category in (
+      'liquid',
+      'fixed',
+      'investment',
+      'loan',
+      'overdraft',
+      'credit_card',
+      'other_debt'
+    )
+  ),
+  subcategory text not null,
+  name text not null,
+  current_value numeric not null check (current_value > 0),
+  interest_rate numeric check (interest_rate is null or interest_rate >= 0),
+  monthly_payment numeric check (monthly_payment is null or monthly_payment >= 0),
+  as_of_date date not null default current_date,
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  check (
+    (record_type = 'asset' and category in ('liquid', 'fixed', 'investment'))
+    or (
+      record_type = 'liability'
+      and category in ('loan', 'overdraft', 'credit_card', 'other_debt')
+    )
+  )
+);
+
+create index if not exists wealth_items_user_id_idx
+  on public.wealth_items (user_id, record_type, category);
+
 create table if not exists public.quotes_latest (
   ticker_id bigint primary key references public.tickers(id) on delete cascade,
   price numeric,

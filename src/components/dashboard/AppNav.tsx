@@ -1,13 +1,21 @@
 import Link from "next/link";
 
 type Props = {
-  current: "dashboard" | "earnings" | "market" | "portfolio" | "screener" | "watchlist";
+  current:
+    | "dashboard"
+    | "earnings"
+    | "market"
+    | "portfolio"
+    | "screener"
+    | "watchlist"
+    | "wealth";
 };
 
 const links = [
   { key: "dashboard", label: "Dashboard", href: "/dashboard" },
   { key: "market", label: "Market", href: "/market" },
   { key: "watchlist", label: "Watchlist", href: "/watchlist" },
+  { key: "wealth", label: "Wealth", href: "/wealth" },
   { key: "earnings", label: "Earnings", href: "/earnings" },
   { key: "screener", label: "Screener", href: "/screener" },
   { key: "portfolio", label: "Portfolio", href: "/portfolio" },

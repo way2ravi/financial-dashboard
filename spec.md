@@ -11,6 +11,9 @@ The dashboard should support:
 - User portfolios
 - Buy/sell transaction tracking
 - Portfolio holdings and performance summaries
+- Net worth and wealth manager for user-entered assets and liabilities
+- Liquid assets, fixed assets, investments, loans, overdrafts, and other debt
+- Net worth dashboard with allocation charts and rule-based financial guidance
 - Daily earnings calendar by selected date
 - Latest quote overview
 - Analyst ratings
@@ -70,6 +73,9 @@ src/
     portfolio/
     screener/
     watchlist/
+    wealth/
+      page.tsx
+      actions.ts
     layout.tsx
     page.tsx
 
@@ -77,6 +83,10 @@ src/
     dashboard/
       AppNav.tsx
       DataFreshness.tsx
+    wealth/
+      WealthCharts.tsx
+      WealthAdvicePanel.tsx
+      WealthItemForm.tsx
 
   lib/
     providers/
@@ -89,10 +99,12 @@ src/
       schema.sql
       rls.sql
       seed.sql
+      wealth.sql
     types/
       database.ts
       index.ts
       market.ts
+      wealth.ts
 ```
 
 ## Daily Earnings Calendar
@@ -135,6 +147,7 @@ Handle business logic:
 - Trigger refresh logic when appropriate
 - Normalize dashboard responses
 - Coordinate multiple repositories/providers
+- Aggregate net worth, allocation breakdowns, and rule-based wealth guidance from user-entered items
 
 ### Repositories
 
@@ -147,6 +160,7 @@ Handle Supabase database access:
 - Read and write fundamentals
 - Read and write OHLC data
 - Read and write watchlists
+- Read and write wealth settings and balance-sheet items
 
 Repositories should not call external APIs.
 
@@ -199,6 +213,8 @@ Never expose the service role key to the browser.
 - `user_watchlist`
 - `portfolios`
 - `portfolio_transactions`
+- `wealth_user_settings`
+- `wealth_items`
 
 ### Market Data Tables
 
@@ -290,7 +306,8 @@ type DashboardData = {
 11. Manual refresh endpoint
 12. Scheduled refresh jobs
 13. Auth UI
-14. Polish, loading states, errors, and deployment
+14. Wealth manager (balance sheet, net worth charts, guidance)
+15. Polish, loading states, errors, and deployment
 
 ## First Vertical Slice
 
@@ -408,6 +425,12 @@ For an existing project that already has the original schema, the portfolio-only
 src/lib/supabase/portfolio.sql
 ```
 
+For an existing project that only needs the wealth / net worth module:
+
+```txt
+src/lib/supabase/wealth.sql
+```
+
 The seed file inserts manual AAPL sample data for:
 
 - ticker metadata
@@ -436,11 +459,89 @@ Initial portfolio scope:
 Portfolio data is private to the owning user through RLS. Market prices still come from the shared market-data cache.
 The database also enforces portfolio ownership at the transaction level with a composite `(portfolio_id, user_id)` foreign key, so a transaction cannot be attached to another user's portfolio even if application code is wrong.
 
+## Wealth Manager Module
+
+The wealth manager is separate from stock portfolios. Portfolios track ticker buy/sell trades against cached market quotes. Wealth manager captures a full personal balance sheet entered by the user.
+
+Page:
+
+```txt
+/wealth
+```
+
+Server actions (no public API routes in the initial version):
+
+```txt
+saveWealthSettingsAction
+addWealthItemAction
+updateWealthItemAction
+removeWealthItemAction
+```
+
+### Data model
+
+`wealth_user_settings` (one row per user):
+
+- `base_currency` — display currency for charts and totals
+- `monthly_expenses_estimate` — optional; used for emergency-fund and debt-service guidance
+
+`wealth_items` (many rows per user):
+
+- `record_type` — `asset` or `liability`
+- `category` — constrained by record type:
+  - Assets: `liquid`, `fixed`, `investment`
+  - Liabilities: `loan`, `overdraft`, `credit_card`, `other_debt`
+- `subcategory` — predefined slug per category (cash, real_estate, mortgage, credit_card, etc.)
+- `name` — user label (e.g. "Primary home", "Chase savings")
+- `current_value` — positive number; liabilities are stored as positive amounts representing debt owed
+- `interest_rate` — optional APR % for liabilities
+- `monthly_payment` — optional scheduled payment for liabilities
+- `as_of_date` — valuation date
+- `notes` — optional
+
+### Aggregations
+
+The wealth service computes:
+
+- Total assets, total liabilities, net worth
+- Liquid, fixed, and investment subtotals
+- Debt-to-asset ratio and liquidity ratio (liquid / total assets)
+- Monthly debt payments and high-interest debt (APR ≥ 8%)
+- Allocation slices for asset donut, liability donut, and net worth bar charts
+
+### Guidance
+
+Personalized guidance is rule-based in `wealthService` (not from external APIs or LLMs). Examples:
+
+- Negative net worth and high debt-to-asset ratio
+- High-interest revolving debt prioritization
+- Emergency fund vs estimated monthly expenses (3–6 month target when expenses are set)
+- Low liquidity, fixed-asset concentration, light investment allocation
+- Heavy monthly debt service relative to estimated expenses
+
+The UI labels this as educational guidance, not licensed financial advice.
+
+### Architecture notes
+
+- User-entered wealth data does not use market-data providers.
+- Reads and writes use the authenticated Supabase server client; RLS restricts rows to `auth.uid()`.
+- Stock portfolio market value is not auto-merged; users may add investment entries manually for a complete net-worth picture.
+
+### UI
+
+- Summary metrics (net worth, assets, liabilities, ratios)
+- SVG donut charts for asset and liability mix
+- Bar comparison of assets vs liabilities
+- Settings form (currency, monthly expenses)
+- Add/edit form with dynamic category and subcategory options (`WealthItemForm` client component)
+- Balance-sheet table grouped into assets and liabilities
+- Link to `/portfolio` for optional manual alignment with brokerage holdings
+
 ## Dashboard UI
 
 The dashboard and portfolio pages share common shell controls:
 
-- Segmented app navigation for Dashboard, Watchlist, Earnings, Screener, and Portfolio
+- Segmented app navigation for Dashboard, Market, Watchlist, Wealth, Earnings, Screener, and Portfolio
 - Light, Dark Blue, and Black theme selector
 - Compact signed-in user pill with sign-out action
 - Source and last-updated freshness chips on market-data panels
@@ -492,6 +593,7 @@ Refresh services should try providers in module-specific order and cache the fir
 - Users can read and update only their own profile.
 - Users can read, add, and remove only their own watchlist items.
 - Users can read and mutate only their own portfolios and portfolio transactions.
+- Users can read and mutate only their own wealth settings and wealth items.
 - Market data is publicly readable.
 - Market data writes happen through server/admin paths only.
 - Provider logs are admin-readable only.
@@ -513,7 +615,9 @@ It runs lint, TypeScript checking, and the production Next.js build.
 - Brokerage integration
 - Payment/subscription system
 - Public social features
-- Complex portfolio performance metrics
+- Complex portfolio performance metrics beyond average-cost holdings
+- Automated brokerage or bank aggregation into wealth items
+- Net worth history snapshots over time
 - Alerts and notifications
 
 These can be added after the core dashboard is stable.

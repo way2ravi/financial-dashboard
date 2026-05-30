@@ -555,6 +555,78 @@ export type Database = {
         };
         Relationships: [];
       };
+      wealth_items: {
+        Row: {
+          id: number;
+          user_id: string;
+          record_type: string;
+          category: string;
+          subcategory: string;
+          name: string;
+          current_value: number;
+          interest_rate: number | null;
+          monthly_payment: number | null;
+          as_of_date: string;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          user_id: string;
+          record_type: string;
+          category: string;
+          subcategory: string;
+          name: string;
+          current_value: number;
+          interest_rate?: number | null;
+          monthly_payment?: number | null;
+          as_of_date?: string;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          user_id?: string;
+          record_type?: string;
+          category?: string;
+          subcategory?: string;
+          name?: string;
+          current_value?: number;
+          interest_rate?: number | null;
+          monthly_payment?: number | null;
+          as_of_date?: string;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      wealth_user_settings: {
+        Row: {
+          user_id: string;
+          base_currency: string;
+          monthly_expenses_estimate: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          base_currency?: string;
+          monthly_expenses_estimate?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          base_currency?: string;
+          monthly_expenses_estimate?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       user_watchlist: {
         Row: {
           id: number;

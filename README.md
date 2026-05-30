@@ -52,11 +52,18 @@ For an existing database that only needs the daily earnings calendar module, run
 src/lib/supabase/earnings_calendar.sql
 ```
 
+For an existing database that only needs the wealth / net worth module, run:
+
+```txt
+src/lib/supabase/wealth.sql
+```
+
 ## Main Routes
 
 - `/dashboard?symbol=AAPL`
 - `/earnings`
 - `/portfolio`
+- `/wealth` — net worth, assets, liabilities, charts, and guidance
 - `/login`
 - `/api/earnings/calendar?date=2026-05-28`
 - `/api/admin/refresh/[symbol]`

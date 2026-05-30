@@ -13,6 +13,7 @@ import type {
   Ticker,
   WatchlistItem,
 } from "@/lib/types/market";
+import type { WealthItem, WealthUserSettings } from "@/lib/types/wealth";
 
 type Tables = Database["public"]["Tables"];
 type TickerRow = Tables["tickers"]["Row"];
@@ -231,5 +232,35 @@ export function mapPortfolioTransaction(
     fees: row.fees,
     notes: row.notes,
     createdAt: row.created_at,
+  };
+}
+
+export function mapWealthUserSettings(
+  row: Tables["wealth_user_settings"]["Row"]
+): WealthUserSettings {
+  return {
+    userId: row.user_id,
+    baseCurrency: row.base_currency,
+    monthlyExpensesEstimate: row.monthly_expenses_estimate,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function mapWealthItem(row: Tables["wealth_items"]["Row"]): WealthItem {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    recordType: row.record_type as WealthItem["recordType"],
+    category: row.category as WealthItem["category"],
+    subcategory: row.subcategory,
+    name: row.name,
+    currentValue: Number(row.current_value),
+    interestRate: row.interest_rate,
+    monthlyPayment: row.monthly_payment,
+    asOfDate: row.as_of_date,
+    notes: row.notes,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
