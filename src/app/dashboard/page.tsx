@@ -223,17 +223,21 @@ function getSelectedTechnicalTab(
     tech === "signals" ||
     tech === "moving-averages" ||
     tech === "momentum" ||
-    tech === "stop-loss" ||
+    tech === "stop-limit" ||
     tech === "support-resistance"
   ) {
     return tech;
+  }
+
+  if (tech === "stop-loss") {
+    return "stop-limit";
   }
 
   if (tab === "support-resistance") {
     return "support-resistance";
   }
 
-  return "stop-loss";
+  return "stop-limit";
 }
 
 function getSelectedChartType(searchParams: Awaited<Props["searchParams"]>): ChartType {

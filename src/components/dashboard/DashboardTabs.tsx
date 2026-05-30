@@ -10,7 +10,6 @@ import {
   type ChartType,
 } from "@/components/dashboard/PriceChart";
 import { SummaryPanel } from "@/components/dashboard/SummaryPanel";
-import { SupportResistancePanel } from "@/components/dashboard/SupportResistancePanel";
 import {
   TechnicalAnalysisPanel,
   type TechnicalSubTab,
@@ -97,11 +96,7 @@ export function DashboardTabs({
             activeSubTab={activeTechnicalTab}
             ohlc={data.ohlc}
             showDataSource={showDataSource}
-            symbol={data.ticker.symbol}
           />
-          {activeTechnicalTab === "support-resistance" ? (
-            <SupportResistancePanel ohlc={data.ohlc} showDataSource={showDataSource} />
-          ) : null}
         </div>
       ) : null}
 

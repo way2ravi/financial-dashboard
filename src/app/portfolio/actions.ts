@@ -20,6 +20,7 @@ export async function createPortfolioAction(formData: FormData) {
 
     await createPortfolioForUser(supabase, user, {
       name: getString(formData, "name"),
+      baseCurrency: getString(formData, "base_currency"),
       description: getString(formData, "description"),
     });
 

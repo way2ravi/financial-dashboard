@@ -308,8 +308,7 @@ async function refreshMarketDataForSymbolSafely(
   try {
     return await refreshMarketDataForSymbol(supabase, symbol, scope);
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown symbol refresh error";
+    const errorMessage = getErrorMessage(error, "Unknown symbol refresh error");
 
     await logProviderFetch(supabase, {
       provider: "provider_fallback",
@@ -362,7 +361,7 @@ async function runRefreshTask(
 
     return result;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown provider error";
+    const errorMessage = getErrorMessage(error, "Unknown provider error");
     await logProviderFetch(supabase, {
       provider: "provider_fallback",
       endpoint: module,
@@ -392,8 +391,7 @@ async function tryProviderFallbacks<T>(
     try {
       return await provider.run();
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown provider error";
+      const errorMessage = getErrorMessage(error, "Unknown provider error");
       errors.push(`${provider.provider}: ${errorMessage}`);
 
       await logProviderFetchSafely(supabase, {
@@ -407,6 +405,33 @@ async function tryProviderFallbacks<T>(
   }
 
   throw new Error(errors.join(" | "));
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (error && typeof error === "object") {
+    const record = error as {
+      code?: string;
+      details?: string;
+      hint?: string;
+      message?: string;
+    };
+    const pieces = [record.message, record.details, record.hint, record.code]
+      .filter((piece): piece is string => Boolean(piece));
+
+    if (pieces.length > 0) {
+      return pieces.join(" ");
+    }
+  }
+
+  return fallback;
 }
 
 async function logProviderFetchSafely(

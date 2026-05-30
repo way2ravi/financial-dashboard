@@ -10,6 +10,7 @@ alter table public.earnings_quarterly enable row level security;
 alter table public.earnings_calendar enable row level security;
 alter table public.fundamentals_snapshot enable row level security;
 alter table public.ohlc_daily enable row level security;
+alter table public.company_news enable row level security;
 alter table public.provider_fetch_log enable row level security;
 
 drop policy if exists "Users can read own profile" on public.users_profile;
@@ -33,6 +34,7 @@ drop policy if exists "Public can read earnings" on public.earnings_quarterly;
 drop policy if exists "Public can read earnings calendar" on public.earnings_calendar;
 drop policy if exists "Public can read fundamentals" on public.fundamentals_snapshot;
 drop policy if exists "Public can read daily ohlc" on public.ohlc_daily;
+drop policy if exists "Public can read company news" on public.company_news;
 drop policy if exists "Admins can read provider logs" on public.provider_fetch_log;
 
 create policy "Users can read own profile"
@@ -167,6 +169,12 @@ using (true);
 
 create policy "Public can read daily ohlc"
 on public.ohlc_daily
+for select
+to anon, authenticated
+using (true);
+
+create policy "Public can read company news"
+on public.company_news
 for select
 to anon, authenticated
 using (true);

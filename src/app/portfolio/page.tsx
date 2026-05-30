@@ -99,6 +99,21 @@ export default async function PortfolioPage({ searchParams }: Props) {
                     className="mt-1 h-9 w-full rounded-lg border app-input px-3 text-xs outline-none"
                   />
                 </label>
+                <label className="block text-xs font-medium app-muted">
+                  Display currency
+                  <select
+                    name="base_currency"
+                    defaultValue="USD"
+                    className="mt-1 h-9 w-full rounded-lg border app-input px-3 text-xs outline-none"
+                  >
+                    <option value="USD">USD - US dollar</option>
+                    <option value="GBP">GBP - British pound</option>
+                    <option value="EUR">EUR - Euro</option>
+                    <option value="INR">INR - Indian rupee</option>
+                    <option value="CAD">CAD - Canadian dollar</option>
+                    <option value="AUD">AUD - Australian dollar</option>
+                  </select>
+                </label>
                 <button
                   type="submit"
                   className="h-9 w-full rounded-lg app-primary-button px-4 text-xs font-semibold"
@@ -120,7 +135,10 @@ export default async function PortfolioPage({ searchParams }: Props) {
                   >
                     <div className="text-sm font-semibold app-heading">{summary.portfolio.name}</div>
                     <div className="mt-1 text-xs app-muted">
-                      {summary.holdings.length} holdings - {formatCurrency(summary.marketValue)}
+                      {summary.holdings.length} holdings - {formatCurrency(summary.marketValue, false, summary.portfolio.baseCurrency)}
+                    </div>
+                    <div className="mt-1 text-[11px] app-muted">
+                      Currency: {summary.portfolio.baseCurrency}
                     </div>
                   </Link>
                 ))}
@@ -219,6 +237,8 @@ function PortfolioDetail({
   summary: PortfolioSummary;
   message: PageMessageValue;
 }) {
+  const currency = summary.portfolio.baseCurrency;
+
   return (
     <div className="min-w-0 space-y-3">
       <PageMessage message={message} />
@@ -231,29 +251,30 @@ function PortfolioDetail({
                 "Performance based on recorded trades and cached quotes."}
             </p>
           </div>
-          <AddTransactionForm portfolioId={summary.portfolio.id} />
+          <AddTransactionForm currency={currency} portfolioId={summary.portfolio.id} />
         </div>
 
         <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
-          <Metric label="Market value" value={formatCurrency(summary.marketValue)} />
-          <Metric label="Invested" value={formatCurrency(summary.investedCapital)} />
+          <Metric label="Market value" value={formatCurrency(summary.marketValue, false, currency)} />
+          <Metric label="Invested" value={formatCurrency(summary.investedCapital, false, currency)} />
           <Metric
             label="Realized gain"
-            value={formatCurrency(summary.realizedGain)}
+            value={formatCurrency(summary.realizedGain, false, currency)}
             tone={summary.realizedGain >= 0 ? "positive" : "negative"}
           />
           <Metric
             label="Unrealized gain"
-            value={formatCurrency(summary.unrealizedGain)}
+            value={formatCurrency(summary.unrealizedGain, false, currency)}
             tone={summary.unrealizedGain >= 0 ? "positive" : "negative"}
           />
           <Metric
             label="Total return"
-            value={`${formatCurrency(summary.totalGain)} (${formatPercent(summary.totalGainPercent)})`}
+            value={`${formatCurrency(summary.totalGain, false, currency)} (${formatPercent(summary.totalGainPercent)})`}
             tone={summary.totalGain >= 0 ? "positive" : "negative"}
           />
         </div>
-        <div className="mt-2 grid gap-2 sm:grid-cols-3">
+        <div className="mt-2 grid gap-2 sm:grid-cols-4">
+          <Metric label="Currency" value={currency} />
           <Metric label="Open positions" value={formatNumber(summary.openPositions, 0)} />
           <Metric label="Closed positions" value={formatNumber(summary.closedPositions, 0)} />
           <Metric label="Trades" value={formatNumber(summary.tradeCount, 0)} />
@@ -293,16 +314,16 @@ function PortfolioDetail({
                       {formatNumber(holding.quantity, 4)}
                     </td>
                     <td className="border-b app-border-soft px-3 py-2.5 text-right">
-                      {formatCurrency(holding.averageCost)}
+                      {formatCurrency(holding.averageCost, false, currency)}
                     </td>
                     <td className="border-b app-border-soft px-3 py-2.5 text-right">
-                      {formatCurrency(holding.costBasis)}
+                      {formatCurrency(holding.costBasis, false, currency)}
                     </td>
                     <td className="border-b app-border-soft px-3 py-2.5 text-right">
-                      {formatCurrency(holding.marketPrice)}
+                      {formatCurrency(holding.marketPrice, false, currency)}
                     </td>
                     <td className="border-b app-border-soft px-3 py-2.5 text-right">
-                      {formatCurrency(holding.marketValue)}
+                      {formatCurrency(holding.marketValue, false, currency)}
                     </td>
                     <td className="border-b app-border-soft px-3 py-2.5 text-right">
                       {formatPercent(holding.allocationPercent)}
@@ -314,7 +335,7 @@ function PortfolioDetail({
                           : "app-negative"
                       }`}
                     >
-                      {formatCurrency(holding.unrealizedGain)} ({formatPercent(holding.unrealizedGainPercent)})
+                      {formatCurrency(holding.unrealizedGain, false, currency)} ({formatPercent(holding.unrealizedGainPercent)})
                     </td>
                   </tr>
                 ))}
@@ -342,10 +363,10 @@ function PortfolioDetail({
                 </div>
                 <div>
                   <div className="font-semibold app-heading">
-                    {transaction.quantity} {transaction.ticker.symbol} @ {formatCurrency(transaction.price)}
+                    {transaction.quantity} {transaction.ticker.symbol} @ {formatCurrency(transaction.price, false, currency)}
                   </div>
                   <div className="text-xs app-muted">
-                    {transaction.tradeDate} - Fees {formatCurrency(transaction.fees)}
+                    {transaction.tradeDate} - Fees {formatCurrency(transaction.fees, false, currency)}
                     {transaction.notes ? ` - ${transaction.notes}` : ""}
                   </div>
                 </div>
@@ -367,7 +388,13 @@ function PortfolioDetail({
   );
 }
 
-function AddTransactionForm({ portfolioId }: { portfolioId: number }) {
+function AddTransactionForm({
+  currency,
+  portfolioId,
+}: {
+  currency: string;
+  portfolioId: number;
+}) {
   return (
     <form
       action={addPortfolioTransactionAction}
@@ -407,7 +434,7 @@ function AddTransactionForm({ portfolioId }: { portfolioId: number }) {
         type="number"
         step="0.01"
         min="0"
-        placeholder="Price"
+        placeholder={`Price (${currency})`}
         required
         className="h-9 rounded-lg border app-input px-3 text-xs outline-none"
       />
@@ -416,7 +443,7 @@ function AddTransactionForm({ portfolioId }: { portfolioId: number }) {
         type="number"
         step="0.01"
         min="0"
-        placeholder="Fees"
+        placeholder={`Fees (${currency})`}
         className="h-9 rounded-lg border app-input px-3 text-xs outline-none"
       />
       <input

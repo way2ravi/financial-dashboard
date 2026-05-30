@@ -625,9 +625,6 @@ function VolumePressureCircle({
       <div className="mt-2 text-center text-[11px] font-medium uppercase tracking-normal app-muted">
         Day pressure
       </div>
-      <div className="mt-1 text-center text-[10px] app-muted">
-        Green = buy estimate · Red = sell estimate
-      </div>
     </div>
   );
 }

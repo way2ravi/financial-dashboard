@@ -39,7 +39,7 @@ export async function getPortfolioSummariesForUser(
 export async function createPortfolioForUser(
   supabase: DbClient,
   user: User | null,
-  input: { name: string; description?: string | null }
+  input: { baseCurrency?: string | null; name: string; description?: string | null }
 ): Promise<Portfolio> {
   if (!user) {
     throw new AppError("You must be signed in to create a portfolio", 401);
@@ -54,6 +54,7 @@ export async function createPortfolioForUser(
   return createPortfolio(supabase, {
     userId: user.id,
     name,
+    baseCurrency: normalizeCurrency(input.baseCurrency),
     description: input.description?.trim() || null,
   });
 }
@@ -261,6 +262,13 @@ function buildHoldings(
 
 function sum(values: number[]) {
   return values.reduce((total, value) => total + value, 0);
+}
+
+function normalizeCurrency(value?: string | null) {
+  const currency = (value || "USD").trim().toUpperCase();
+  const supported = new Set(["USD", "GBP", "EUR", "INR", "CAD", "AUD"]);
+
+  return supported.has(currency) ? currency : "USD";
 }
 
 function getOpenQuantityForTicker(

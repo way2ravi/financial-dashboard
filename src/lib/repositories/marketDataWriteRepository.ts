@@ -178,25 +178,60 @@ export async function upsertCompanyNews(
   }
 
   const fetchedAt = new Date().toISOString();
-  const { error } = await supabase.from("company_news").upsert(
-    rows.map((article) => ({
-      ticker_id: ticker.id,
-      headline: article.headline,
-      summary: article.summary,
-      url: article.url,
-      image_url: article.imageUrl,
-      source_name: article.sourceName,
-      published_at: article.publishedAt,
-      sentiment_label: article.sentimentLabel,
-      sentiment_score: article.sentimentScore,
-      source: article.source,
-      source_updated_at: article.sourceUpdatedAt,
-      fetched_at: fetchedAt,
-    })),
-    { onConflict: "ticker_id,url" }
-  );
+  let error: { code?: string; message?: string } | null = null;
+
+  try {
+    const result = await supabase.from("company_news").upsert(
+      rows.map((article) => ({
+        ticker_id: ticker.id,
+        headline: article.headline,
+        summary: article.summary,
+        url: article.url,
+        image_url: article.imageUrl,
+        source_name: article.sourceName,
+        published_at: article.publishedAt,
+        sentiment_label: article.sentimentLabel,
+        sentiment_score: article.sentimentScore,
+        source: article.source,
+        source_updated_at: article.sourceUpdatedAt,
+        fetched_at: fetchedAt,
+      })),
+      { onConflict: "ticker_id,url" }
+    );
+
+    error = result.error;
+  } catch (caughtError) {
+    if (isMissingCompanyNewsTableError(caughtError)) {
+      throw new Error(getMissingCompanyNewsTableMessage());
+    }
+
+    throw caughtError;
+  }
 
   if (error) {
+    if (isMissingCompanyNewsTableError(error)) {
+      throw new Error(getMissingCompanyNewsTableMessage());
+    }
+
     throw error;
   }
+}
+
+function isMissingCompanyNewsTableError(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const record = error as { code?: string; message?: string };
+
+  return (
+    record.code === "42P01" ||
+    record.code === "PGRST205" ||
+    record.message?.includes("company_news") ||
+    record.message?.includes("schema cache")
+  );
+}
+
+function getMissingCompanyNewsTableMessage() {
+  return "Company news table is missing. Run src/lib/supabase/company_news.sql and the company_news section in src/lib/supabase/rls.sql in Supabase.";
 }

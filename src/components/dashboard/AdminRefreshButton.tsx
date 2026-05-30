@@ -23,12 +23,14 @@ type Props = {
 
 const quickModules = ["quote", "ohlc"];
 const fullModules = [
+  "profile",
   "quote",
   "analystRatings",
   "priceTargets",
   "earnings",
   "fundamentals",
   "ohlc",
+  "news",
 ];
 
 export function AdminRefreshButton({ symbol }: Props) {

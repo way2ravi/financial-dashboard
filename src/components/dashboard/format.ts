@@ -1,11 +1,15 @@
-export function formatCurrency(value: number | null | undefined, compact = false) {
+export function formatCurrency(
+  value: number | null | undefined,
+  compact = false,
+  currency = "USD"
+) {
   if (value === null || value === undefined) {
     return "-";
   }
 
   return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "USD",
+    currency,
     maximumFractionDigits: compact ? 1 : 2,
     notation: compact ? "compact" : "standard",
   }).format(value);
@@ -28,4 +32,3 @@ export function formatPercent(value: number | null | undefined, digits = 2) {
 
   return `${formatNumber(value, digits)}%`;
 }
-
