@@ -4,6 +4,7 @@ import { formatCurrency, formatPercent } from "./format";
 
 type Props = {
   ohlc: OhlcDaily[];
+  showDataSource?: boolean;
 };
 
 type Level = {
@@ -12,7 +13,7 @@ type Level = {
   tone?: "neutral" | "support" | "resistance";
 };
 
-export function SupportResistancePanel({ ohlc }: Props) {
+export function SupportResistancePanel({ ohlc, showDataSource = false }: Props) {
   const levels = calculateSupportResistance(ohlc);
   const freshness = latestFreshness(ohlc);
 
@@ -26,7 +27,11 @@ export function SupportResistancePanel({ ohlc }: Props) {
               Daily OHLC history is needed to calculate technical levels.
             </p>
             <div className="mt-2">
-              <DataFreshness fetchedAt={freshness?.fetchedAt} source={freshness?.source} />
+              <DataFreshness
+                fetchedAt={freshness?.fetchedAt}
+                showSource={showDataSource}
+                source={freshness?.source}
+              />
             </div>
           </div>
         </div>
@@ -58,7 +63,11 @@ export function SupportResistancePanel({ ohlc }: Props) {
             Based on the latest candle and last {levels.lookbackDays} cached trading days.
           </p>
           <div className="mt-2">
-            <DataFreshness fetchedAt={freshness?.fetchedAt} source={freshness?.source} />
+            <DataFreshness
+              fetchedAt={freshness?.fetchedAt}
+              showSource={showDataSource}
+              source={freshness?.source}
+            />
           </div>
         </div>
         <div className="text-right">

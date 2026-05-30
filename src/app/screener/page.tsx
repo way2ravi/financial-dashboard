@@ -3,7 +3,8 @@ import { AppNav } from "@/components/dashboard/AppNav";
 import { AuthStatus } from "@/components/dashboard/AuthStatus";
 import { ThemeSwitcher } from "@/components/dashboard/ThemeSwitcher";
 import { formatCurrency, formatNumber, formatPercent } from "@/components/dashboard/format";
-import { getStockScreener } from "@/lib/services";
+import { currentUserIsAdmin, getStockScreener } from "@/lib/services";
+import { createClient } from "@/lib/supabase/server";
 import type { ScreenerCategory, ScreenerCategoryResult, ScreenerResult } from "@/lib/types";
 
 type ScreenerPageProps = {
@@ -12,6 +13,8 @@ type ScreenerPageProps = {
 
 export default async function ScreenerPage({ searchParams }: ScreenerPageProps) {
   const params = await searchParams;
+  const supabase = await createClient();
+  const showDataSource = await currentUserIsAdmin(supabase);
   const categories = await getStockScreener();
   const activeTab = getSelectedScreenerTab(params.tab);
   const activeCategory =
@@ -40,7 +43,7 @@ export default async function ScreenerPage({ searchParams }: ScreenerPageProps) 
       <div className="mx-auto max-w-7xl space-y-3 px-4 py-4 sm:px-6 lg:px-8">
         <ScreenerTabs categories={categories} activeTab={activeCategory.category} />
 
-        <ScreenerTable category={activeCategory} />
+        <ScreenerTable category={activeCategory} showDataSource={showDataSource} />
       </div>
     </main>
   );
@@ -82,7 +85,13 @@ function ScreenerTabs({
   );
 }
 
-function ScreenerTable({ category }: { category: ScreenerCategoryResult }) {
+function ScreenerTable({
+  category,
+  showDataSource,
+}: {
+  category: ScreenerCategoryResult;
+  showDataSource: boolean;
+}) {
   return (
     <section className="overflow-hidden rounded-lg border app-surface shadow-sm" id={category.category}>
       <div className="flex flex-col gap-2 border-b app-border-soft px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
@@ -90,9 +99,11 @@ function ScreenerTable({ category }: { category: ScreenerCategoryResult }) {
           <h2 className="text-sm font-semibold app-heading">{category.title}</h2>
           <p className="mt-0.5 text-xs leading-5 app-muted">{category.description}</p>
         </div>
-        <span className="w-fit rounded-full border app-subtle px-2 py-1 text-[11px] font-medium app-muted">
-          {category.items[0]?.source ? `Source ${category.items[0].source}` : "Provider feed"}
-        </span>
+        {showDataSource ? (
+          <span className="w-fit rounded-full border app-subtle px-2 py-1 text-[11px] font-medium app-muted">
+            {category.items[0]?.source ? `Source ${category.items[0].source}` : "Provider feed"}
+          </span>
+        ) : null}
       </div>
 
       {category.error ? (

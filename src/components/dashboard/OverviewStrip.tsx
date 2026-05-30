@@ -10,9 +10,10 @@ import { TickerSearch } from "./TickerSearch";
 
 type Props = {
   data: DashboardData;
+  showDataSource?: boolean;
 };
 
-export function OverviewStrip({ data }: Props) {
+export function OverviewStrip({ data, showDataSource = false }: Props) {
   const quote = data.quote;
   const hasDayChange = quote?.change !== null && quote?.change !== undefined;
   const positive = (quote?.change ?? 0) >= 0;
@@ -49,7 +50,11 @@ export function OverviewStrip({ data }: Props) {
                 <p className="text-sm app-muted">{data.ticker.name}</p>
               </div>
               <div className="mt-2">
-                <DataFreshness fetchedAt={quote?.fetchedAt} source={quote?.source} />
+                <DataFreshness
+                  fetchedAt={quote?.fetchedAt}
+                  showSource={showDataSource}
+                  source={quote?.source}
+                />
               </div>
             </div>
           </div>

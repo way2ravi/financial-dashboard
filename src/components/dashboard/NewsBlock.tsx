@@ -3,9 +3,10 @@ import { DataFreshness, latestFreshness } from "./DataFreshness";
 
 type Props = {
   news: CompanyNewsArticle[];
+  showDataSource?: boolean;
 };
 
-export function NewsBlock({ news }: Props) {
+export function NewsBlock({ news, showDataSource = false }: Props) {
   const freshness = latestFreshness(news);
 
   return (
@@ -17,14 +18,18 @@ export function NewsBlock({ news }: Props) {
             Latest company headlines from the cached provider feed.
           </p>
           <div className="mt-2">
-            <DataFreshness fetchedAt={freshness?.fetchedAt} source={freshness?.source} />
+            <DataFreshness
+              fetchedAt={freshness?.fetchedAt}
+              showSource={showDataSource}
+              source={freshness?.source}
+            />
           </div>
         </div>
       </div>
 
       {news.length === 0 ? (
         <div className="mt-3 rounded-lg border app-subtle p-3 text-xs app-muted">
-          No cached news yet. Press Load to refresh company news for this ticker.
+          No company news is cached yet. Press Load to refresh Finnhub first, then Alpha Vantage as fallback. Some smaller tickers may not return provider news on free plans.
         </div>
       ) : (
         <div className="mt-3 divide-y app-border-soft">
@@ -44,7 +49,9 @@ export function NewsBlock({ news }: Props) {
                     <p className="mt-1 line-clamp-2 text-xs leading-5 app-muted">{article.summary}</p>
                   ) : null}
                   <div className="mt-2 flex flex-wrap items-center gap-2 text-xs app-muted">
-                    <span>{article.sourceName ?? article.source ?? "News"}</span>
+                    <span>
+                      {article.sourceName ?? (showDataSource ? article.source : null) ?? "News"}
+                    </span>
                     <span>{formatNewsDate(article.publishedAt)}</span>
                   </div>
                 </div>

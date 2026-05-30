@@ -8,4 +8,5 @@ export * from "./refreshScope";
 export * from "./refreshSummary";
 export * from "./screenerService";
 export * from "./tickerService";
+export * from "./userRoleService";
 export * from "./watchlistService";

@@ -4,19 +4,20 @@ import { formatCurrency, formatNumber, formatPercent } from "./format";
 
 type Props = {
   fundamentals: FundamentalsSnapshot | null;
+  showDataSource?: boolean;
 };
 
-export function FundamentalsGrid({ fundamentals }: Props) {
+export function FundamentalsGrid({ fundamentals, showDataSource = false }: Props) {
   const peAnalysis = analyzePeRatio(fundamentals);
   const metrics = [
-    ["Market cap", formatCurrency(fundamentals?.marketCap, true)],
-    ["P/E", formatNumber(fundamentals?.pe)],
-    ["Forward P/E", formatNumber(fundamentals?.forwardPe)],
-    ["PEG", formatNumber(fundamentals?.peg)],
-    ["P/B", formatNumber(fundamentals?.pb)],
-    ["ROE", formatPercent(fundamentals?.roe)],
-    ["Debt / Equity", formatNumber(fundamentals?.debtToEquity)],
-    ["Dividend yield", formatPercent(fundamentals?.dividendYield)],
+    metric("Market cap", formatCurrency(fundamentals?.marketCap, true), "neutral", null),
+    metric("P/E", formatNumber(fundamentals?.pe), peTone(fundamentals?.pe), scoreRange(fundamentals?.pe, 0, 40, true)),
+    metric("Forward P/E", formatNumber(fundamentals?.forwardPe), peTone(fundamentals?.forwardPe), scoreRange(fundamentals?.forwardPe, 0, 40, true)),
+    metric("PEG", formatNumber(fundamentals?.peg), pegTone(fundamentals?.peg), scoreRange(fundamentals?.peg, 0, 3, true)),
+    metric("P/B", formatNumber(fundamentals?.pb), "neutral", scoreRange(fundamentals?.pb, 0, 10, true)),
+    metric("ROE", formatPercent(fundamentals?.roe), roeTone(fundamentals?.roe), scoreRange(fundamentals?.roe, 0, 30, false)),
+    metric("Debt / Equity", formatNumber(fundamentals?.debtToEquity), debtTone(fundamentals?.debtToEquity), scoreRange(fundamentals?.debtToEquity, 0, 3, true)),
+    metric("Dividend yield", formatPercent(fundamentals?.dividendYield), "neutral", scoreRange(fundamentals?.dividendYield, 0, 5, false)),
   ];
 
   return (
@@ -25,14 +26,26 @@ export function FundamentalsGrid({ fundamentals }: Props) {
         <h2 className="text-sm font-semibold app-heading">Fundamentals</h2>
         <DataFreshness
           fetchedAt={fundamentals?.fetchedAt}
+          showSource={showDataSource}
           source={fundamentals?.source}
         />
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4">
-        {metrics.map(([label, value]) => (
-          <div key={label} className="rounded-lg border app-subtle px-3 py-2.5">
-            <div className="text-[11px] font-medium app-muted">{label}</div>
-            <div className="mt-1 text-base font-semibold app-heading">{value}</div>
+        {metrics.map((item) => (
+          <div key={item.label} className="rounded-lg border app-subtle px-3 py-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-[11px] font-medium app-muted">{item.label}</div>
+              <span className={`h-2 w-2 rounded-full ${getToneDot(item.tone)}`} />
+            </div>
+            <div className="mt-1 text-base font-semibold app-heading">{item.value}</div>
+            {item.score !== null ? (
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--app-border-soft)]">
+                <div
+                  className={`h-full rounded-full ${getToneBar(item.tone)}`}
+                  style={{ width: `${item.score}%` }}
+                />
+              </div>
+            ) : null}
           </div>
         ))}
       </div>
@@ -67,6 +80,67 @@ export function FundamentalsGrid({ fundamentals }: Props) {
       </div>
     </section>
   );
+}
+
+type MetricTone = "positive" | "negative" | "neutral";
+
+function metric(label: string, value: string, tone: MetricTone, score: number | null) {
+  return { label, score, tone, value };
+}
+
+function scoreRange(
+  value: number | null | undefined,
+  min: number,
+  max: number,
+  inverted: boolean
+) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  const normalized = Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
+
+  return inverted ? 100 - normalized : normalized;
+}
+
+function peTone(value: number | null | undefined): MetricTone {
+  if (value === null || value === undefined || value <= 0) return "neutral";
+  if (value <= 20) return "positive";
+  if (value > 35) return "negative";
+  return "neutral";
+}
+
+function pegTone(value: number | null | undefined): MetricTone {
+  if (value === null || value === undefined || value <= 0) return "neutral";
+  if (value <= 1.5) return "positive";
+  if (value >= 2.5) return "negative";
+  return "neutral";
+}
+
+function roeTone(value: number | null | undefined): MetricTone {
+  if (value === null || value === undefined) return "neutral";
+  if (value >= 15) return "positive";
+  if (value < 5) return "negative";
+  return "neutral";
+}
+
+function debtTone(value: number | null | undefined): MetricTone {
+  if (value === null || value === undefined) return "neutral";
+  if (value > 2) return "negative";
+  if (value <= 1) return "positive";
+  return "neutral";
+}
+
+function getToneDot(tone: MetricTone) {
+  if (tone === "positive") return "bg-[var(--app-positive)]";
+  if (tone === "negative") return "bg-[var(--app-negative)]";
+  return "bg-[var(--app-text-soft)]";
+}
+
+function getToneBar(tone: MetricTone) {
+  if (tone === "positive") return "bg-[var(--app-positive)]";
+  if (tone === "negative") return "bg-[var(--app-negative)]";
+  return "bg-[var(--app-text-soft)]";
 }
 
 function analyzePeRatio(fundamentals: FundamentalsSnapshot | null) {

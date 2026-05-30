@@ -1,15 +1,20 @@
-import { DailyEarningsBlock } from "@/components/dashboard/DailyEarningsBlock";
 import {
   DashboardTabs,
   type DashboardTabId,
 } from "@/components/dashboard/DashboardTabs";
+import type {
+  ChartInterval,
+  ChartRange,
+  ChartType,
+} from "@/components/dashboard/PriceChart";
+import type { TechnicalSubTab } from "@/components/dashboard/TechnicalAnalysisPanel";
 import { OverviewStrip } from "@/components/dashboard/OverviewStrip";
 import { PageMessage } from "@/components/dashboard/PageMessage";
-import { Watchlist } from "@/components/dashboard/Watchlist";
 import { mockDashboardData } from "@/lib/mock/dashboard";
 import {
   getDashboardBySymbol,
   getTickerBySymbol,
+  currentUserIsAdmin,
   refreshMarketDataForSymbol,
   searchTickerDirectory,
 } from "@/lib/services";
@@ -21,10 +26,14 @@ import type { PageMessageValue } from "@/components/dashboard/PageMessage";
 type Props = {
   searchParams: Promise<{
     autoload?: string | string[];
+    chart?: string | string[];
     error?: string | string[];
+    interval?: string | string[];
     notice?: string | string[];
+    range?: string | string[];
     symbol?: string | string[];
     tab?: string | string[];
+    tech?: string | string[];
   }>;
 };
 
@@ -32,6 +41,12 @@ export default async function DashboardPage({ searchParams }: Props) {
   const resolvedSearchParams = await searchParams;
   const selectedSymbol = getSelectedSymbol(resolvedSearchParams);
   const selectedTab = getSelectedTab(resolvedSearchParams);
+  const selectedTechnicalTab = getSelectedTechnicalTab(resolvedSearchParams);
+  const selectedChartType = getSelectedChartType(resolvedSearchParams);
+  const selectedChartRange = getSelectedChartRange(resolvedSearchParams);
+  const selectedChartInterval = getSelectedChartInterval(resolvedSearchParams);
+  const supabase = await createClient();
+  const showDataSource = await currentUserIsAdmin(supabase);
   const message = getPageMessage(resolvedSearchParams);
   const autoloadMessage = await maybeAutoloadDashboardData(
     selectedSymbol,
@@ -42,17 +57,19 @@ export default async function DashboardPage({ searchParams }: Props) {
 
   return (
     <main className="min-h-screen app-bg">
-      <OverviewStrip data={data} />
+      <OverviewStrip data={data} showDataSource={showDataSource} />
 
-      <div className="mx-auto grid max-w-7xl gap-3 px-4 py-4 sm:px-6 lg:grid-cols-[280px_1fr] lg:px-8">
-        <aside className="min-w-0 self-start space-y-3 lg:sticky lg:top-4">
-          <Watchlist currentSymbol={data.ticker.symbol} />
-          <DailyEarningsBlock currentSymbol={data.ticker.symbol} />
-        </aside>
-        <div className="min-w-0 space-y-3">
-          <PageMessage message={pageMessage} />
-          <DashboardTabs activeTab={selectedTab} data={data} />
-        </div>
+      <div className="mx-auto max-w-7xl space-y-3 px-4 py-4 sm:px-6 lg:px-8">
+        <PageMessage message={pageMessage} />
+        <DashboardTabs
+          activeChartInterval={selectedChartInterval}
+          activeChartRange={selectedChartRange}
+          activeChartType={selectedChartType}
+          activeTab={selectedTab}
+          activeTechnicalTab={selectedTechnicalTab}
+          data={data}
+          showDataSource={showDataSource}
+        />
       </div>
     </main>
   );
@@ -177,16 +194,78 @@ function getSelectedSymbol(searchParams: Awaited<Props["searchParams"]>) {
 function getSelectedTab(searchParams: Awaited<Props["searchParams"]>): DashboardTabId {
   const tab = getSearchParam(searchParams.tab);
 
+  if (tab === "support-resistance") {
+    return "technical";
+  }
+
   if (
+    tab === "summary" ||
+    tab === "chart" ||
+    tab === "technical" ||
+    tab === "analyst" ||
     tab === "earnings" ||
     tab === "fundamentals" ||
-    tab === "chart" ||
     tab === "news"
   ) {
     return tab;
   }
 
-  return "analyst";
+  return "summary";
+}
+
+function getSelectedTechnicalTab(
+  searchParams: Awaited<Props["searchParams"]>
+): TechnicalSubTab {
+  const tech = getSearchParam(searchParams.tech);
+  const tab = getSearchParam(searchParams.tab);
+
+  if (
+    tech === "signals" ||
+    tech === "moving-averages" ||
+    tech === "momentum" ||
+    tech === "stop-loss" ||
+    tech === "support-resistance"
+  ) {
+    return tech;
+  }
+
+  if (tab === "support-resistance") {
+    return "support-resistance";
+  }
+
+  return "stop-loss";
+}
+
+function getSelectedChartType(searchParams: Awaited<Props["searchParams"]>): ChartType {
+  const chart = getSearchParam(searchParams.chart);
+
+  if (chart === "line" || chart === "candles" || chart === "ohlc" || chart === "area") {
+    return chart;
+  }
+
+  return "area";
+}
+
+function getSelectedChartRange(searchParams: Awaited<Props["searchParams"]>): ChartRange {
+  const range = getSearchParam(searchParams.range);
+
+  if (range === "1m" || range === "3m" || range === "6m" || range === "1y" || range === "all") {
+    return range;
+  }
+
+  return "6m";
+}
+
+function getSelectedChartInterval(
+  searchParams: Awaited<Props["searchParams"]>
+): ChartInterval {
+  const interval = getSearchParam(searchParams.interval);
+
+  if (interval === "weekly" || interval === "monthly" || interval === "daily") {
+    return interval;
+  }
+
+  return "daily";
 }
 
 function getPageMessage(searchParams: Awaited<Props["searchParams"]>) {

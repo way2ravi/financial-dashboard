@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function addCurrentSymbolToWatchlist(formData: FormData) {
   const symbol = getSymbol(formData);
+  const returnTo = getReturnTo(formData);
 
   try {
     const supabase = await createClient();
@@ -16,15 +17,17 @@ export async function addCurrentSymbolToWatchlist(formData: FormData) {
 
     await addSymbolToWatchlist(supabase, user, symbol);
     revalidatePath("/dashboard");
+    revalidatePath("/watchlist");
   } catch (error) {
-    redirect(dashboardMessageUrl(symbol, "error", getActionErrorMessage(error)));
+    redirect(messageUrl(symbol, "error", getActionErrorMessage(error), returnTo));
   }
 
-  redirect(dashboardMessageUrl(symbol, "notice", `${symbol} added to watchlist`));
+  redirect(messageUrl(symbol, "notice", `${symbol} added to watchlist`, returnTo));
 }
 
 export async function removeCurrentSymbolFromWatchlist(formData: FormData) {
   const symbol = getSymbol(formData);
+  const returnTo = getReturnTo(formData);
 
   try {
     const supabase = await createClient();
@@ -34,16 +37,23 @@ export async function removeCurrentSymbolFromWatchlist(formData: FormData) {
 
     await removeSymbolFromWatchlist(supabase, user, symbol);
     revalidatePath("/dashboard");
+    revalidatePath("/watchlist");
   } catch (error) {
-    redirect(dashboardMessageUrl(symbol, "error", getActionErrorMessage(error)));
+    redirect(messageUrl(symbol, "error", getActionErrorMessage(error), returnTo));
   }
 
-  redirect(dashboardMessageUrl(symbol, "notice", `${symbol} removed from watchlist`));
+  redirect(messageUrl(symbol, "notice", `${symbol} removed from watchlist`, returnTo));
 }
 
 function getSymbol(formData: FormData) {
   const value = formData.get("symbol");
   return typeof value === "string" ? value.trim().toUpperCase() : "";
+}
+
+function getReturnTo(formData: FormData) {
+  const value = formData.get("return_to");
+
+  return value === "/watchlist" ? value : "/dashboard";
 }
 
 function getActionErrorMessage(error: unknown) {
@@ -58,15 +68,21 @@ function getActionErrorMessage(error: unknown) {
   return "Something went wrong. Please try again.";
 }
 
-function dashboardMessageUrl(
+function messageUrl(
   symbol: string,
   type: "error" | "notice",
-  message: string
+  message: string,
+  returnTo: "/dashboard" | "/watchlist"
 ) {
   const params = new URLSearchParams({
-    symbol,
     [type]: message,
   });
+
+  if (returnTo === "/watchlist") {
+    return `/watchlist?${params.toString()}`;
+  }
+
+  params.set("symbol", symbol);
 
   return `/dashboard?${params.toString()}`;
 }

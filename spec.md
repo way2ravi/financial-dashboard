@@ -18,9 +18,12 @@ The dashboard should support:
 - Last quarterly earnings
 - Fundamentals and valuation ratios
 - OHLC price chart data
+- Consolidated stock summary with plain-English Buy / Hold / Sell-style indication
+- Technical analysis tab with indicators, moving averages, support/resistance, and stop-loss guidance
+- Company news and sentiment
 - Cached market data through Supabase
 - External provider refresh through isolated provider modules
-- Light and dark-blue screen themes
+- Light, dark-blue, and black screen themes
 - Admin-controlled manual refresh
 
 ## Stack
@@ -64,6 +67,9 @@ src/
           route.ts
     dashboard/
     earnings/
+    portfolio/
+    screener/
+    watchlist/
     layout.tsx
     page.tsx
 
@@ -203,6 +209,7 @@ Never expose the service role key to the browser.
 - `earnings_quarterly`
 - `fundamentals_snapshot`
 - `ohlc_daily`
+- `company_news`
 - `provider_fetch_log`
 
 ## Analyst Data Design
@@ -264,6 +271,7 @@ type DashboardData = {
   earnings: EarningsQuarterly[];
   fundamentals: FundamentalsSnapshot | null;
   ohlc: OhlcDaily[];
+  news: CompanyNewsArticle[];
 };
 ```
 
@@ -374,7 +382,7 @@ x-cron-secret: CRON_SECRET
 
 It uses the server-only Supabase service-role client and refreshes a bounded set of active tickers sequentially to reduce provider rate-limit pressure.
 Symbol-level failures are returned in the response and logged without stopping the rest of the batch.
-The optional `modules` parameter can limit refreshes to `quote`, `analystRatings`, `priceTargets`, `earnings`, `fundamentals`, and/or `ohlc`.
+The optional `modules` parameter can limit refreshes to `quote`, `analystRatings`, `priceTargets`, `earnings`, `fundamentals`, `ohlc`, and/or `news`.
 
 The Vercel deployment schedule is configured in `vercel.json`:
 
@@ -432,13 +440,37 @@ The database also enforces portfolio ownership at the transaction level with a c
 
 The dashboard and portfolio pages share common shell controls:
 
-- Segmented app navigation for Dashboard and Portfolio
-- Light and Dark Blue theme selector
+- Segmented app navigation for Dashboard, Watchlist, Earnings, Screener, and Portfolio
+- Light, Dark Blue, and Black theme selector
 - Compact signed-in user pill with sign-out action
 - Source and last-updated freshness chips on market-data panels
 - Support, resistance, and pivot levels calculated from cached daily OHLC for the selected ticker
 
-The primary dashboard refresh action is the ticker `Load` button. It fetches quote, analyst ratings, price targets, earnings, fundamentals, and OHLC for the requested symbol before navigation.
+Black is the default theme.
+
+The dashboard does not include embedded Watchlist or Today's Earnings blocks. Those are separate top-level pages so the ticker research page remains compact.
+
+Dashboard tabs:
+
+1. `Summary` - first/default tab. Consolidates analyst data, price targets, earnings, fundamentals, technicals, and news into a plain-English indication for the end user. The UI should show an overall graphical score, confidence, and per-category signal cards. The wording should be practical and understandable, such as Buy Watch, Hold / Watch, or Avoid / Sell Bias.
+2. `Chart` - a dedicated price chart tab for the selected stock. This is separate from technical analysis so users can inspect price action without scrolling through every indicator.
+3. `Technical` - technical indicators, summary, moving averages, momentum, volume, support/resistance, and a stop-loss card at the top. Stop-loss guidance is calculated from available technical data, such as recent support, ATR/volatility, and short-term moving averages.
+4. `Analyst` - analyst ratings table plus low, mean, and high price targets with separate freshness information for ratings and targets.
+5. `Earnings` - quarterly earnings table with EPS actual, EPS estimate, EPS surprise, revenue actual, revenue estimate, and revenue surprise columns.
+6. `Fundamentals` - valuation/profitability/liquidity ratios with visual indicators and a plain-English P/E read that avoids calling a stock cheap unless growth, profitability, and debt support it.
+7. `News` - company news headlines and sentiment from provider feeds.
+
+The primary dashboard refresh action is the ticker `Load` button. It fetches quote, analyst ratings, price targets, earnings, fundamentals, OHLC, and news for the requested symbol before navigation.
+
+## Watchlist Page
+
+The watchlist is a dedicated top-level page:
+
+```txt
+/watchlist
+```
+
+Signed-in users can view saved tickers, open any ticker in the dashboard, and remove saved tickers. The dashboard can still add the currently selected ticker to the watchlist, but the persistent list should live on the Watchlist page rather than in the dashboard sidebar.
 
 ## External Providers
 
@@ -448,6 +480,7 @@ Initial provider candidates:
 - Twelve Data for quote, ticker search, and daily OHLC fallback
 - Alpha Vantage for quote, ticker search, daily OHLC, fundamentals, and quarterly earnings fallback
 - Financial Modeling Prep for quote, OHLC, analyst rating, price target, and fundamentals fallback
+- Finnhub and Alpha Vantage for company news fallback
 - MarketData.app for analyst data and earnings alternatives
 - EarningsAPI for broad earnings calendar data
 

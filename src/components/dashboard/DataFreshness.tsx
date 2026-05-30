@@ -1,16 +1,17 @@
 type Props = {
   fetchedAt?: string | null;
+  showSource?: boolean;
   source?: string | null;
 };
 
-export function DataFreshness({ fetchedAt, source }: Props) {
-  if (!fetchedAt && !source) {
+export function DataFreshness({ fetchedAt, showSource = false, source }: Props) {
+  if (!fetchedAt && (!showSource || !source)) {
     return null;
   }
 
   return (
     <div className="inline-flex flex-wrap items-center gap-1.5 rounded-md border app-subtle px-2 py-1 text-xs app-muted">
-      <span>Source {source || "cache"}</span>
+      {showSource ? <span>Source {source || "cache"}</span> : null}
       {fetchedAt ? <span>Updated {formatFreshness(fetchedAt)}</span> : null}
     </div>
   );

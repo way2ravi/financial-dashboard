@@ -1,9 +1,13 @@
+import Link from "next/link";
 import type { OhlcDaily } from "@/lib/types";
 import { DataFreshness, latestFreshness } from "./DataFreshness";
 import { formatCurrency, formatNumber, formatPercent } from "./format";
 
 type Props = {
+  activeSubTab: TechnicalSubTab;
   ohlc: OhlcDaily[];
+  showDataSource?: boolean;
+  symbol: string;
 };
 
 type SignalTone = "bullish" | "bearish" | "neutral";
@@ -24,7 +28,47 @@ type Candle = {
   volume: number | null;
 };
 
-export function TechnicalAnalysisPanel({ ohlc }: Props) {
+type StopLossRead = {
+  balanced: StopLossMethod;
+  confidence: "High" | "Medium" | "Low";
+  methods: StopLossMethod[];
+  position: StopLossMethod;
+  shortTerm: StopLossMethod;
+  summary: string;
+  suggested: StopLossMethod;
+};
+
+type StopLossMethod = {
+  label: string;
+  price: number;
+  riskPercent: number;
+  detail: string;
+  method: string;
+  weight: number;
+};
+
+export type TechnicalSubTab =
+  | "stop-loss"
+  | "signals"
+  | "moving-averages"
+  | "momentum"
+  | "support-resistance";
+
+const technicalTabs: Array<{ id: TechnicalSubTab; label: string }> = [
+  { id: "stop-loss", label: "Stop Loss" },
+  { id: "signals", label: "Signals" },
+  { id: "moving-averages", label: "Moving Averages" },
+  { id: "momentum", label: "Momentum" },
+  { id: "support-resistance", label: "Support / Resistance" },
+];
+
+export function TechnicalAnalysisPanel({
+  activeSubTab,
+  ohlc,
+  showDataSource = false,
+  symbol,
+}: Props) {
+  const activeSection = activeSubTab;
   const freshness = latestFreshness(ohlc);
   const candles = toCandles(ohlc);
 
@@ -38,7 +82,11 @@ export function TechnicalAnalysisPanel({ ohlc }: Props) {
               More daily OHLC history is needed to calculate moving averages, RSI, MACD, and trend signals.
             </p>
             <div className="mt-2">
-              <DataFreshness fetchedAt={freshness?.fetchedAt} source={freshness?.source} />
+              <DataFreshness
+                fetchedAt={freshness?.fetchedAt}
+                showSource={showDataSource}
+                source={freshness?.source}
+              />
             </div>
           </div>
         </div>
@@ -60,7 +108,11 @@ export function TechnicalAnalysisPanel({ ohlc }: Props) {
             Trend, momentum, moving average, volatility, and volume read from cached daily candles.
           </p>
           <div className="mt-2">
-            <DataFreshness fetchedAt={freshness?.fetchedAt} source={freshness?.source} />
+            <DataFreshness
+              fetchedAt={freshness?.fetchedAt}
+              showSource={showDataSource}
+              source={freshness?.source}
+            />
           </div>
         </div>
         <div className="rounded-lg border app-subtle px-3 py-2.5 lg:min-w-[320px]">
@@ -79,45 +131,237 @@ export function TechnicalAnalysisPanel({ ohlc }: Props) {
         </div>
       </div>
 
-      <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
-        {analysis.signals.map((signal) => (
-          <SignalCard key={signal.label} signal={signal} />
-        ))}
+      <div className="mt-3 overflow-x-auto rounded-lg border app-surface p-1">
+        <div className="flex min-w-max gap-1">
+          {technicalTabs.map((tab) => (
+            <Link
+              key={tab.id}
+              aria-current={activeSection === tab.id ? "page" : undefined}
+              className={`rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
+                activeSection === tab.id
+                  ? "app-primary-button"
+                  : "app-muted hover:bg-[color-mix(in_srgb,var(--app-accent)_8%,transparent)] hover:text-[var(--app-text)]"
+              }`}
+              href={technicalTabHref(symbol, tab.id)}
+            >
+              {tab.label}
+            </Link>
+          ))}
+        </div>
       </div>
 
-      <div className="mt-3 grid gap-3 lg:grid-cols-[1fr_340px]">
-        <div className="rounded-lg border app-subtle p-3">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <div className="text-[11px] font-medium uppercase tracking-normal app-muted">
-                Moving averages
-              </div>
-              <div className="mt-1 text-xs app-muted">
-                Price compared with common short, medium, and long trend averages.
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-[11px] font-medium uppercase tracking-normal app-muted">
-                Last close
-              </div>
-              <div className="text-sm font-semibold app-heading">
-                {formatCurrency(analysis.latestClose)}
-              </div>
-            </div>
-          </div>
-          <div className="mt-3 space-y-2">
-            {analysis.movingAverages.map((ma) => (
-              <MovingAverageRow key={ma.label} ma={ma} />
-            ))}
-          </div>
-        </div>
+      {activeSection === "stop-loss" ? <StopLossPanel stopLoss={analysis.stopLoss} /> : null}
 
-        <div className="grid gap-3">
+      {activeSection === "signals" ? (
+        <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+          {analysis.signals.map((signal) => (
+            <SignalCard key={signal.label} signal={signal} />
+          ))}
+        </div>
+      ) : null}
+
+      {activeSection === "moving-averages" ? (
+        <MovingAveragesPanel
+          latestClose={analysis.latestClose}
+          movingAverages={analysis.movingAverages}
+        />
+      ) : null}
+
+      {activeSection === "momentum" ? (
+        <div className="mt-3 grid gap-3 lg:grid-cols-2">
           <RsiGauge value={analysis.rsi} />
           <MacdBars values={analysis.macd.histogram.slice(-18)} tone={analysis.macdTone} />
         </div>
-      </div>
+      ) : null}
     </section>
+  );
+}
+
+function StopLossPanel({ stopLoss }: { stopLoss: StopLossRead }) {
+  const prices = stopLoss.methods.map((method) => method.price);
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const range = Math.max(max - min, 0.01);
+
+  return (
+    <div className="mt-3 space-y-3">
+      <div className="rounded-lg border border-[color-mix(in_srgb,var(--app-negative)_30%,var(--app-border))] bg-[color-mix(in_srgb,var(--app-negative)_6%,var(--app-surface))] p-3">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <div className="text-[11px] font-medium uppercase tracking-normal app-muted">
+              Which stop loss is good?
+            </div>
+            <div className="mt-1 text-sm font-semibold app-heading">
+              Balanced choice: <span className="app-negative">{formatCurrency(stopLoss.balanced.price)}</span>
+            </div>
+            <p className="mt-1 max-w-3xl text-xs leading-5 app-muted">{stopLoss.summary}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:min-w-[280px]">
+            <StopLossStat label="Balanced risk" value={formatSignedPercent(stopLoss.balanced.riskPercent)} />
+            <StopLossStat label="Confidence" value={stopLoss.confidence} />
+          </div>
+        </div>
+
+        <div className="mt-3 grid gap-2 md:grid-cols-3">
+          <RecommendationCard
+            label="Short-term trade"
+            method={stopLoss.shortTerm}
+            note="Tighter exit. Good if you want to protect capital quickly and can re-enter later."
+          />
+          <RecommendationCard
+            label="Balanced swing"
+            method={stopLoss.balanced}
+            note="Best default choice. It gives the stock room to move without accepting the widest drawdown."
+            recommended
+          />
+          <RecommendationCard
+            label="Position trade"
+            method={stopLoss.position}
+            note="Wider exit. Better for longer holds, but risk is larger before the stop triggers."
+          />
+        </div>
+      </div>
+
+      <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+        {stopLoss.methods.map((method) => {
+          const position = ((method.price - min) / range) * 100;
+
+          return (
+            <div
+              key={method.method}
+              className={`rounded-lg border px-3 py-2.5 ${
+                method.method === stopLoss.balanced.method
+                  ? "border-[color-mix(in_srgb,var(--app-negative)_45%,var(--app-border))] app-surface"
+                  : "app-subtle"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="text-[11px] font-medium uppercase tracking-normal app-muted">
+                  {method.label}
+                </div>
+                {method.method === stopLoss.balanced.method ? (
+                  <span className="rounded-full bg-[color-mix(in_srgb,var(--app-negative)_12%,transparent)] px-2 py-0.5 text-[10px] font-semibold app-negative">
+                    Balanced
+                  </span>
+                ) : null}
+              </div>
+              <div className="mt-1 flex items-baseline justify-between gap-2">
+                <div className="text-sm font-semibold app-heading">{formatCurrency(method.price)}</div>
+                <div className="text-xs font-semibold app-negative">
+                  {formatSignedPercent(method.riskPercent)}
+                </div>
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--app-border-soft)]">
+                <div
+                  className="h-full rounded-full bg-[var(--app-negative)]"
+                  style={{ width: `${Math.max(8, Math.min(100, position))}%` }}
+                />
+              </div>
+              <p className="mt-2 text-xs leading-5 app-muted">{method.detail}</p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function RecommendationCard({
+  label,
+  method,
+  note,
+  recommended = false,
+}: {
+  label: string;
+  method: StopLossMethod;
+  note: string;
+  recommended?: boolean;
+}) {
+  return (
+    <div className={`rounded-lg border px-3 py-2.5 ${recommended ? "app-surface" : "app-subtle"}`}>
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-[11px] font-semibold uppercase tracking-normal app-muted">
+          {label}
+        </div>
+        {recommended ? (
+          <span className="rounded-full bg-[color-mix(in_srgb,var(--app-positive)_12%,transparent)] px-2 py-0.5 text-[10px] font-semibold app-positive">
+            Good default
+          </span>
+        ) : null}
+      </div>
+      <div className="mt-1 flex items-baseline justify-between gap-2">
+        <div className="text-sm font-semibold app-heading">{formatCurrency(method.price)}</div>
+        <div className="text-xs font-semibold app-negative">
+          {formatSignedPercent(method.riskPercent)}
+        </div>
+      </div>
+      <p className="mt-2 text-xs leading-5 app-muted">
+        {method.label}. {note}
+      </p>
+    </div>
+  );
+}
+
+function StopLossStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border app-subtle px-3 py-2">
+      <div className="text-[11px] font-medium app-muted">{label}</div>
+      <div className="mt-1 text-sm font-semibold app-heading">{value}</div>
+    </div>
+  );
+}
+
+function technicalTabHref(symbol: string, tech: TechnicalSubTab) {
+  const params = new URLSearchParams({
+    symbol,
+    tab: "technical",
+  });
+
+  if (tech !== "stop-loss") {
+    params.set("tech", tech);
+  }
+
+  return `/dashboard?${params.toString()}`;
+}
+
+function MovingAveragesPanel({
+  latestClose,
+  movingAverages,
+}: {
+  latestClose: number;
+  movingAverages: Array<{
+    distance: number | null;
+    label: string;
+    tone: SignalTone;
+    value: number | null;
+  }>;
+}) {
+  return (
+    <div className="mt-3 rounded-lg border app-subtle p-3">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="text-[11px] font-medium uppercase tracking-normal app-muted">
+            Moving averages
+          </div>
+          <div className="mt-1 text-xs app-muted">
+            Price compared with common short, medium, and long trend averages.
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-[11px] font-medium uppercase tracking-normal app-muted">
+            Last close
+          </div>
+          <div className="text-sm font-semibold app-heading">
+            {formatCurrency(latestClose)}
+          </div>
+        </div>
+      </div>
+      <div className="mt-3 space-y-2">
+        {movingAverages.map((ma) => (
+          <MovingAverageRow key={ma.label} ma={ma} />
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -263,6 +507,7 @@ function buildTechnicalAnalysis(candles: Candle[]) {
   const macd = calculateMacd(closes);
   const bollinger = calculateBollinger(closes, 20);
   const volumeSignal = calculateVolumeSignal(candles);
+  const stopLoss = calculateStopLoss(candles, latestClose, sma20);
   const movingAverages = [
     toMovingAverage("SMA 20", sma20, latestClose),
     toMovingAverage("EMA 20", ema20, latestClose),
@@ -346,9 +591,159 @@ function buildTechnicalAnalysis(candles: Candle[]) {
     score,
     signals,
     summary,
+    stopLoss,
     tone,
     verdict,
   };
+}
+
+function calculateStopLoss(
+  candles: Candle[],
+  latestClose: number,
+  sma20: number | null
+): StopLossRead {
+  const atr = calculateAtr(candles, 14);
+  const sma50 = sma(candles.map((candle) => candle.close), 50);
+  const recentLows = candles
+    .slice(-60)
+    .map((candle) => candle.low)
+    .filter((low) => low > 0 && low < latestClose)
+    .sort((a, b) => b - a);
+  const nearestSupport = recentLows[0] ?? null;
+  const swingLow = Math.min(...candles.slice(-20).map((candle) => candle.low));
+  const recentHigh = Math.max(...candles.slice(-20).map((candle) => candle.high));
+  const rawMethods = [
+    {
+      label: "Support-based",
+      price: nearestSupport === null ? null : nearestSupport * 0.98,
+      detail: "Uses the nearest recent support area with a small buffer.",
+      method: "support",
+      weight: 3,
+    },
+    {
+      label: "ATR conservative",
+      price: atr === null ? null : latestClose - atr * 2,
+      detail: "Uses two average true ranges below the latest close.",
+      method: "atr-2",
+      weight: 3,
+    },
+    {
+      label: "ATR tight",
+      price: atr === null ? null : latestClose - atr * 1.25,
+      detail: "Uses a tighter 1.25 ATR buffer for shorter-term trades.",
+      method: "atr-1.25",
+      weight: 2,
+    },
+    {
+      label: "SMA 20 trend",
+      price: sma20 === null ? null : sma20 * 0.97,
+      detail: "Uses the 20-day average with a small buffer.",
+      method: "sma20",
+      weight: 2,
+    },
+    {
+      label: "SMA 50 trend",
+      price: sma50 === null ? null : sma50 * 0.97,
+      detail: "Uses the 50-day average for a wider trend stop.",
+      method: "sma50",
+      weight: 1,
+    },
+    {
+      label: "Swing low",
+      price: Number.isFinite(swingLow) ? swingLow * 0.985 : null,
+      detail: "Uses the lowest low from the last 20 daily candles.",
+      method: "swing-low",
+      weight: 2,
+    },
+    {
+      label: "Trailing high",
+      price: Number.isFinite(recentHigh) ? recentHigh * 0.9 : null,
+      detail: "Uses a 10% trailing stop from the recent 20-day high.",
+      method: "trailing-high",
+      weight: 1,
+    },
+    {
+      label: "Fixed 8%",
+      price: latestClose * 0.92,
+      detail: "Uses a simple fixed-risk fallback when chart levels are noisy.",
+      method: "fixed-8",
+      weight: 1,
+    },
+  ];
+  const methods = rawMethods
+    .filter((candidate): candidate is StopLossMethod =>
+      candidate.price !== null && candidate.price > 0 && candidate.price < latestClose
+    )
+    .map((method) => ({
+      ...method,
+      riskPercent: ((method.price - latestClose) / latestClose) * 100,
+    }))
+    .sort((a, b) => b.price - a.price);
+  const weightedPrice =
+    methods.reduce((sum, method) => sum + method.price * method.weight, 0) /
+    methods.reduce((sum, method) => sum + method.weight, 0);
+  const suggested =
+    methods
+      .map((method) => ({
+        ...method,
+        distanceFromWeighted: Math.abs(method.price - weightedPrice),
+      }))
+      .sort((a, b) => a.distanceFromWeighted - b.distanceFromWeighted)[0] ?? {
+      detail: "Uses an 8% fallback because technical support data is limited.",
+      label: "Fixed 8%",
+      method: "fixed-8",
+      price: latestClose * 0.92,
+      riskPercent: -8,
+      weight: 1,
+    };
+  const cleanSuggested: StopLossMethod = {
+    detail: suggested.detail,
+    label: suggested.label,
+    method: suggested.method,
+    price: suggested.price,
+    riskPercent: suggested.riskPercent,
+    weight: suggested.weight,
+  };
+  const confidence = methods.length >= 5 ? "High" : methods.length >= 3 ? "Medium" : "Low";
+  const shortTerm =
+    methods.find((method) => method.method === "support") ??
+    methods.find((method) => method.method === "fixed-8") ??
+    methods[0] ??
+    cleanSuggested;
+  const position =
+    methods.find((method) => method.method === "sma50") ??
+    methods.find((method) => method.method === "atr-2") ??
+    methods.at(-1) ??
+    cleanSuggested;
+
+  return {
+    balanced: cleanSuggested,
+    confidence,
+    methods,
+    position,
+    shortTerm,
+    suggested: cleanSuggested,
+    summary: `For most swing trades, the balanced stop is the best default because it combines ${methods.length} available methods and stays closest to the weighted average of support, volatility, trend, swing, trailing, and fixed-risk stops. Use the short-term stop only if you want a tight exit.`,
+  };
+}
+
+function calculateAtr(candles: Candle[], period: number) {
+  if (candles.length <= period) return null;
+
+  const trueRanges = candles.slice(-period).map((candle, index, slice) => {
+    const previousClose =
+      index === 0
+        ? candles[candles.length - period - 1]?.close ?? candle.close
+        : slice[index - 1].close;
+
+    return Math.max(
+      candle.high - candle.low,
+      Math.abs(candle.high - previousClose),
+      Math.abs(candle.low - previousClose)
+    );
+  });
+
+  return trueRanges.reduce((sum, value) => sum + value, 0) / trueRanges.length;
 }
 
 function toCandles(ohlc: OhlcDaily[]): Candle[] {
