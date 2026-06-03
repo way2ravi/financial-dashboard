@@ -5,6 +5,7 @@ import type {
   CompanyNewsArticle,
   EarningsCalendarItem,
   EarningsQuarterly,
+  FinancialStatementRow,
   FundamentalsSnapshot,
   OhlcDaily,
   Portfolio,
@@ -13,7 +14,7 @@ import type {
   Ticker,
   WatchlistItem,
 } from "@/lib/types/market";
-import type { WealthItem, WealthUserSettings } from "@/lib/types/wealth";
+import type { WealthItem, WealthSnapshot, WealthUserSettings } from "@/lib/types/wealth";
 
 type Tables = Database["public"]["Tables"];
 type TickerRow = Tables["tickers"]["Row"];
@@ -157,6 +158,35 @@ export function mapFundamentals(
   };
 }
 
+export function mapFinancialStatement(
+  row: Tables["financial_statement_rows"]["Row"]
+): FinancialStatementRow {
+  return {
+    id: row.id,
+    tickerId: row.ticker_id,
+    statementType: row.statement_type as FinancialStatementRow["statementType"],
+    periodType: row.period_type as FinancialStatementRow["periodType"],
+    fiscalDate: row.fiscal_date,
+    calendarYear: row.calendar_year,
+    period: row.period,
+    totalRevenue: row.total_revenue,
+    grossProfit: row.gross_profit,
+    operatingIncome: row.operating_income,
+    netIncome: row.net_income,
+    totalAssets: row.total_assets,
+    totalCurrentLiabilities: row.total_current_liabilities,
+    totalEquity: row.total_equity,
+    leveredFreeCashFlow: row.levered_free_cash_flow,
+    cashFromOperations: row.cash_from_operations,
+    cashFromInvesting: row.cash_from_investing,
+    cashFromFinancing: row.cash_from_financing,
+    netChangeInCash: row.net_change_in_cash,
+    source: row.source,
+    sourceUpdatedAt: row.source_updated_at,
+    fetchedAt: row.fetched_at,
+  };
+}
+
 export function mapOhlc(row: Tables["ohlc_daily"]["Row"]): OhlcDaily {
   return {
     id: row.id,
@@ -260,6 +290,25 @@ export function mapWealthItem(row: Tables["wealth_items"]["Row"]): WealthItem {
     monthlyPayment: row.monthly_payment,
     asOfDate: row.as_of_date,
     notes: row.notes,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function mapWealthSnapshot(
+  row: Tables["wealth_snapshots"]["Row"]
+): WealthSnapshot {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    snapshotDate: row.snapshot_date,
+    totalAssets: Number(row.total_assets),
+    totalLiabilities: Number(row.total_liabilities),
+    netWorth: Number(row.net_worth),
+    liquidAssets: Number(row.liquid_assets),
+    fixedAssets: Number(row.fixed_assets),
+    investments: Number(row.investments),
+    monthlyDebtPayments: Number(row.monthly_debt_payments),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

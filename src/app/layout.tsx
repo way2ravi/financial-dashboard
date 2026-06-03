@@ -35,14 +35,6 @@ export default function RootLayout({
               try {
                 var theme = localStorage.getItem("financial-dashboard-theme") || "black";
                 document.documentElement.dataset.theme = theme;
-                function syncThemeButtons() {
-                  document.querySelectorAll("[data-theme-option]").forEach(function (button) {
-                    var active = button.getAttribute("data-theme-option") === theme;
-                    button.setAttribute("data-active", active ? "true" : "false");
-                    button.setAttribute("aria-pressed", active ? "true" : "false");
-                  });
-                }
-                document.addEventListener("DOMContentLoaded", syncThemeButtons);
                 document.addEventListener("click", function (event) {
                   var target = event.target && event.target.closest
                     ? event.target.closest("[data-theme-option]")
@@ -51,7 +43,6 @@ export default function RootLayout({
                   theme = target.getAttribute("data-theme-option") || "black";
                   document.documentElement.dataset.theme = theme;
                   localStorage.setItem("financial-dashboard-theme", theme);
-                  syncThemeButtons();
                 });
               } catch (_) {
                 document.documentElement.dataset.theme = "black";

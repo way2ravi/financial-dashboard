@@ -29,7 +29,7 @@ export function NewsBlock({ news, showDataSource = false }: Props) {
 
       {news.length === 0 ? (
         <div className="mt-3 rounded-lg border app-subtle p-3 text-xs app-muted">
-          No company news is cached yet. Press Load to refresh Finnhub first, then Alpha Vantage as fallback. Some smaller tickers may not return provider news on free plans.
+          No company news is cached yet. Selecting a ticker refreshes Finnhub first, then Alpha Vantage as fallback. Some smaller tickers may not return provider news on free plans.
         </div>
       ) : (
         <div className="mt-3 divide-y app-border-soft">

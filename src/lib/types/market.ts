@@ -154,6 +154,47 @@ export type FundamentalsSnapshot = {
   fetchedAt: string;
 };
 
+export type FinancialStatementType = "income" | "balance" | "cashflow";
+
+export type FinancialStatementPeriod = "annual" | "quarter";
+
+export type FinancialStatementRow = {
+  id: number;
+  tickerId: number;
+  statementType: FinancialStatementType;
+  periodType: FinancialStatementPeriod;
+  fiscalDate: string;
+  calendarYear: string | null;
+  period: string | null;
+  totalRevenue: number | null;
+  grossProfit: number | null;
+  operatingIncome: number | null;
+  netIncome: number | null;
+  totalAssets: number | null;
+  totalCurrentLiabilities: number | null;
+  totalEquity: number | null;
+  leveredFreeCashFlow: number | null;
+  cashFromOperations: number | null;
+  cashFromInvesting: number | null;
+  cashFromFinancing: number | null;
+  netChangeInCash: number | null;
+  source: ProviderName | string | null;
+  sourceUpdatedAt: string | null;
+  fetchedAt: string;
+};
+
+export type FinancialStatements = {
+  annual: FinancialStatementRow[];
+  quarterly: FinancialStatementRow[];
+};
+
+export type ProviderFinancialStatementRow = Omit<
+  FinancialStatementRow,
+  "fetchedAt" | "id" | "tickerId"
+> & {
+  symbol: string;
+};
+
 export type OhlcDaily = {
   id: number;
   tickerId: number;
@@ -286,6 +327,7 @@ export type DashboardData = {
   analystPriceTargets: AnalystPriceTargetsSnapshot | null;
   earnings: EarningsQuarterly[];
   fundamentals: FundamentalsSnapshot | null;
+  financialStatements: FinancialStatements;
   ohlc: OhlcDaily[];
   news: CompanyNewsArticle[];
 };
@@ -421,6 +463,7 @@ export type RefreshModule =
   | "priceTargets"
   | "earnings"
   | "fundamentals"
+  | "financialStatements"
   | "ohlc"
   | "news";
 

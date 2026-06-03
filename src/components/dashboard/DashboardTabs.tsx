@@ -115,6 +115,7 @@ export function DashboardTabs({
 
       {activeTab === "fundamentals" ? (
         <FundamentalsGrid
+          financialStatements={data.financialStatements}
           fundamentals={data.fundamentals}
           showDataSource={showDataSource}
         />

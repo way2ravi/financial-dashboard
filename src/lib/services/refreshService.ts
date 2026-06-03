@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   getAlphaVantageDailyOhlc,
   getAlphaVantageEarnings,
+  getAlphaVantageFinancialStatements,
   getAlphaVantageFundamentals,
   getAlphaVantageNews,
   getAlphaVantageQuote,
@@ -15,9 +16,11 @@ import {
   getFinnhubQuote,
   getFmpAnalystRatings,
   getFmpDailyOhlc,
+  getFmpFinancialStatements,
   getFmpFundamentals,
   getFmpPriceTargets,
   getFmpQuote,
+  getSecFinancialStatements,
   getTwelveDataDailyOhlc,
   getTwelveDataQuote,
 } from "@/lib/providers";
@@ -28,6 +31,7 @@ import {
   upsertAnalystPriceTargets,
   upsertAnalystRatings,
   upsertDailyOhlc,
+  upsertFinancialStatements,
   upsertFundamentalsSnapshot,
   upsertCompanyNews,
   upsertLatestQuote,
@@ -215,6 +219,31 @@ export async function refreshMarketDataForSymbol(
           status: "success",
           updated: 1,
           provider: fundamentals.source,
+        };
+      },
+    },
+    {
+      module: "financialStatements",
+      run: async () => {
+        const statements = await tryProviderFallbacks(
+          supabase,
+          normalizedSymbol,
+          "financialStatements",
+          [
+            { provider: "fmp", run: () => getFmpFinancialStatements(normalizedSymbol) },
+            {
+              provider: "alpha_vantage",
+              run: () => getAlphaVantageFinancialStatements(normalizedSymbol),
+            },
+            { provider: "sec", run: () => getSecFinancialStatements(normalizedSymbol) },
+          ]
+        );
+        const updated = await upsertFinancialStatements(supabase, ticker, statements);
+        return {
+          module: "financialStatements",
+          status: "success",
+          updated,
+          provider: statements[0]?.source ?? undefined,
         };
       },
     },

@@ -4,6 +4,7 @@ import type {
   ProviderAnalystPriceTargets,
   ProviderAnalystRatings,
   ProviderEarningsQuarterly,
+  ProviderFinancialStatementRow,
   ProviderFundamentalsSnapshot,
   ProviderNewsArticle,
   ProviderOhlcDaily,
@@ -135,6 +136,55 @@ export async function upsertFundamentalsSnapshot(
   }
 }
 
+export async function upsertFinancialStatements(
+  supabase: DbClient,
+  ticker: Ticker,
+  rows: ProviderFinancialStatementRow[]
+): Promise<number> {
+  if (rows.length === 0) {
+    return 0;
+  }
+
+  const { error } = await supabase.from("financial_statement_rows").upsert(
+    rows.map((row) => ({
+      ticker_id: ticker.id,
+      statement_type: row.statementType,
+      period_type: row.periodType,
+      fiscal_date: row.fiscalDate,
+      calendar_year: row.calendarYear,
+      period: row.period,
+      total_revenue: row.totalRevenue,
+      gross_profit: row.grossProfit,
+      operating_income: row.operatingIncome,
+      net_income: row.netIncome,
+      total_assets: row.totalAssets,
+      total_current_liabilities: row.totalCurrentLiabilities,
+      total_equity: row.totalEquity,
+      levered_free_cash_flow: row.leveredFreeCashFlow,
+      cash_from_operations: row.cashFromOperations,
+      cash_from_investing: row.cashFromInvesting,
+      cash_from_financing: row.cashFromFinancing,
+      net_change_in_cash: row.netChangeInCash,
+      source: row.source,
+      source_updated_at: row.sourceUpdatedAt,
+      fetched_at: new Date().toISOString(),
+    })),
+    { onConflict: "ticker_id,statement_type,period_type,fiscal_date" }
+  );
+
+  if (error) {
+    if (isMissingFinancialStatementsTableError(error)) {
+      throw new Error(
+        "Financial statement table is missing. Run the financial_statement_rows section in src/lib/supabase/schema.sql and src/lib/supabase/rls.sql in Supabase."
+      );
+    }
+
+    throw error;
+  }
+
+  return rows.length;
+}
+
 export async function upsertDailyOhlc(
   supabase: DbClient,
   ticker: Ticker,
@@ -228,6 +278,21 @@ function isMissingCompanyNewsTableError(error: unknown) {
     record.code === "42P01" ||
     record.code === "PGRST205" ||
     record.message?.includes("company_news") ||
+    record.message?.includes("schema cache")
+  );
+}
+
+function isMissingFinancialStatementsTableError(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const record = error as { code?: string; message?: string };
+
+  return (
+    record.code === "42P01" ||
+    record.code === "PGRST205" ||
+    record.message?.includes("financial_statement_rows") ||
     record.message?.includes("schema cache")
   );
 }

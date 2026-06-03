@@ -2,6 +2,7 @@ import "server-only";
 
 import type {
   ProviderEarningsQuarterly,
+  ProviderFinancialStatementRow,
   ProviderFundamentalsSnapshot,
   ProviderNewsArticle,
   ProviderOhlcDaily,
@@ -35,6 +36,13 @@ type AlphaVantageOverviewResponse = Record<string, string | undefined> & {
 
 type AlphaVantageEarningsResponse = {
   quarterlyEarnings?: Array<Record<string, string | undefined>>;
+  Note?: string;
+  Information?: string;
+};
+
+type AlphaVantageStatementResponse = {
+  annualReports?: Array<Record<string, string | undefined>>;
+  quarterlyReports?: Array<Record<string, string | undefined>>;
   Note?: string;
   Information?: string;
 };
@@ -245,6 +253,102 @@ export async function getAlphaVantageEarnings(
   return earnings.slice(0, 8);
 }
 
+export async function getAlphaVantageFinancialStatements(
+  symbol: string
+): Promise<ProviderFinancialStatementRow[]> {
+  const normalizedSymbol = symbol.trim().toUpperCase();
+  const income = await getFromAlphaVantage<AlphaVantageStatementResponse>({
+    function: "INCOME_STATEMENT",
+    symbol: normalizedSymbol,
+  });
+  await waitForAlphaVantageFreeTier();
+  const balance = await getFromAlphaVantage<AlphaVantageStatementResponse>({
+    function: "BALANCE_SHEET",
+    symbol: normalizedSymbol,
+  });
+  await waitForAlphaVantageFreeTier();
+  const cashflow = await getFromAlphaVantage<AlphaVantageStatementResponse>({
+    function: "CASH_FLOW",
+    symbol: normalizedSymbol,
+  });
+
+  const rows = [
+    ...mapAlphaVantageStatementRows(normalizedSymbol, "income", "annual", income.annualReports, 5),
+    ...mapAlphaVantageStatementRows(normalizedSymbol, "income", "quarter", income.quarterlyReports, 4),
+    ...mapAlphaVantageStatementRows(normalizedSymbol, "balance", "annual", balance.annualReports, 5),
+    ...mapAlphaVantageStatementRows(normalizedSymbol, "balance", "quarter", balance.quarterlyReports, 4),
+    ...mapAlphaVantageStatementRows(normalizedSymbol, "cashflow", "annual", cashflow.annualReports, 5),
+    ...mapAlphaVantageStatementRows(normalizedSymbol, "cashflow", "quarter", cashflow.quarterlyReports, 4),
+  ];
+
+  if (rows.length === 0) {
+    throw new Error("Alpha Vantage financial statement response was empty");
+  }
+
+  return rows;
+}
+
+function mapAlphaVantageStatementRows(
+  symbol: string,
+  statementType: ProviderFinancialStatementRow["statementType"],
+  periodType: ProviderFinancialStatementRow["periodType"],
+  reports: Array<Record<string, string | undefined>> | undefined,
+  limit: number
+): ProviderFinancialStatementRow[] {
+  return (reports ?? [])
+    .slice(0, limit)
+    .map((row) => mapAlphaVantageStatementRow(symbol, statementType, periodType, row))
+    .filter((row): row is ProviderFinancialStatementRow => row !== null);
+}
+
+function mapAlphaVantageStatementRow(
+  symbol: string,
+  statementType: ProviderFinancialStatementRow["statementType"],
+  periodType: ProviderFinancialStatementRow["periodType"],
+  row: Record<string, string | undefined>
+): ProviderFinancialStatementRow | null {
+  const fiscalDate = getString(row, "fiscalDateEnding");
+
+  if (!fiscalDate) {
+    return null;
+  }
+
+  const operatingCash = toNumber(getString(row, "operatingCashflow"));
+  const capitalExpenditures = toNumber(getString(row, "capitalExpenditures"));
+
+  return {
+    symbol,
+    statementType,
+    periodType,
+    fiscalDate,
+    calendarYear: fiscalDate.slice(0, 4),
+    period: periodType === "annual" ? fiscalDate.slice(0, 4) : `Q${inferQuarter(fiscalDate) ?? ""} ${fiscalDate.slice(0, 4)}`.trim(),
+    totalRevenue: statementType === "income" ? toNumber(getString(row, "totalRevenue")) : null,
+    grossProfit: statementType === "income" ? toNumber(getString(row, "grossProfit")) : null,
+    operatingIncome:
+      statementType === "income" ? toNumber(getString(row, "operatingIncome")) : null,
+    netIncome: statementType === "income" ? toNumber(getString(row, "netIncome")) : null,
+    totalAssets: statementType === "balance" ? toNumber(getString(row, "totalAssets")) : null,
+    totalCurrentLiabilities:
+      statementType === "balance" ? toNumber(getString(row, "totalCurrentLiabilities")) : null,
+    totalEquity:
+      statementType === "balance" ? toNumber(getString(row, "totalShareholderEquity")) : null,
+    leveredFreeCashFlow:
+      statementType === "cashflow" ? estimateFreeCashFlow(operatingCash, capitalExpenditures) : null,
+    cashFromOperations: statementType === "cashflow" ? operatingCash : null,
+    cashFromInvesting:
+      statementType === "cashflow" ? toNumber(getString(row, "cashflowFromInvestment")) : null,
+    cashFromFinancing:
+      statementType === "cashflow" ? toNumber(getString(row, "cashflowFromFinancing")) : null,
+    netChangeInCash:
+      statementType === "cashflow"
+        ? toNumber(getString(row, "changeInCashAndCashEquivalents"))
+        : null,
+    source: PROVIDER,
+    sourceUpdatedAt: fiscalDate,
+  };
+}
+
 export async function getAlphaVantageNews(
   symbol: string,
   limit = 12
@@ -328,7 +432,9 @@ async function getFromAlphaVantage<T>(params: Record<string, string>): Promise<T
   const throttledMessage = getProviderMessage(data);
 
   if (throttledMessage) {
-    throw new Error(`Alpha Vantage ${params.function} unavailable: ${throttledMessage}`);
+    throw new Error(
+      `Alpha Vantage ${params.function} unavailable: ${sanitizeProviderMessage(throttledMessage)}`
+    );
   }
 
   return data;
@@ -342,6 +448,12 @@ function getProviderMessage(data: unknown) {
   const record = data as { Note?: string; Information?: string; "Error Message"?: string };
 
   return record.Note ?? record.Information ?? record["Error Message"] ?? null;
+}
+
+function sanitizeProviderMessage(message: string) {
+  return message
+    .replace(/API key as\s+[A-Z0-9]+/gi, "API key")
+    .replace(/apikey=[A-Z0-9]+/gi, "apikey=[hidden]");
 }
 
 function getString(record: Record<string, string | undefined>, key: string) {
@@ -365,6 +477,21 @@ function toPercentNumber(value: string | number | null | undefined) {
   }
 
   return toNumber(value);
+}
+
+function estimateFreeCashFlow(
+  operatingCash: number | null,
+  capitalExpenditures: number | null
+) {
+  if (operatingCash === null) {
+    return null;
+  }
+
+  return operatingCash + (capitalExpenditures ?? 0);
+}
+
+function waitForAlphaVantageFreeTier() {
+  return new Promise((resolve) => setTimeout(resolve, 1200));
 }
 
 function mapAlphaVantageMovers(items: AlphaVantageMover[]): ScreenerResult[] {
@@ -418,6 +545,7 @@ export const alphaVantageProvider = {
   getQuote: getAlphaVantageQuote,
   getDailyOhlc: getAlphaVantageDailyOhlc,
   getFundamentals: getAlphaVantageFundamentals,
+  getFinancialStatements: getAlphaVantageFinancialStatements,
   getEarnings: getAlphaVantageEarnings,
   getCompanyNews: getAlphaVantageNews,
   getMarketMovers: getAlphaVantageMarketMovers,

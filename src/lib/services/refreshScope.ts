@@ -7,6 +7,7 @@ const refreshModules = [
   "priceTargets",
   "earnings",
   "fundamentals",
+  "financialStatements",
   "ohlc",
   "news",
 ] as const;

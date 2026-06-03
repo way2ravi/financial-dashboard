@@ -4,6 +4,7 @@ import type {
   AnalystRatingConsensus,
   ProviderAnalystPriceTargets,
   ProviderAnalystRatings,
+  ProviderFinancialStatementRow,
   ProviderFundamentalsSnapshot,
   ProviderOhlcDaily,
   ProviderQuote,
@@ -52,6 +53,39 @@ type FmpRatiosResponse = Array<{
 type FmpProfileResponse = Array<{
   mktCap?: number;
   beta?: number;
+}>;
+
+type FmpIncomeStatementResponse = Array<{
+  date?: string;
+  calendarYear?: string;
+  period?: string;
+  revenue?: number;
+  grossProfit?: number;
+  operatingIncome?: number;
+  netIncome?: number;
+}>;
+
+type FmpBalanceSheetResponse = Array<{
+  date?: string;
+  calendarYear?: string;
+  period?: string;
+  totalAssets?: number;
+  totalCurrentLiabilities?: number;
+  totalStockholdersEquity?: number;
+  totalEquity?: number;
+}>;
+
+type FmpCashFlowResponse = Array<{
+  date?: string;
+  calendarYear?: string;
+  period?: string;
+  freeCashFlow?: number;
+  operatingCashFlow?: number;
+  netCashProvidedByOperatingActivities?: number;
+  netCashUsedForInvestingActivites?: number;
+  netCashUsedForInvestingActivities?: number;
+  netCashUsedProvidedByFinancingActivities?: number;
+  netChangeInCash?: number;
 }>;
 
 type FmpPriceTargetConsensusResponse =
@@ -246,6 +280,101 @@ export async function getFmpFundamentals(
   };
 }
 
+export async function getFmpFinancialStatements(
+  symbol: string
+): Promise<ProviderFinancialStatementRow[]> {
+  const normalizedSymbol = symbol.trim().toUpperCase();
+  const [annualIncome, quarterlyIncome, annualBalance, quarterlyBalance, annualCash, quarterlyCash] =
+    await Promise.all([
+      getFmpStatementRows(normalizedSymbol, "income", "annual", 5),
+      getFmpStatementRows(normalizedSymbol, "income", "quarter", 4),
+      getFmpStatementRows(normalizedSymbol, "balance", "annual", 5),
+      getFmpStatementRows(normalizedSymbol, "balance", "quarter", 4),
+      getFmpStatementRows(normalizedSymbol, "cashflow", "annual", 5),
+      getFmpStatementRows(normalizedSymbol, "cashflow", "quarter", 4),
+    ]);
+
+  return [
+    ...annualIncome,
+    ...quarterlyIncome,
+    ...annualBalance,
+    ...quarterlyBalance,
+    ...annualCash,
+    ...quarterlyCash,
+  ];
+}
+
+async function getFmpStatementRows(
+  symbol: string,
+  statementType: ProviderFinancialStatementRow["statementType"],
+  periodType: ProviderFinancialStatementRow["periodType"],
+  limit: number
+): Promise<ProviderFinancialStatementRow[]> {
+  const period = periodType === "annual" ? "annual" : "quarter";
+  const path =
+    statementType === "income"
+      ? `income-statement/${symbol}`
+      : statementType === "balance"
+        ? `balance-sheet-statement/${symbol}`
+        : `cash-flow-statement/${symbol}`;
+  const raw = await getFromFmp<
+    FmpIncomeStatementResponse | FmpBalanceSheetResponse | FmpCashFlowResponse
+  >(path, { period, limit: String(limit) });
+
+  return raw
+    .map((row) => mapFmpStatementRow(symbol, statementType, periodType, row))
+    .filter((row): row is ProviderFinancialStatementRow => row !== null);
+}
+
+function mapFmpStatementRow(
+  symbol: string,
+  statementType: ProviderFinancialStatementRow["statementType"],
+  periodType: ProviderFinancialStatementRow["periodType"],
+  row: FmpIncomeStatementResponse[number] &
+    FmpBalanceSheetResponse[number] &
+    FmpCashFlowResponse[number]
+): ProviderFinancialStatementRow | null {
+  if (!row.date) {
+    return null;
+  }
+
+  return {
+    symbol,
+    statementType,
+    periodType,
+    fiscalDate: row.date,
+    calendarYear: row.calendarYear ?? null,
+    period: row.period ?? null,
+    totalRevenue: statementType === "income" ? toNumber(row.revenue) : null,
+    grossProfit: statementType === "income" ? toNumber(row.grossProfit) : null,
+    operatingIncome: statementType === "income" ? toNumber(row.operatingIncome) : null,
+    netIncome: statementType === "income" ? toNumber(row.netIncome) : null,
+    totalAssets: statementType === "balance" ? toNumber(row.totalAssets) : null,
+    totalCurrentLiabilities:
+      statementType === "balance" ? toNumber(row.totalCurrentLiabilities) : null,
+    totalEquity:
+      statementType === "balance"
+        ? toNumber(row.totalStockholdersEquity ?? row.totalEquity)
+        : null,
+    leveredFreeCashFlow: statementType === "cashflow" ? toNumber(row.freeCashFlow) : null,
+    cashFromOperations:
+      statementType === "cashflow"
+        ? toNumber(row.operatingCashFlow ?? row.netCashProvidedByOperatingActivities)
+        : null,
+    cashFromInvesting:
+      statementType === "cashflow"
+        ? toNumber(row.netCashUsedForInvestingActivites ?? row.netCashUsedForInvestingActivities)
+        : null,
+    cashFromFinancing:
+      statementType === "cashflow"
+        ? toNumber(row.netCashUsedProvidedByFinancingActivities)
+        : null,
+    netChangeInCash: statementType === "cashflow" ? toNumber(row.netChangeInCash) : null,
+    source: PROVIDER,
+    sourceUpdatedAt: row.date,
+  };
+}
+
 export async function getFmpScreener(
   params: Record<string, string> = {}
 ): Promise<ScreenerResult[]> {
@@ -429,6 +558,7 @@ export const fmpProvider = {
   getAnalystRatings: getFmpAnalystRatings,
   getPriceTargets: getFmpPriceTargets,
   getFundamentals: getFmpFundamentals,
+  getFinancialStatements: getFmpFinancialStatements,
   getScreener: getFmpScreener,
   getMarketList: getFmpMarketList,
 };

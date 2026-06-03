@@ -29,6 +29,7 @@ export default async function MarketPage({ searchParams }: Props) {
   const refresh = getSearchParam(params.refresh) === "1";
   const overview = await getMarketOverview(createAdminClient(), { refresh });
   const regionSummaries = summarizeRegions(overview.markets);
+  const readiness = buildFoReadiness(overview.markets, overview.mood);
 
   return (
     <main className="min-h-screen app-bg">
@@ -82,9 +83,92 @@ export default async function MarketPage({ searchParams }: Props) {
           </div>
         </section>
 
+        <MarketReadinessPanel readiness={readiness} />
+
         <MarketTable markets={overview.markets} />
       </div>
     </main>
+  );
+}
+
+function MarketReadinessPanel({ readiness }: { readiness: FoReadiness }) {
+  const toneClass =
+    readiness.tone === "positive"
+      ? "text-emerald-300"
+      : readiness.tone === "negative"
+        ? "text-rose-300"
+        : "text-amber-300";
+
+  return (
+    <section className="rounded-lg border app-surface p-4 shadow-sm">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <h2 className="text-sm font-semibold app-heading">Market Posture & F&O Readiness</h2>
+          <p className="mt-1 max-w-3xl text-xs leading-5 app-muted">
+            A practical pre-trade read for futures and options planning. This uses market breadth,
+            average index movement, US leadership, and current quote coverage. It is a readiness
+            guide, not a trade signal.
+          </p>
+        </div>
+        <div className="rounded-lg border app-subtle px-3 py-2 text-right">
+          <div className="text-[11px] uppercase tracking-wide app-muted">Posture</div>
+          <div className={`mt-1 text-sm font-semibold ${toneClass}`}>{readiness.label}</div>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="rounded-lg border app-subtle p-4">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs font-semibold app-heading">Readiness score</span>
+            <span className="text-xs font-semibold app-muted">{readiness.score}/100</span>
+          </div>
+          <div className="mt-3 h-2 overflow-hidden rounded-full app-surface">
+            <div
+              className={`h-full rounded-full ${readiness.barClass}`}
+              style={{ width: `${readiness.score}%` }}
+            />
+          </div>
+          <p className="mt-4 text-xs leading-5 app-muted">{readiness.summary}</p>
+          <div className="mt-4 rounded-md app-surface px-3 py-2 text-xs font-medium app-heading">
+            F&O stance: {readiness.stance}
+          </div>
+        </div>
+
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          {readiness.factors.map((factor) => (
+            <ReadinessFactor key={factor.label} factor={factor} />
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-2 md:grid-cols-3">
+        {readiness.actions.map((action) => (
+          <div key={action.title} className="rounded-lg border app-subtle px-3 py-2.5">
+            <div className="text-xs font-semibold app-heading">{action.title}</div>
+            <p className="mt-1 text-xs leading-5 app-muted">{action.body}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ReadinessFactor({ factor }: { factor: ReadinessFactor }) {
+  const toneClass =
+    factor.tone === "positive"
+      ? "app-positive"
+      : factor.tone === "negative"
+        ? "app-negative"
+        : "app-heading";
+
+  return (
+    <div className="rounded-lg border app-subtle px-3 py-2.5">
+      <div className="text-[11px] font-semibold uppercase tracking-normal app-muted">
+        {factor.label}
+      </div>
+      <div className={`mt-1 text-base font-semibold ${toneClass}`}>{factor.value}</div>
+      <p className="mt-1 text-[11px] leading-4 app-muted">{factor.detail}</p>
+    </div>
   );
 }
 
@@ -274,6 +358,210 @@ function MiniStat({ label, value }: { label: string; value: string }) {
       <div className="mt-1 text-sm font-semibold app-heading">{value}</div>
     </div>
   );
+}
+
+type ReadinessTone = "positive" | "negative" | "neutral";
+
+type ReadinessFactor = {
+  label: string;
+  value: string;
+  detail: string;
+  tone: ReadinessTone;
+};
+
+type FoReadiness = {
+  actions: Array<{ title: string; body: string }>;
+  barClass: string;
+  factors: ReadinessFactor[];
+  label: string;
+  score: number;
+  stance: string;
+  summary: string;
+  tone: ReadinessTone;
+};
+
+function buildFoReadiness(markets: GlobalMarketRow[], mood: MarketMood): FoReadiness {
+  const quotedMarkets = markets.filter(
+    (market) => market.quote?.changePercent !== null && market.quote?.changePercent !== undefined
+  );
+  const coverage = markets.length === 0 ? 0 : (quotedMarkets.length / markets.length) * 100;
+  const usMarkets = quotedMarkets.filter((market) => market.region === "United States");
+  const usAverage = averageChange(usMarkets);
+  const globalAverage = mood.averageChange;
+  const breadthPercent =
+    quotedMarkets.length === 0 ? null : (mood.advancers / quotedMarkets.length) * 100;
+  const spy = findChange(markets, "SPY");
+  const qqq = findChange(markets, "QQQ");
+  const iwm = findChange(markets, "IWM");
+  const leadershipSpread =
+    qqq !== null && spy !== null ? qqq - spy : iwm !== null && spy !== null ? iwm - spy : null;
+
+  let score = 50;
+
+  if (globalAverage !== null) score += Math.max(-22, Math.min(22, globalAverage * 9));
+  if (breadthPercent !== null) score += Math.max(-18, Math.min(18, (breadthPercent - 50) * 0.55));
+  if (usAverage !== null) score += Math.max(-12, Math.min(12, usAverage * 5));
+  if (coverage < 70) score -= 8;
+  if (leadershipSpread !== null && leadershipSpread > 0.35) score += 4;
+  if (leadershipSpread !== null && leadershipSpread < -0.35) score -= 4;
+
+  const boundedScore = Math.max(0, Math.min(100, Math.round(score)));
+  const tone: ReadinessTone =
+    boundedScore >= 62 ? "positive" : boundedScore <= 42 ? "negative" : "neutral";
+  const label =
+    tone === "positive" ? "Risk-on setup" : tone === "negative" ? "Risk-off setup" : "Balanced setup";
+  const barClass =
+    tone === "positive" ? "bg-emerald-500" : tone === "negative" ? "bg-rose-500" : "bg-amber-500";
+  const stance =
+    tone === "positive"
+      ? "Favour defined-risk bullish setups and avoid chasing overextended moves."
+      : tone === "negative"
+        ? "Prefer smaller size, hedges, or wait for stabilization before directional longs."
+        : "Use neutral or defined-risk strategies until breadth or momentum confirms direction.";
+
+  return {
+    actions: buildReadinessActions(tone, coverage),
+    barClass,
+    factors: [
+      {
+        label: "Breadth",
+        value: breadthPercent === null ? "-" : `${breadthPercent.toFixed(0)}% up`,
+        detail: `${mood.advancers} advancing, ${mood.decliners} declining`,
+        tone: getToneFromCenteredValue(breadthPercent, 55, 45),
+      },
+      {
+        label: "Global momentum",
+        value: globalAverage === null ? "-" : formatPercent(globalAverage),
+        detail: "Average move across tracked markets",
+        tone: getToneFromValue(globalAverage, 0.25, -0.25),
+      },
+      {
+        label: "US lead",
+        value: usAverage === null ? "-" : formatPercent(usAverage),
+        detail: "SPY, QQQ, DIA, IWM average",
+        tone: getToneFromValue(usAverage, 0.25, -0.25),
+      },
+      {
+        label: "Tech vs broad",
+        value: leadershipSpread === null ? "-" : formatPercent(leadershipSpread),
+        detail: "QQQ relative to SPY where available",
+        tone: getToneFromValue(leadershipSpread, 0.35, -0.35),
+      },
+    ],
+    label,
+    score: boundedScore,
+    stance,
+    summary: buildReadinessSummary(tone, boundedScore, coverage),
+    tone,
+  };
+}
+
+function buildReadinessActions(tone: ReadinessTone, coverage: number) {
+  const dataAction =
+    coverage < 70
+      ? {
+          title: "Data check",
+          body: "Refresh market quotes before using this for F&O planning because quote coverage is low.",
+        }
+      : {
+          title: "Data check",
+          body: "Quote coverage is usable for a same-day market posture read.",
+        };
+
+  if (tone === "positive") {
+    return [
+      {
+        title: "Directional bias",
+        body: "Bullish setups can be considered, but keep risk defined because strong days can reverse late.",
+      },
+      {
+        title: "Option structure",
+        body: "Prefer spreads over naked premium if implied volatility is elevated when we add options-chain data.",
+      },
+      dataAction,
+    ];
+  }
+
+  if (tone === "negative") {
+    return [
+      {
+        title: "Directional bias",
+        body: "Avoid forcing long trades. Watch for support breaks, failed bounces, or hedge opportunities.",
+      },
+      {
+        title: "Option structure",
+        body: "Defined-risk bearish spreads or protective puts fit better than oversized short-dated bets.",
+      },
+      dataAction,
+    ];
+  }
+
+  return [
+    {
+      title: "Directional bias",
+      body: "Market is mixed. Wait for confirmation or use neutral strategies where liquidity is strong.",
+    },
+    {
+      title: "Option structure",
+      body: "Iron condors, calendars, or debit spreads may fit better than one-way trades after options data is added.",
+    },
+    dataAction,
+  ];
+}
+
+function buildReadinessSummary(tone: ReadinessTone, score: number, coverage: number) {
+  const coverageText =
+    coverage < 70
+      ? " Quote coverage is thin, so treat this as preliminary."
+      : " Quote coverage is sufficient for a broad market read.";
+
+  if (tone === "positive") {
+    return `Market posture is constructive with a ${score}/100 readiness score.${coverageText}`;
+  }
+
+  if (tone === "negative") {
+    return `Market posture is defensive with a ${score}/100 readiness score.${coverageText}`;
+  }
+
+  return `Market posture is mixed with a ${score}/100 readiness score.${coverageText}`;
+}
+
+function averageChange(markets: GlobalMarketRow[]) {
+  const values = markets
+    .map((market) => market.quote?.changePercent)
+    .filter((value): value is number => value !== null && value !== undefined);
+
+  if (values.length === 0) {
+    return null;
+  }
+
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function findChange(markets: GlobalMarketRow[], symbol: string) {
+  return markets.find((market) => market.symbol === symbol)?.quote?.changePercent ?? null;
+}
+
+function getToneFromCenteredValue(
+  value: number | null,
+  positiveThreshold: number,
+  negativeThreshold: number
+): ReadinessTone {
+  if (value === null) return "neutral";
+  if (value >= positiveThreshold) return "positive";
+  if (value <= negativeThreshold) return "negative";
+  return "neutral";
+}
+
+function getToneFromValue(
+  value: number | null,
+  positiveThreshold: number,
+  negativeThreshold: number
+): ReadinessTone {
+  if (value === null) return "neutral";
+  if (value >= positiveThreshold) return "positive";
+  if (value <= negativeThreshold) return "negative";
+  return "neutral";
 }
 
 type RegionSummary = {

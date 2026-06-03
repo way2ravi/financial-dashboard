@@ -59,7 +59,7 @@ export function OverviewStrip({ data, showDataSource = false }: Props) {
             </div>
           </div>
 
-          <div className="flex w-full flex-col gap-2 lg:w-auto lg:items-end">
+          <div className="flex w-full flex-col gap-2 lg:w-[620px] lg:items-end">
             <TickerSearch initialSymbol={data.ticker.symbol} />
           </div>
         </div>

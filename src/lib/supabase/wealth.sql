@@ -44,8 +44,28 @@ create table if not exists public.wealth_items (
 create index if not exists wealth_items_user_id_idx
   on public.wealth_items (user_id, record_type, category);
 
+create table if not exists public.wealth_snapshots (
+  id bigserial primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  snapshot_date date not null default current_date,
+  total_assets numeric not null default 0,
+  total_liabilities numeric not null default 0,
+  net_worth numeric not null default 0,
+  liquid_assets numeric not null default 0,
+  fixed_assets numeric not null default 0,
+  investments numeric not null default 0,
+  monthly_debt_payments numeric not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (user_id, snapshot_date)
+);
+
+create index if not exists wealth_snapshots_user_date_idx
+  on public.wealth_snapshots (user_id, snapshot_date desc);
+
 alter table public.wealth_user_settings enable row level security;
 alter table public.wealth_items enable row level security;
+alter table public.wealth_snapshots enable row level security;
 
 drop policy if exists "Users can read own wealth settings" on public.wealth_user_settings;
 drop policy if exists "Users can insert own wealth settings" on public.wealth_user_settings;
@@ -54,6 +74,9 @@ drop policy if exists "Users can read own wealth items" on public.wealth_items;
 drop policy if exists "Users can create own wealth items" on public.wealth_items;
 drop policy if exists "Users can update own wealth items" on public.wealth_items;
 drop policy if exists "Users can delete own wealth items" on public.wealth_items;
+drop policy if exists "Users can read own wealth snapshots" on public.wealth_snapshots;
+drop policy if exists "Users can create own wealth snapshots" on public.wealth_snapshots;
+drop policy if exists "Users can update own wealth snapshots" on public.wealth_snapshots;
 
 create policy "Users can read own wealth settings"
 on public.wealth_user_settings
@@ -98,3 +121,22 @@ on public.wealth_items
 for delete
 to authenticated
 using (auth.uid() = user_id);
+
+create policy "Users can read own wealth snapshots"
+on public.wealth_snapshots
+for select
+to authenticated
+using (auth.uid() = user_id);
+
+create policy "Users can create own wealth snapshots"
+on public.wealth_snapshots
+for insert
+to authenticated
+with check (auth.uid() = user_id);
+
+create policy "Users can update own wealth snapshots"
+on public.wealth_snapshots
+for update
+to authenticated
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);

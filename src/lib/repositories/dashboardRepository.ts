@@ -6,6 +6,7 @@ import type {
   CompanyNewsArticle,
   DashboardData,
   EarningsQuarterly,
+  FinancialStatementRow,
   FundamentalsSnapshot,
   OhlcDaily,
   QuoteLatest,
@@ -15,6 +16,7 @@ import {
   mapAnalystPriceTargets,
   mapAnalystRatings,
   mapEarnings,
+  mapFinancialStatement,
   mapFundamentals,
   mapCompanyNews,
   mapOhlc,
@@ -37,6 +39,7 @@ export async function getCachedDashboardData(
     analystPriceTargets,
     earnings,
     fundamentals,
+    financialStatements,
     ohlc,
     news,
   ] = await Promise.all([
@@ -45,6 +48,7 @@ export async function getCachedDashboardData(
     getLatestAnalystPriceTargets(supabase, ticker.id),
     getQuarterlyEarnings(supabase, ticker.id, earningsLimit),
     getLatestFundamentals(supabase, ticker.id),
+    getFinancialStatements(supabase, ticker.id),
     getDailyOhlc(supabase, ticker.id, ohlcLimit),
     getCompanyNews(supabase, ticker.id, 8),
   ]);
@@ -56,6 +60,7 @@ export async function getCachedDashboardData(
     analystPriceTargets,
     earnings,
     fundamentals,
+    financialStatements,
     ohlc,
     news,
   };
@@ -155,6 +160,43 @@ export async function getLatestFundamentals(
   return data ? mapFundamentals(data) : null;
 }
 
+export async function getFinancialStatements(
+  supabase: DbClient,
+  tickerId: number
+): Promise<DashboardData["financialStatements"]> {
+  const [annual, quarterly] = await Promise.all([
+    getFinancialStatementRows(supabase, tickerId, "annual", 15),
+    getFinancialStatementRows(supabase, tickerId, "quarter", 12),
+  ]);
+
+  return { annual, quarterly };
+}
+
+async function getFinancialStatementRows(
+  supabase: DbClient,
+  tickerId: number,
+  periodType: FinancialStatementRow["periodType"],
+  limit: number
+): Promise<FinancialStatementRow[]> {
+  const { data, error } = await supabase
+    .from("financial_statement_rows")
+    .select("*")
+    .eq("ticker_id", tickerId)
+    .eq("period_type", periodType)
+    .order("fiscal_date", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    if (isMissingFinancialStatementsTableError(error)) {
+      return [];
+    }
+
+    throw error;
+  }
+
+  return (data ?? []).map(mapFinancialStatement);
+}
+
 export async function getDailyOhlc(
   supabase: DbClient,
   tickerId: number,
@@ -195,6 +237,15 @@ export async function getCompanyNews(
   }
 
   return (data ?? []).map(mapCompanyNews);
+}
+
+function isMissingFinancialStatementsTableError(error: { code?: string; message?: string }) {
+  return (
+    error.code === "42P01" ||
+    error.code === "PGRST205" ||
+    error.message?.includes("financial_statement_rows") ||
+    error.message?.includes("schema cache")
+  );
 }
 
 function isMissingCompanyNewsTableError(error: { code?: string; message?: string }) {

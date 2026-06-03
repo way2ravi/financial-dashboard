@@ -41,14 +41,40 @@ export type WealthBreakdownSlice = {
   percent: number;
 };
 
+export type WealthSnapshot = {
+  id: number;
+  userId: string;
+  snapshotDate: string;
+  totalAssets: number;
+  totalLiabilities: number;
+  netWorth: number;
+  liquidAssets: number;
+  fixedAssets: number;
+  investments: number;
+  monthlyDebtPayments: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type WealthAdvicePriority = "high" | "medium" | "low";
+
+export type WealthAdviceModule =
+  | "overview"
+  | "liquidity"
+  | "debt"
+  | "assets"
+  | "investments"
+  | "risk"
+  | "planning";
 
 export type WealthAdviceItem = {
   id: string;
   priority: WealthAdvicePriority;
+  module: WealthAdviceModule;
   title: string;
   summary: string;
   action: string;
+  metric?: string;
 };
 
 export type WealthDashboard = {
@@ -68,6 +94,7 @@ export type WealthDashboard = {
   assetAllocation: WealthBreakdownSlice[];
   liabilityAllocation: WealthBreakdownSlice[];
   categoryTotals: WealthBreakdownSlice[];
+  snapshots: WealthSnapshot[];
   advice: WealthAdviceItem[];
 };
 

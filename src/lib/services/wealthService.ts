@@ -4,8 +4,10 @@ import {
   deleteWealthItem,
   getWealthItemById,
   getWealthItemsForUser,
+  getWealthSnapshotsForUser,
   getWealthUserSettings,
   updateWealthItem,
+  upsertWealthSnapshot,
   upsertWealthUserSettings,
 } from "@/lib/repositories/wealthRepository";
 import type { Database } from "@/lib/types/database";
@@ -42,7 +44,13 @@ export async function getWealthDashboardForUser(
     getWealthItemsForUser(supabase, user.id),
   ]);
 
-  return buildWealthDashboard(settings, items);
+  const dashboard = buildWealthDashboard(settings, items);
+  const snapshots = await getSnapshotsSafely(supabase, user.id, dashboard);
+
+  return {
+    ...dashboard,
+    snapshots,
+  };
 }
 
 export async function saveWealthSettingsForUser(
@@ -192,6 +200,7 @@ function buildWealthDashboard(
     assetAllocation,
     liabilityAllocation,
     categoryTotals,
+    snapshots: [],
     advice: buildWealthAdvice({
       settings,
       totalAssets,
@@ -207,6 +216,32 @@ function buildWealthDashboard(
   };
 
   return metrics;
+}
+
+async function getSnapshotsSafely(
+  supabase: DbClient,
+  userId: string,
+  dashboard: WealthDashboard
+) {
+  try {
+    const snapshotDate = new Date().toISOString().slice(0, 10);
+
+    await upsertWealthSnapshot(supabase, {
+      userId,
+      snapshotDate,
+      totalAssets: dashboard.totalAssets,
+      totalLiabilities: dashboard.totalLiabilities,
+      netWorth: dashboard.netWorth,
+      liquidAssets: dashboard.liquidAssets,
+      fixedAssets: dashboard.fixedAssets,
+      investments: dashboard.investments,
+      monthlyDebtPayments: dashboard.monthlyDebtPayments,
+    });
+
+    return getWealthSnapshotsForUser(supabase, userId);
+  } catch {
+    return [];
+  }
 }
 
 function buildWealthAdvice(
@@ -231,10 +266,12 @@ function buildWealthAdvice(
       {
         id: "start-tracking",
         priority: "medium",
+        module: "overview",
         title: "Start your wealth picture",
         summary:
           "Add your cash, investments, property, and debts to see net worth and personalized guidance.",
         action: "Record at least one liquid asset and any major loans or cards.",
+        metric: "No entries yet",
       },
     ];
   }
@@ -243,9 +280,11 @@ function buildWealthAdvice(
     advice.push({
       id: "negative-net-worth",
       priority: "high",
+      module: "overview",
       title: "Liabilities exceed assets",
       summary: `Net worth is negative. Focus on high-cost debt and stabilizing cash flow before new discretionary spending.`,
       action: "List debts by interest rate and pay the highest-rate balances first.",
+      metric: formatCompact(input.netWorth, currency),
     });
   }
 
@@ -256,18 +295,22 @@ function buildWealthAdvice(
     advice.push({
       id: "high-debt-ratio",
       priority: "high",
+      module: "debt",
       title: "Debt load is elevated",
       summary: `Debt is about ${debtRatio.toFixed(0)}% of total assets. Lowering this ratio improves resilience.`,
       action:
         "Use the debt avalanche method (highest APR first) or snowball method (smallest balance first) for extra payments.",
+      metric: `${debtRatio.toFixed(0)}% debt/assets`,
     });
   } else if (debtRatio !== null && debtRatio >= 30) {
     advice.push({
       id: "moderate-debt-ratio",
       priority: "medium",
+      module: "debt",
       title: "Moderate leverage",
       summary: `Debt is about ${debtRatio.toFixed(0)}% of assets. Monitor monthly payments against income.`,
       action: "Avoid new high-interest borrowing until the ratio trends down.",
+      metric: `${debtRatio.toFixed(0)}% debt/assets`,
     });
   }
 
@@ -275,9 +318,11 @@ function buildWealthAdvice(
     advice.push({
       id: "high-interest-debt",
       priority: "high",
+      module: "debt",
       title: "High-interest debt detected",
       summary: `${formatCompact(input.highInterestDebt, currency)} is in liabilities at 8%+ APR (cards, overdrafts, personal loans).`,
       action: "Prioritize paying these balances before adding to investments.",
+      metric: formatCompact(input.highInterestDebt, currency),
     });
   }
 
@@ -291,9 +336,11 @@ function buildWealthAdvice(
     advice.push({
       id: "emergency-fund",
       priority: monthsCovered < 3 ? "high" : "medium",
+      module: "liquidity",
       title: "Build your emergency reserve",
-      summary: `Liquid assets cover about ${monthsCovered.toFixed(1)} months of estimated expenses (target: 3–6 months).`,
+      summary: `Liquid assets cover about ${monthsCovered.toFixed(1)} months of estimated expenses (target: 3-6 months).`,
       action: "Increase cash or savings until you reach your 6-month reserve target.",
+      metric: `${monthsCovered.toFixed(1)} months`,
     });
   } else if (
     input.totalAssets > 0 &&
@@ -303,9 +350,11 @@ function buildWealthAdvice(
     advice.push({
       id: "low-liquidity",
       priority: "medium",
+      module: "liquidity",
       title: "Low cash buffer",
       summary: "Liquid assets are under 10% of total assets, which can strain short-term needs.",
       action: "Hold more in checking, savings, or money market before illiquid purchases.",
+      metric: `${((input.liquidAssets / input.totalAssets) * 100).toFixed(0)}% liquid`,
     });
   }
 
@@ -313,9 +362,11 @@ function buildWealthAdvice(
     advice.push({
       id: "real-estate-concentration",
       priority: "medium",
+      module: "assets",
       title: "Concentration in fixed assets",
       summary: "Most wealth sits in property or other fixed assets, limiting flexibility.",
       action: "Consider rebalancing into liquid or investment assets over time if appropriate.",
+      metric: `${((input.fixedAssets / input.totalAssets) * 100).toFixed(0)}% fixed`,
     });
   }
 
@@ -323,9 +374,11 @@ function buildWealthAdvice(
     advice.push({
       id: "low-investments",
       priority: "low",
+      module: "investments",
       title: "Investment allocation is light",
       summary: "Investments are a small share of assets relative to typical long-term wealth plans.",
       action: "After emergency fund and high-rate debt, increase diversified retirement or brokerage contributions.",
+      metric: `${((input.investments / input.totalAssets) * 100).toFixed(0)}% invested`,
     });
   }
 
@@ -339,9 +392,11 @@ function buildWealthAdvice(
     advice.push({
       id: "healthy-balance",
       priority: "low",
+      module: "planning",
       title: "Solid foundation",
       summary: "Net worth is positive with manageable debt and reasonable liquidity.",
       action: "Maintain contributions to retirement and rebalance investments once or twice a year.",
+      metric: "On track",
     });
   }
 
@@ -349,9 +404,11 @@ function buildWealthAdvice(
     advice.push({
       id: "debt-service-burden",
       priority: "high",
+      module: "risk",
       title: "Heavy monthly debt service",
       summary: "Scheduled debt payments exceed 40% of your estimated monthly expenses.",
       action: "Refinance, consolidate, or renegotiate terms where possible; pause non-essential spending.",
+      metric: formatCompact(input.monthlyDebtPayments, currency),
     });
   }
 
@@ -363,9 +420,52 @@ function buildWealthAdvice(
     advice.push({
       id: "revolving-credit",
       priority: "medium",
+      module: "debt",
       title: "Revolving credit on the books",
       summary: "Credit cards and overdrafts usually carry the highest rates and should be cleared quickly.",
       action: "Pay more than the minimum each month and stop new charges until balances fall.",
+      metric: `${revolving.length} account${revolving.length === 1 ? "" : "s"}`,
+    });
+  }
+
+  if (input.totalAssets > 0 && input.totalLiabilities === 0) {
+    advice.push({
+      id: "debt-free-foundation",
+      priority: "low",
+      module: "planning",
+      title: "Debt-free balance sheet",
+      summary:
+        "No liabilities are recorded, so the main focus can shift from debt control to growth, protection, and estate planning.",
+      action:
+        "Review insurance, beneficiaries, retirement contributions, and annual portfolio rebalancing.",
+      metric: "No debt",
+    });
+  }
+
+  if (input.totalAssets > 0 && input.investments / input.totalAssets > 0.75) {
+    advice.push({
+      id: "investment-concentration",
+      priority: "medium",
+      module: "risk",
+      title: "High exposure to market assets",
+      summary:
+        "Investments make up most of your assets. That can support growth, but market swings can hit net worth quickly.",
+      action:
+        "Keep enough cash for short-term needs and diversify across asset classes where suitable.",
+      metric: `${((input.investments / input.totalAssets) * 100).toFixed(0)}% invested`,
+    });
+  }
+
+  if (!monthlyExpenses) {
+    advice.push({
+      id: "expense-estimate-needed",
+      priority: "low",
+      module: "planning",
+      title: "Add monthly expenses for sharper guidance",
+      summary:
+        "Emergency-fund and debt-payment guidance is more reliable when your normal monthly spending is saved.",
+      action: "Enter monthly expenses in Wealth settings.",
+      metric: "Expense estimate missing",
     });
   }
 
@@ -377,7 +477,7 @@ function buildWealthAdvice(
 
   return advice
     .sort((left, right) => priorityRank[left.priority] - priorityRank[right.priority])
-    .slice(0, 6);
+    .slice(0, 9);
 }
 
 function groupLiabilityTotals(liabilities: WealthItem[]) {

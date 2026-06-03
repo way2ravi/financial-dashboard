@@ -146,6 +146,10 @@ export const mockDashboardData: DashboardData = {
     sourceUpdatedAt: "2026-05-28T00:00:00Z",
     fetchedAt: "2026-05-28T00:05:00Z",
   },
+  financialStatements: {
+    annual: [],
+    quarterly: [],
+  },
   ohlc: [
     { id: 1, tickerId: 1, date: "2026-05-17", open: 181, high: 184, low: 180, close: 183, adjustedClose: 183, volume: 41800000, source: "manual", sourceUpdatedAt: null, fetchedAt: "2026-05-28T00:05:00Z" },
     { id: 2, tickerId: 1, date: "2026-05-18", open: 183, high: 186, low: 182, close: 185, adjustedClose: 185, volume: 45500000, source: "manual", sourceUpdatedAt: null, fetchedAt: "2026-05-28T00:05:00Z" },

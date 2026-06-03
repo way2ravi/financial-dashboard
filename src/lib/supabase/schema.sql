@@ -236,6 +236,35 @@ create table if not exists public.fundamentals_snapshot (
 create index if not exists fundamentals_ticker_date_idx
   on public.fundamentals_snapshot (ticker_id, as_of_date desc);
 
+create table if not exists public.financial_statement_rows (
+  id bigserial primary key,
+  ticker_id bigint not null references public.tickers(id) on delete cascade,
+  statement_type text not null check (statement_type in ('income', 'balance', 'cashflow')),
+  period_type text not null check (period_type in ('annual', 'quarter')),
+  fiscal_date date not null,
+  calendar_year text,
+  period text,
+  total_revenue numeric,
+  gross_profit numeric,
+  operating_income numeric,
+  net_income numeric,
+  total_assets numeric,
+  total_current_liabilities numeric,
+  total_equity numeric,
+  levered_free_cash_flow numeric,
+  cash_from_operations numeric,
+  cash_from_investing numeric,
+  cash_from_financing numeric,
+  net_change_in_cash numeric,
+  source text,
+  source_updated_at timestamptz,
+  fetched_at timestamptz not null default now(),
+  unique (ticker_id, statement_type, period_type, fiscal_date)
+);
+
+create index if not exists financial_statement_rows_ticker_period_idx
+  on public.financial_statement_rows (ticker_id, period_type, fiscal_date desc);
+
 create table if not exists public.ohlc_daily (
   id bigserial primary key,
   ticker_id bigint not null references public.tickers(id) on delete cascade,

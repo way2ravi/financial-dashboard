@@ -14,6 +14,7 @@ import { ThemeSwitcher } from "@/components/dashboard/ThemeSwitcher";
 import { WealthAdvicePanel } from "@/components/wealth/WealthAdvicePanel";
 import { WealthCharts } from "@/components/wealth/WealthCharts";
 import { WealthItemForm } from "@/components/wealth/WealthItemForm";
+import { WealthTrendChart } from "@/components/wealth/WealthTrendChart";
 import { getWealthDashboardForUser } from "@/lib/services";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/types/database";
@@ -96,6 +97,17 @@ export default async function WealthPage({ searchParams }: Props) {
           </section>
         ) : (
           <>
+            <WealthSnapshot
+              currency={currency}
+              netWorth={dashboard.netWorth}
+              totalAssets={dashboard.totalAssets}
+              totalLiabilities={dashboard.totalLiabilities}
+              liquidityRatio={dashboard.liquidityRatio}
+              debtToAssetRatio={dashboard.debtToAssetRatio}
+              monthlyDebtPayments={dashboard.monthlyDebtPayments}
+              adviceCount={dashboard.advice.length}
+            />
+
             <section className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
               <Metric
                 label="Net worth"
@@ -143,6 +155,19 @@ export default async function WealthPage({ searchParams }: Props) {
                 }
               />
             </section>
+
+            <WealthModuleOverview
+              currency={currency}
+              liquidAssets={dashboard.liquidAssets}
+              fixedAssets={dashboard.fixedAssets}
+              investments={dashboard.investments}
+              totalAssets={dashboard.totalAssets}
+              totalLiabilities={dashboard.totalLiabilities}
+              highInterestDebt={dashboard.highInterestDebt}
+              monthlyDebtPayments={dashboard.monthlyDebtPayments}
+            />
+
+            <WealthTrendChart currency={currency} snapshots={dashboard.snapshots} />
 
             <WealthCharts
               currency={currency}
@@ -235,6 +260,260 @@ export default async function WealthPage({ searchParams }: Props) {
       </div>
     </main>
   );
+}
+
+function WealthSnapshot({
+  currency,
+  netWorth,
+  totalAssets,
+  totalLiabilities,
+  liquidityRatio,
+  debtToAssetRatio,
+  monthlyDebtPayments,
+  adviceCount,
+}: {
+  currency: string;
+  netWorth: number;
+  totalAssets: number;
+  totalLiabilities: number;
+  liquidityRatio: number | null;
+  debtToAssetRatio: number | null;
+  monthlyDebtPayments: number;
+  adviceCount: number;
+}) {
+  const health = getWealthHealth({
+    netWorth,
+    totalAssets,
+    debtToAssetRatio,
+    liquidityRatio,
+  });
+
+  return (
+    <section className="overflow-hidden rounded-lg border app-surface shadow-sm">
+      <div className="grid gap-4 p-4 lg:grid-cols-[1.15fr_0.85fr] lg:p-5">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${health.badgeClass}`}
+            >
+              {health.label}
+            </span>
+            <span className="rounded-full border app-border-soft px-2.5 py-1 text-[11px] font-semibold app-muted">
+              {adviceCount} active insight{adviceCount === 1 ? "" : "s"}
+            </span>
+          </div>
+          <h2 className="mt-4 text-2xl font-semibold tracking-normal app-heading sm:text-3xl">
+            {formatCurrency(netWorth, false, currency)}
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 app-muted">{health.summary}</p>
+
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            <SnapshotFact
+              label="Assets"
+              value={formatCurrency(totalAssets, true, currency)}
+            />
+            <SnapshotFact
+              label="Liabilities"
+              value={formatCurrency(totalLiabilities, true, currency)}
+            />
+            <SnapshotFact
+              label="Monthly debt"
+              value={formatCurrency(monthlyDebtPayments, true, currency)}
+            />
+          </div>
+        </div>
+
+        <div className="rounded-lg border app-subtle p-4">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-semibold app-heading">Financial health</span>
+            <span className="app-muted">{health.score}/100</span>
+          </div>
+          <div className="mt-3 h-2 overflow-hidden rounded-full app-surface">
+            <div
+              className={`h-full rounded-full ${health.barClass}`}
+              style={{ width: `${health.score}%` }}
+            />
+          </div>
+          <div className="mt-4 space-y-3">
+            <HealthRow
+              label="Liquidity"
+              value={liquidityRatio === null ? "-" : formatPercent(liquidityRatio, 0)}
+              ok={liquidityRatio !== null && liquidityRatio >= 10}
+            />
+            <HealthRow
+              label="Debt control"
+              value={debtToAssetRatio === null ? "-" : formatPercent(debtToAssetRatio, 0)}
+              ok={debtToAssetRatio !== null && debtToAssetRatio < 35}
+            />
+            <HealthRow label="Net worth" value={netWorth >= 0 ? "Positive" : "Negative"} ok={netWorth >= 0} />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function WealthModuleOverview({
+  currency,
+  liquidAssets,
+  fixedAssets,
+  investments,
+  totalAssets,
+  totalLiabilities,
+  highInterestDebt,
+  monthlyDebtPayments,
+}: {
+  currency: string;
+  liquidAssets: number;
+  fixedAssets: number;
+  investments: number;
+  totalAssets: number;
+  totalLiabilities: number;
+  highInterestDebt: number;
+  monthlyDebtPayments: number;
+}) {
+  return (
+    <section className="grid gap-3 lg:grid-cols-3">
+      <ModuleCard
+        title="Liquidity"
+        value={formatCurrency(liquidAssets, true, currency)}
+        caption="Cash and near-cash assets available for short-term needs."
+        percent={totalAssets > 0 ? (liquidAssets / totalAssets) * 100 : 0}
+        tone={liquidAssets > 0 ? "positive" : "neutral"}
+      />
+      <ModuleCard
+        title="Debt"
+        value={formatCurrency(totalLiabilities, true, currency)}
+        caption={`High-rate debt: ${formatCurrency(highInterestDebt, true, currency)}. Monthly payments: ${formatCurrency(monthlyDebtPayments, true, currency)}.`}
+        percent={totalAssets > 0 ? Math.min((totalLiabilities / totalAssets) * 100, 100) : 0}
+        tone={totalLiabilities > 0 ? "negative" : "positive"}
+      />
+      <ModuleCard
+        title="Growth assets"
+        value={formatCurrency(investments, true, currency)}
+        caption={`Fixed assets: ${formatCurrency(fixedAssets, true, currency)}. Investments are the long-term growth engine.`}
+        percent={totalAssets > 0 ? (investments / totalAssets) * 100 : 0}
+        tone={investments > 0 ? "positive" : "neutral"}
+      />
+    </section>
+  );
+}
+
+function SnapshotFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border app-subtle px-3 py-2.5">
+      <p className="text-[11px] uppercase tracking-wide app-muted">{label}</p>
+      <p className="mt-1 text-sm font-semibold app-heading">{value}</p>
+    </div>
+  );
+}
+
+function HealthRow({
+  label,
+  value,
+  ok,
+}: {
+  label: string;
+  value: string;
+  ok: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-2 text-xs">
+      <span className="app-muted">{label}</span>
+      <span className={ok ? "font-semibold text-emerald-400" : "font-semibold text-amber-300"}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function ModuleCard({
+  title,
+  value,
+  caption,
+  percent,
+  tone,
+}: {
+  title: string;
+  value: string;
+  caption: string;
+  percent: number;
+  tone: "positive" | "negative" | "neutral";
+}) {
+  const barClass =
+    tone === "positive" ? "bg-emerald-500" : tone === "negative" ? "bg-rose-500" : "bg-sky-500";
+
+  return (
+    <div className="rounded-lg border app-surface p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-semibold app-heading">{title}</h2>
+          <p className="mt-1 text-lg font-semibold app-heading">{value}</p>
+        </div>
+        <span className="rounded-full border app-border-soft px-2 py-1 text-[11px] font-semibold app-muted">
+          {percent.toFixed(0)}%
+        </span>
+      </div>
+      <div className="mt-3 h-2 overflow-hidden rounded-full app-subtle">
+        <div className={`h-full rounded-full ${barClass}`} style={{ width: `${Math.min(percent, 100)}%` }} />
+      </div>
+      <p className="mt-3 text-xs leading-5 app-muted">{caption}</p>
+    </div>
+  );
+}
+
+function getWealthHealth({
+  netWorth,
+  totalAssets,
+  debtToAssetRatio,
+  liquidityRatio,
+}: {
+  netWorth: number;
+  totalAssets: number;
+  debtToAssetRatio: number | null;
+  liquidityRatio: number | null;
+}) {
+  let score = 35;
+
+  if (totalAssets > 0) score += 15;
+  if (netWorth > 0) score += 20;
+  if (liquidityRatio !== null && liquidityRatio >= 10) score += 15;
+  if (liquidityRatio !== null && liquidityRatio >= 20) score += 5;
+  if (debtToAssetRatio !== null && debtToAssetRatio < 35) score += 10;
+  if (debtToAssetRatio !== null && debtToAssetRatio >= 50) score -= 15;
+
+  const boundedScore = Math.max(0, Math.min(100, score));
+
+  if (boundedScore >= 75) {
+    return {
+      score: boundedScore,
+      label: "Strong",
+      summary:
+        "Your wealth picture looks resilient. The next focus is optimization: diversification, tax efficiency, protection, and steady contributions.",
+      badgeClass: "border-emerald-500/45 bg-emerald-500/10 text-emerald-300",
+      barClass: "bg-emerald-500",
+    };
+  }
+
+  if (boundedScore >= 55) {
+    return {
+      score: boundedScore,
+      label: "Stable",
+      summary:
+        "Your balance sheet has a workable base. Improve liquidity, reduce expensive debt, and keep growth assets aligned with your time horizon.",
+      badgeClass: "border-amber-500/45 bg-amber-500/10 text-amber-300",
+      barClass: "bg-amber-500",
+    };
+  }
+
+  return {
+    score: boundedScore,
+    label: "Needs attention",
+    summary:
+      "The current picture needs defensive work first. Build cash reserves, control high-rate debt, and avoid adding risk until the basics are steadier.",
+    badgeClass: "border-rose-500/45 bg-rose-500/10 text-rose-300",
+    barClass: "bg-rose-500",
+  };
 }
 
 function WealthItemsTable({

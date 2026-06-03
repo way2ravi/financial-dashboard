@@ -181,7 +181,9 @@ body {
     background: var(--app-surface-muted);
   }
 
-  .theme-option[data-active="true"] {
+  [data-theme="light"] .theme-option[data-theme-option="light"],
+  [data-theme="dark-blue"] .theme-option[data-theme-option="dark-blue"],
+  [data-theme="black"] .theme-option[data-theme-option="black"] {
     background: var(--app-primary);
     color: var(--app-primary-text);
   }

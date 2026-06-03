@@ -128,7 +128,7 @@ async function loadDashboardData(
       data: fallbackData,
       fallbackMessage: autoloadMessage ?? {
         tone: "notice",
-        text: `${symbol} is in the ticker directory, but some dashboard data is not cached yet. Press Load to fetch fresh data. Reason: ${reason}.`,
+        text: `${symbol} is in the ticker directory, but some dashboard data is not cached yet. Select the ticker again or wait for provider limits to reset. Reason: ${reason}.`,
       },
     };
   }
@@ -157,6 +157,7 @@ async function loadFallbackDashboardData(symbol: string): Promise<DashboardData>
       analystPriceTargets: null,
       earnings: [],
       fundamentals: null,
+      financialStatements: { annual: [], quarterly: [] },
       ohlc: [],
       news: [],
     };
@@ -177,6 +178,7 @@ async function loadFallbackDashboardData(symbol: string): Promise<DashboardData>
       analystPriceTargets: null,
       earnings: [],
       fundamentals: null,
+      financialStatements: { annual: [], quarterly: [] },
       ohlc: [],
       news: [],
     };

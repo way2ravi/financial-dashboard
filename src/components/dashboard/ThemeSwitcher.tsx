@@ -13,8 +13,6 @@ export function ThemeSwitcher() {
           type="button"
           className="theme-option h-8 rounded-md px-3 text-xs font-semibold"
           data-theme-option={item.value}
-          data-active={item.value === "black" ? "true" : "false"}
-          aria-pressed={item.value === "black"}
         >
           {item.label}
         </button>

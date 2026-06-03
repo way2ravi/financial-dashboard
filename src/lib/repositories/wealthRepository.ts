@@ -4,9 +4,10 @@ import type {
   WealthCategory,
   WealthItem,
   WealthRecordType,
+  WealthSnapshot,
   WealthUserSettings,
 } from "@/lib/types/wealth";
-import { mapWealthItem, mapWealthUserSettings } from "./mappers";
+import { mapWealthItem, mapWealthSnapshot, mapWealthUserSettings } from "./mappers";
 
 type DbClient = SupabaseClient<Database>;
 
@@ -189,4 +190,64 @@ export async function getWealthItemById(
   }
 
   return data ? mapWealthItem(data) : null;
+}
+
+export async function getWealthSnapshotsForUser(
+  supabase: DbClient,
+  userId: string,
+  limit = 90
+): Promise<WealthSnapshot[]> {
+  const { data, error } = await supabase
+    .from("wealth_snapshots")
+    .select("*")
+    .eq("user_id", userId)
+    .order("snapshot_date", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []).map(mapWealthSnapshot).reverse();
+}
+
+export async function upsertWealthSnapshot(
+  supabase: DbClient,
+  input: {
+    userId: string;
+    snapshotDate: string;
+    totalAssets: number;
+    totalLiabilities: number;
+    netWorth: number;
+    liquidAssets: number;
+    fixedAssets: number;
+    investments: number;
+    monthlyDebtPayments: number;
+  }
+): Promise<WealthSnapshot> {
+  const { data, error } = await supabase
+    .from("wealth_snapshots")
+    .upsert(
+      {
+        user_id: input.userId,
+        snapshot_date: input.snapshotDate,
+        total_assets: input.totalAssets,
+        total_liabilities: input.totalLiabilities,
+        net_worth: input.netWorth,
+        liquid_assets: input.liquidAssets,
+        fixed_assets: input.fixedAssets,
+        investments: input.investments,
+        monthly_debt_payments: input.monthlyDebtPayments,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,snapshot_date" }
+    )
+    .select("*")
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return mapWealthSnapshot(data);
 }
