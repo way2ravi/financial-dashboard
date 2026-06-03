@@ -189,7 +189,7 @@ export function TickerSearch({ initialSymbol }: Props) {
       {isOpen ? (
         <div
           id="ticker-search-results"
-          className="absolute left-0 right-0 top-full z-30 mt-1 overflow-hidden rounded-lg border app-surface shadow-2xl lg:w-[760px] lg:max-w-[calc(100vw-2rem)]"
+          className="absolute left-0 right-0 top-full z-30 mt-1 overflow-hidden rounded-lg border app-popover shadow-2xl lg:w-[760px] lg:max-w-[calc(100vw-2rem)]"
           role="listbox"
         >
           <div className="grid lg:grid-cols-[1fr_300px]">

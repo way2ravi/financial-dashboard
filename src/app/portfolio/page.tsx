@@ -5,10 +5,8 @@ import {
   createPortfolioAction,
   removePortfolioTransactionAction,
 } from "@/app/portfolio/actions";
-import { AppNav } from "@/components/dashboard/AppNav";
-import { AuthStatus } from "@/components/dashboard/AuthStatus";
+import { AppHeader } from "@/components/dashboard/AppHeader";
 import { PageMessage, type PageMessageValue } from "@/components/dashboard/PageMessage";
-import { ThemeSwitcher } from "@/components/dashboard/ThemeSwitcher";
 import {
   formatCurrency,
   formatNumber,
@@ -43,23 +41,11 @@ export default async function PortfolioPage({ searchParams }: Props) {
 
   return (
     <main className="min-h-screen app-bg">
-      <header className="border-b app-surface">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-normal app-heading">
-              Portfolio
-            </h1>
-            <p className="mt-1 max-w-2xl text-xs leading-5 app-muted">
-              Create portfolios, record buy and sell trades, and track holdings performance.
-            </p>
-          </div>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <AppNav current="portfolio" />
-            <ThemeSwitcher />
-            <AuthStatus />
-          </div>
-        </div>
-      </header>
+      <AppHeader
+        current="portfolio"
+        title="Portfolio"
+        description="Create portfolios, record buy and sell trades, and track holdings performance."
+      />
 
       <div className="mx-auto grid max-w-7xl gap-3 px-4 py-4 sm:px-6 lg:grid-cols-[320px_1fr] lg:px-8">
         <aside className="min-w-0 self-start rounded-lg border app-surface p-4 shadow-sm lg:sticky lg:top-4">

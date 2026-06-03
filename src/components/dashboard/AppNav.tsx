@@ -23,16 +23,16 @@ const links = [
 
 export function AppNav({ current }: Props) {
   return (
-    <nav className="flex rounded-lg border app-surface p-1" aria-label="Main navigation">
+    <nav className="flex min-w-0 overflow-x-auto rounded-lg border app-surface p-1 shadow-sm lg:overflow-visible" aria-label="Main navigation">
       {links.map((link) => (
         <Link
           key={link.key}
           href={link.href}
           aria-current={current === link.key ? "page" : undefined}
-          className={`h-8 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+          className={`h-8 shrink-0 rounded-md px-2.5 py-1.5 text-xs font-semibold transition xl:px-3 ${
             current === link.key
-              ? "bg-[var(--app-primary)] text-white"
-              : "app-muted hover:bg-[var(--app-subtle)] hover:text-[var(--app-heading)]"
+              ? "bg-[var(--app-accent)] text-white shadow-sm"
+              : "app-muted hover:bg-[color-mix(in_srgb,var(--app-teal)_14%,transparent)] hover:text-[var(--app-primary)]"
           }`}
         >
           {link.label}

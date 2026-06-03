@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { removeCurrentSymbolFromWatchlist } from "@/app/watchlist/actions";
-import { AppNav } from "@/components/dashboard/AppNav";
-import { AuthStatus } from "@/components/dashboard/AuthStatus";
+import { AppHeader } from "@/components/dashboard/AppHeader";
 import { PageMessage } from "@/components/dashboard/PageMessage";
-import { ThemeSwitcher } from "@/components/dashboard/ThemeSwitcher";
 import { TickerLogo } from "@/components/dashboard/TickerLogo";
 import { TickerSearch } from "@/components/dashboard/TickerSearch";
 import { getWatchlistForUser } from "@/lib/services";
@@ -28,21 +26,11 @@ export default async function WatchlistPage({ searchParams }: Props) {
 
   return (
     <main className="min-h-screen app-bg">
-      <header className="border-b app-surface">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-normal app-heading">Watchlist</h1>
-            <p className="mt-1 max-w-2xl text-xs leading-5 app-muted">
-              Your saved tickers, separated from the dashboard so the stock view stays focused.
-            </p>
-          </div>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <AppNav current="watchlist" />
-            <ThemeSwitcher />
-            <AuthStatus />
-          </div>
-        </div>
-      </header>
+      <AppHeader
+        current="watchlist"
+        title="Watchlist"
+        description="Your saved tickers, separated from the dashboard so the stock view stays focused."
+      />
 
       <div className="mx-auto max-w-7xl space-y-3 px-4 py-4 sm:px-6 lg:px-8">
         <PageMessage message={message} />

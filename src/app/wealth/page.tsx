@@ -6,11 +6,9 @@ import {
   saveWealthSettingsAction,
   updateWealthItemAction,
 } from "@/app/wealth/actions";
-import { AppNav } from "@/components/dashboard/AppNav";
-import { AuthStatus } from "@/components/dashboard/AuthStatus";
+import { AppHeader } from "@/components/dashboard/AppHeader";
 import { formatCurrency, formatPercent } from "@/components/dashboard/format";
 import { PageMessage } from "@/components/dashboard/PageMessage";
-import { ThemeSwitcher } from "@/components/dashboard/ThemeSwitcher";
 import { WealthAdvicePanel } from "@/components/wealth/WealthAdvicePanel";
 import { WealthCharts } from "@/components/wealth/WealthCharts";
 import { WealthItemForm } from "@/components/wealth/WealthItemForm";
@@ -49,24 +47,11 @@ export default async function WealthPage({ searchParams }: Props) {
 
   return (
     <main className="min-h-screen app-bg">
-      <header className="border-b app-surface">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-normal app-heading">
-              Wealth Manager
-            </h1>
-            <p className="mt-1 max-w-2xl text-xs leading-5 app-muted">
-              Track liquid assets, fixed assets, investments, loans, overdrafts, and debt. View net
-              worth, charts, and personalized guidance.
-            </p>
-          </div>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <AppNav current="wealth" />
-            <ThemeSwitcher />
-            <AuthStatus />
-          </div>
-        </div>
-      </header>
+      <AppHeader
+        current="wealth"
+        title="Wealth Manager"
+        description="Track liquid assets, fixed assets, investments, loans, overdrafts, and debt. View net worth, charts, and personalized guidance."
+      />
 
       <div className="mx-auto max-w-7xl space-y-3 px-4 py-4 sm:px-6 lg:px-8">
         <PageMessage message={message} />

@@ -95,7 +95,7 @@ export function PriceChart({
         <div>
           <h2 className="text-sm font-semibold app-heading">Stock Chart</h2>
           <p className="mt-1 text-xs app-muted">
-            {candles[0]?.date} to {latest?.date} · {intervalLabel(interval)} from cached OHLC
+            {candles[0]?.date} to {latest?.date} - {intervalLabel(interval)} from cached OHLC
           </p>
           <div className="mt-2">
             <DataFreshness
@@ -147,12 +147,48 @@ export function PriceChart({
         <ChartCanvas candles={candles} type={chartType} />
       </div>
 
-      <VolumeAnalytics candles={candles} />
     </section>
   );
 }
 
-function VolumeAnalytics({ candles }: { candles: Candle[] }) {
+export function VolumeAnalytics({
+  interval,
+  ohlc,
+  range,
+  showDataSource = false,
+}: {
+  interval: ChartInterval;
+  ohlc: OhlcDaily[];
+  range: ChartRange;
+  showDataSource?: boolean;
+}) {
+  const freshness = latestFreshness(ohlc);
+  const baseCandles = toCandles(ohlc);
+  const candles = aggregateCandles(filterByRange(baseCandles, range), interval);
+
+  if (baseCandles.length < 2) {
+    return (
+      <section className="rounded-lg border app-surface p-4 shadow-sm">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="text-sm font-semibold app-heading">Volume Analysis</h2>
+            <p className="mt-1 text-xs app-muted">Daily OHLC cache is not populated yet.</p>
+            <div className="mt-2">
+              <DataFreshness
+                fetchedAt={freshness?.fetchedAt}
+                showSource={showDataSource}
+                source={freshness?.source}
+              />
+            </div>
+          </div>
+        </div>
+        <div className="mt-3 flex h-[260px] items-center justify-center rounded-lg border app-subtle px-4 text-center text-xs app-muted">
+          Refresh market data to analyze volume.
+        </div>
+      </section>
+    );
+  }
+
   const recent = candles.slice(-20);
   const latest = candles.at(-1) ?? null;
   const latestVolume = latest?.volume ?? null;
@@ -172,6 +208,23 @@ function VolumeAnalytics({ candles }: { candles: Candle[] }) {
   const latestPressure = latest ? getVolumePressure(latest, volumeRatio) : null;
 
   return (
+    <section className="rounded-lg border app-surface p-4 shadow-sm">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-sm font-semibold app-heading">Volume Analysis</h2>
+          <p className="mt-1 text-xs app-muted">
+            {candles[0]?.date} to {latest?.date} - {intervalLabel(interval)} volume and pressure.
+          </p>
+          <div className="mt-2">
+            <DataFreshness
+              fetchedAt={freshness?.fetchedAt}
+              showSource={showDataSource}
+              source={freshness?.source}
+            />
+          </div>
+        </div>
+      </div>
+
     <div className="mt-3 grid gap-3 xl:grid-cols-[1fr_380px]">
       <section className="rounded-lg border app-subtle p-3">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -277,21 +330,19 @@ function VolumeAnalytics({ candles }: { candles: Candle[] }) {
         </div>
       </section>
     </div>
+    </section>
   );
 }
 
 function ChartCanvas({ candles, type }: { candles: Candle[]; type: ChartType }) {
   const width = 920;
-  const priceHeight = 330;
-  const volumeHeight = 80;
-  const gap = 18;
-  const height = priceHeight + volumeHeight + gap;
+  const priceHeight = 390;
+  const height = priceHeight;
   const padding = { bottom: 18, left: 44, right: 18, top: 18 };
   const prices = candles.flatMap((candle) => [candle.high, candle.low, candle.close]);
   const min = Math.min(...prices);
   const max = Math.max(...prices);
   const range = Math.max(max - min, 0.01);
-  const maxVolume = Math.max(...candles.map((candle) => candle.volume ?? 0), 1);
   const usableWidth = width - padding.left - padding.right;
   const pointGap = usableWidth / Math.max(candles.length - 1, 1);
   const candleWidth = Math.max(3, Math.min(14, pointGap * 0.58));
@@ -319,8 +370,8 @@ function ChartCanvas({ candles, type }: { candles: Candle[]; type: ChartType }) 
       <svg className="h-full w-full" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${type} stock chart`}>
         <defs>
           <linearGradient id="chartAreaFill" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="var(--app-accent)" stopOpacity="0.35" />
-            <stop offset="100%" stopColor="var(--app-accent)" stopOpacity="0.02" />
+            <stop offset="0%" stopColor="var(--app-teal)" stopOpacity="0.35" />
+            <stop offset="100%" stopColor="var(--app-teal)" stopOpacity="0.02" />
           </linearGradient>
         </defs>
 
@@ -351,7 +402,7 @@ function ChartCanvas({ candles, type }: { candles: Candle[]; type: ChartType }) 
             <polyline
               fill="none"
               points={linePoints}
-              stroke="var(--app-accent)"
+              stroke="var(--app-teal)"
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth="3"
@@ -391,32 +442,8 @@ function ChartCanvas({ candles, type }: { candles: Candle[]; type: ChartType }) 
           y2={priceHeight - padding.bottom}
         />
 
-        {candles.map((candle, index) => {
-          const volume = candle.volume ?? 0;
-          const barHeight = (volume / maxVolume) * (volumeHeight - 14);
-          const positive = candle.close >= candle.open;
-          const x = xFor(index) - candleWidth / 2;
-          const y = priceHeight + gap + volumeHeight - barHeight;
-
-          return (
-            <rect
-              key={`${candle.date}-volume`}
-              fill={positive ? "var(--app-positive)" : "var(--app-negative)"}
-              height={Math.max(1, barHeight)}
-              opacity="0.55"
-              rx="1"
-              width={Math.max(2, candleWidth)}
-              x={x}
-              y={y}
-            />
-          );
-        })}
-
-        <text className="fill-[var(--app-text-soft)] text-[10px]" x={padding.left} y={priceHeight + gap + 12}>
-          Volume
-        </text>
         <text className="fill-[var(--app-text-soft)] text-[10px]" textAnchor="end" x={width - padding.right} y={height - 2}>
-          {candles[0]?.date} · {candles.at(-1)?.date}
+          {candles[0]?.date} - {candles.at(-1)?.date}
         </text>
       </svg>
     </div>
@@ -603,7 +630,7 @@ function VolumePressureCircle({
       <div
         className="grid h-36 w-36 place-items-center rounded-full"
         style={{
-          background: `conic-gradient(#16a34a 0 ${buyEnd}%, #9ca3af ${buyEnd}% ${neutralEnd}%, #dc2626 ${neutralEnd}% 100%)`,
+          background: `conic-gradient(var(--app-positive) 0 ${buyEnd}%, var(--app-teal) ${buyEnd}% ${neutralEnd}%, var(--app-negative) ${neutralEnd}% 100%)`,
         }}
       >
         <div className="grid h-28 w-28 place-items-center rounded-full app-surface text-center">
@@ -613,10 +640,10 @@ function VolumePressureCircle({
             </div>
             <div className="mt-1 grid gap-0.5 text-[10px] leading-4">
               <span className="app-positive">
-                Buy {formatNumberCompact(pressure?.buyVolume)} · {formatNumberPlain(pressure?.buyPercent, 0)}%
+                Buy {formatNumberCompact(pressure?.buyVolume)} - {formatNumberPlain(pressure?.buyPercent, 0)}%
               </span>
               <span className="app-negative">
-                Sell {formatNumberCompact(pressure?.sellVolume)} · {formatNumberPlain(pressure?.sellPercent, 0)}%
+                Sell {formatNumberCompact(pressure?.sellVolume)} - {formatNumberPlain(pressure?.sellPercent, 0)}%
               </span>
             </div>
           </div>

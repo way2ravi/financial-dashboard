@@ -4,7 +4,6 @@ import { AuthStatus } from "./AuthStatus";
 import { BrandMark } from "./BrandMark";
 import { DataFreshness } from "./DataFreshness";
 import { formatCurrency, formatNumber, formatPercent } from "./format";
-import { ThemeSwitcher } from "./ThemeSwitcher";
 import { TickerLogo } from "./TickerLogo";
 import { TickerSearch } from "./TickerSearch";
 
@@ -22,32 +21,31 @@ export function OverviewStrip({ data, showDataSource = false }: Props) {
     : "-";
 
   return (
-    <section className="border-b app-surface">
+    <section className="border-b app-brand-header">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
           <BrandMark />
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:justify-end">
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:flex-1 lg:justify-end">
             <AppNav current="dashboard" />
-            <ThemeSwitcher />
             <AuthStatus />
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 border-t app-border-soft pt-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex flex-col gap-3 border-t border-white/15 pt-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex min-w-0 gap-3">
             <TickerLogo ticker={data.ticker} size="lg" />
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2 text-xs app-muted">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--app-header-muted)]">
                 <span>{data.ticker.exchange}</span>
-                <span className="h-1 w-1 rounded-full bg-[var(--app-border)]" />
+                <span className="h-1 w-1 rounded-full bg-white/35" />
                 <span>{data.ticker.sector}</span>
               </div>
               <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                <h1 className="text-2xl font-semibold tracking-normal app-heading">
+                <h1 className="brand-display text-3xl font-bold tracking-normal text-white">
                   {data.ticker.symbol}
                 </h1>
-                <p className="text-sm app-muted">{data.ticker.name}</p>
+                <p className="text-sm text-[var(--app-header-muted)]">{data.ticker.name}</p>
               </div>
               <div className="mt-2">
                 <DataFreshness
@@ -97,8 +95,8 @@ function Metric({
         : "app-heading";
 
   return (
-    <div className="rounded-lg border app-subtle px-3 py-2.5">
-      <div className="text-[11px] font-medium uppercase tracking-normal app-muted">{label}</div>
+    <div className="rounded-lg border border-white/15 bg-white/10 px-3 py-2.5 shadow-sm">
+      <div className="text-[11px] font-medium uppercase tracking-normal text-[var(--app-header-muted)]">{label}</div>
       <div className={`mt-1 text-base font-semibold ${toneClass}`}>{value}</div>
     </div>
   );

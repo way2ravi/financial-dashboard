@@ -1,11 +1,21 @@
+import Link from "next/link";
 import type { DashboardData, OhlcDaily } from "@/lib/types";
 import { asPercent, epsSurprisePercent, surprisePercent } from "@/lib/financial/metrics";
 import { simpleMovingAverage, wilderRsi } from "@/lib/technical/indicators";
 import { formatCurrency, formatNumber, formatPercent } from "./format";
 
 type SignalTone = "positive" | "negative" | "neutral";
+type SummaryShortcutTab =
+  | "analyst"
+  | "chart"
+  | "earnings"
+  | "fundamentals"
+  | "news"
+  | "summary"
+  | "technical";
 
 type Signal = {
+  hrefTab: SummaryShortcutTab;
   label: string;
   score: number;
   tone: SignalTone;
@@ -22,6 +32,7 @@ export function SummaryPanel({ data }: Props) {
   const score = signals.reduce((total, signal) => total + signal.score, 0);
   const confidence = getConfidence(signals);
   const decision = getDecision(score, confidence);
+  const symbol = data.ticker.symbol;
 
   return (
     <section className="space-y-3">
@@ -40,10 +51,26 @@ export function SummaryPanel({ data }: Props) {
             </div>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2">
-            <MiniStat label="Signal score" value={formatSignedScore(score)} />
-            <MiniStat label="Confidence" value={confidence} />
-            <MiniStat label="Last price" value={formatCurrency(data.quote?.price)} />
-            <MiniStat label="Target mean" value={formatCurrency(data.analystPriceTargets?.targetMean)} />
+            <MiniStat
+              href={dashboardTabHref(symbol, "summary")}
+              label="Signal score"
+              value={formatSignedScore(score)}
+            />
+            <MiniStat
+              href={dashboardTabHref(symbol, "summary")}
+              label="Confidence"
+              value={confidence}
+            />
+            <MiniStat
+              href={dashboardTabHref(symbol, "chart")}
+              label="Last price"
+              value={formatCurrency(data.quote?.price)}
+            />
+            <MiniStat
+              href={dashboardTabHref(symbol, "analyst")}
+              label="Target mean"
+              value={formatCurrency(data.analystPriceTargets?.targetMean)}
+            />
           </div>
         </div>
 
@@ -51,11 +78,11 @@ export function SummaryPanel({ data }: Props) {
           <h2 className="text-sm font-semibold app-heading">Plain English Summary</h2>
           <p className="mt-2 text-sm leading-6 app-heading">{decision.narrative}</p>
           <p className="mt-2 text-[11px] leading-5 app-muted">
-            Screening summary only — not investment advice. Verify with your own research and risk limits.
+            Screening summary only - not investment advice. Verify with your own research and risk limits.
           </p>
           <div className="mt-3 grid gap-2 md:grid-cols-2">
             {signals.map((signal) => (
-              <SignalCard key={signal.label} signal={signal} />
+              <SignalCard key={signal.label} signal={signal} symbol={symbol} />
             ))}
           </div>
         </div>
@@ -64,7 +91,7 @@ export function SummaryPanel({ data }: Props) {
   );
 }
 
-function SignalCard({ signal }: { signal: Signal }) {
+function SignalCard({ signal, symbol }: { signal: Signal; symbol: string }) {
   const width = Math.max(8, Math.min(100, Math.abs(signal.score) * 35));
   const barClass =
     signal.tone === "positive"
@@ -74,7 +101,11 @@ function SignalCard({ signal }: { signal: Signal }) {
         : "bg-[var(--app-text-soft)]";
 
   return (
-    <div className="rounded-lg border app-subtle px-3 py-2.5">
+    <Link
+      href={dashboardTabHref(symbol, signal.hrefTab)}
+      className="block rounded-lg border app-subtle px-3 py-2.5 transition hover:border-[var(--app-primary)] hover:bg-[var(--app-surface)] hover:shadow-sm"
+      aria-label={`Open ${signal.label} tab`}
+    >
       <div className="flex items-center justify-between gap-2">
         <div className="text-[11px] font-semibold uppercase tracking-normal app-muted">
           {signal.label}
@@ -87,7 +118,7 @@ function SignalCard({ signal }: { signal: Signal }) {
         <div className={`h-full rounded-full ${barClass}`} style={{ width: `${width}%` }} />
       </div>
       <p className="mt-2 text-xs leading-5 app-muted">{signal.detail}</p>
-    </div>
+    </Link>
   );
 }
 
@@ -112,12 +143,16 @@ function DecisionDial({ score }: { score: number }) {
   );
 }
 
-function MiniStat({ label, value }: { label: string; value: string }) {
+function MiniStat({ href, label, value }: { href: string; label: string; value: string }) {
   return (
-    <div className="rounded-lg border app-subtle px-3 py-2">
+    <Link
+      href={href}
+      className="block rounded-lg border app-subtle px-3 py-2 transition hover:border-[var(--app-primary)] hover:bg-[var(--app-surface)] hover:shadow-sm"
+      aria-label={`Open ${label} detail`}
+    >
       <div className="text-[11px] font-medium app-muted">{label}</div>
       <div className="mt-1 text-sm font-semibold app-heading">{value}</div>
-    </div>
+    </Link>
   );
 }
 
@@ -149,6 +184,7 @@ function buildAnalystSignal(data: DashboardData): Signal {
   else if (upside !== null && upside < 0) score -= 1;
 
   return {
+    hrefTab: "analyst",
     label: "Analyst view",
     score,
     tone: toTone(score),
@@ -165,6 +201,7 @@ function buildEarningsSignal(data: DashboardData): Signal {
 
   if (!latest) {
     return {
+      hrefTab: "earnings",
       label: "Earnings",
       score: 0,
       tone: "neutral",
@@ -187,6 +224,7 @@ function buildEarningsSignal(data: DashboardData): Signal {
   if (revenueSurprise !== null && revenueSurprise < 0) score -= 1;
 
   return {
+    hrefTab: "earnings",
     label: "Earnings",
     score,
     tone: toTone(score),
@@ -200,6 +238,7 @@ function buildFundamentalSignal(data: DashboardData): Signal {
 
   if (!f) {
     return {
+      hrefTab: "fundamentals",
       label: "Fundamentals",
       score: 0,
       tone: "neutral",
@@ -220,6 +259,7 @@ function buildFundamentalSignal(data: DashboardData): Signal {
   if (f.debtToEquity !== null && f.debtToEquity > 2) score -= 1;
 
   return {
+    hrefTab: "fundamentals",
     label: "Fundamentals",
     score,
     tone: toTone(score),
@@ -235,6 +275,7 @@ function buildTechnicalSignal(ohlc: OhlcDaily[]): Signal {
 
   if (closes.length < 30) {
     return {
+      hrefTab: "technical",
       label: "Technical",
       score: 0,
       tone: "neutral",
@@ -263,6 +304,7 @@ function buildTechnicalSignal(ohlc: OhlcDaily[]): Signal {
   if (rsi !== null && rsi > 70) score -= 1;
 
   return {
+    hrefTab: "technical",
     label: "Technical",
     score,
     tone: toTone(score),
@@ -278,6 +320,7 @@ function buildNewsSignal(data: DashboardData): Signal {
 
   if (scored.length === 0) {
     return {
+      hrefTab: "news",
       label: "News",
       score: 0,
       tone: "neutral",
@@ -290,6 +333,7 @@ function buildNewsSignal(data: DashboardData): Signal {
   const score = averageScore > 0.15 ? 1 : averageScore < -0.15 ? -1 : 0;
 
   return {
+    hrefTab: "news",
     label: "News",
     score,
     tone: toTone(score),
@@ -356,4 +400,14 @@ function formatSignedPercent(value: number) {
   const formatted = formatPercent(value, 1);
 
   return value > 0 ? `+${formatted}` : formatted;
+}
+
+function dashboardTabHref(symbol: string, tab: SummaryShortcutTab) {
+  const params = new URLSearchParams({ symbol });
+
+  if (tab !== "summary") {
+    params.set("tab", tab);
+  }
+
+  return `/dashboard?${params.toString()}`;
 }

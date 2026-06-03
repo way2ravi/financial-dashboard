@@ -5,10 +5,12 @@ import { FundamentalsGrid } from "@/components/dashboard/FundamentalsGrid";
 import { NewsBlock } from "@/components/dashboard/NewsBlock";
 import {
   PriceChart,
+  VolumeAnalytics,
   type ChartInterval,
   type ChartRange,
   type ChartType,
 } from "@/components/dashboard/PriceChart";
+import { ProtectedInsight } from "@/components/dashboard/ProtectedInsight";
 import { SummaryPanel } from "@/components/dashboard/SummaryPanel";
 import {
   TechnicalAnalysisPanel,
@@ -23,12 +25,14 @@ type Props = {
   activeTab: TabId;
   activeTechnicalTab: TechnicalSubTab;
   data: DashboardData;
+  isAuthenticated?: boolean;
   showDataSource?: boolean;
 };
 
 export type DashboardTabId =
   | "summary"
   | "chart"
+  | "volume"
   | "technical"
   | "analyst"
   | "earnings"
@@ -40,6 +44,7 @@ type TabId = DashboardTabId;
 const tabs: Array<{ id: TabId; label: string }> = [
   { id: "summary", label: "Summary" },
   { id: "chart", label: "Chart" },
+  { id: "volume", label: "Volume" },
   { id: "technical", label: "Technical" },
   { id: "analyst", label: "Analyst" },
   { id: "earnings", label: "Earnings" },
@@ -54,6 +59,7 @@ export function DashboardTabs({
   activeTab,
   activeTechnicalTab,
   data,
+  isAuthenticated = false,
   showDataSource = false,
 }: Props) {
   return (
@@ -64,10 +70,10 @@ export function DashboardTabs({
             <Link
               key={tab.id}
               aria-current={activeTab === tab.id ? "page" : undefined}
-              className={`rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
+              className={`rounded-md px-3 py-2 text-xs font-semibold transition ${
                 activeTab === tab.id
-                  ? "app-primary-button"
-                  : "app-muted hover:bg-[color-mix(in_srgb,var(--app-accent)_8%,transparent)] hover:text-[var(--app-text)]"
+                  ? "bg-[var(--app-primary)] text-white shadow-sm"
+                  : "app-muted hover:bg-[color-mix(in_srgb,var(--app-teal)_14%,transparent)] hover:text-[var(--app-primary)]"
               }`}
               href={dashboardTabHref(data.ticker.symbol, tab.id)}
             >
@@ -77,7 +83,15 @@ export function DashboardTabs({
         </div>
       </div>
 
-      {activeTab === "summary" ? <SummaryPanel data={data} /> : null}
+      {activeTab === "summary" ? (
+        <ProtectedInsight
+          isAuthenticated={isAuthenticated}
+          message="Sign in to view the consolidated buy, hold, or sell-style screening summary."
+          title="Summary intelligence locked"
+        >
+          <SummaryPanel data={data} />
+        </ProtectedInsight>
+      ) : null}
 
       {activeTab === "chart" ? (
         <PriceChart
@@ -90,23 +104,50 @@ export function DashboardTabs({
         />
       ) : null}
 
-      {activeTab === "technical" ? (
-        <div className="space-y-3">
-          <TechnicalAnalysisPanel
-            activeSubTab={activeTechnicalTab}
+      {activeTab === "volume" ? (
+        <ProtectedInsight
+          isAuthenticated={isAuthenticated}
+          message="Sign in to view volume pressure, buy/sell volume estimates, and recent activity."
+          title="Volume analysis locked"
+        >
+          <VolumeAnalytics
+            interval={activeChartInterval}
             ohlc={data.ohlc}
+            range={activeChartRange}
             showDataSource={showDataSource}
           />
-        </div>
+        </ProtectedInsight>
+      ) : null}
+
+      {activeTab === "technical" ? (
+        <ProtectedInsight
+          isAuthenticated={isAuthenticated}
+          message="Sign in to view technical indicators, stop/limit analysis, and support/resistance levels."
+          title="Technical analysis locked"
+        >
+          <div className="space-y-3">
+            <TechnicalAnalysisPanel
+              activeSubTab={activeTechnicalTab}
+              ohlc={data.ohlc}
+              showDataSource={showDataSource}
+            />
+          </div>
+        </ProtectedInsight>
       ) : null}
 
       {activeTab === "analyst" ? (
-        <AnalystPanel
-          ratings={data.analystRatings}
-          targets={data.analystPriceTargets}
-          quote={data.quote}
-          showDataSource={showDataSource}
-        />
+        <ProtectedInsight
+          isAuthenticated={isAuthenticated}
+          message="Sign in to view analyst ratings, rating distribution, and target price data."
+          title="Analyst insight locked"
+        >
+          <AnalystPanel
+            ratings={data.analystRatings}
+            targets={data.analystPriceTargets}
+            quote={data.quote}
+            showDataSource={showDataSource}
+          />
+        </ProtectedInsight>
       ) : null}
 
       {activeTab === "earnings" ? (
@@ -114,11 +155,17 @@ export function DashboardTabs({
       ) : null}
 
       {activeTab === "fundamentals" ? (
-        <FundamentalsGrid
-          financialStatements={data.financialStatements}
-          fundamentals={data.fundamentals}
-          showDataSource={showDataSource}
-        />
+        <ProtectedInsight
+          isAuthenticated={isAuthenticated}
+          message="Sign in to view fundamentals, financial statements, and valuation commentary."
+          title="Fundamental analysis locked"
+        >
+          <FundamentalsGrid
+            financialStatements={data.financialStatements}
+            fundamentals={data.fundamentals}
+            showDataSource={showDataSource}
+          />
+        </ProtectedInsight>
       ) : null}
 
       {activeTab === "news" ? (

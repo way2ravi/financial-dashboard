@@ -1,6 +1,6 @@
 import { signIn, signUp } from "@/app/auth/actions";
+import { BrandMark } from "@/components/dashboard/BrandMark";
 import { PageMessage } from "@/components/dashboard/PageMessage";
-import { ThemeSwitcher } from "@/components/dashboard/ThemeSwitcher";
 
 type Props = {
   searchParams: Promise<{
@@ -16,14 +16,16 @@ export default async function LoginPage({ searchParams }: Props) {
   return (
     <main className="min-h-screen app-bg px-4 py-10">
       <div className="mx-auto max-w-5xl">
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <p className="text-sm font-medium app-muted">Financial Dashboard</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-normal app-heading">
+        <div className="mb-8 overflow-hidden rounded-lg border app-brand-header shadow-sm">
+          <div className="p-4 sm:p-5">
+            <BrandMark />
+            <h1 className="brand-display mt-6 text-3xl font-bold tracking-normal text-white">
               Sign in to manage your watchlist
             </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--app-header-muted)]">
+              Access watchlists, portfolios, wealth tracking, and deeper investment intelligence.
+            </p>
           </div>
-          <ThemeSwitcher />
         </div>
 
         {message ? (

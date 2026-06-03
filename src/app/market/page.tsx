@@ -1,7 +1,5 @@
 import Link from "next/link";
-import { AppNav } from "@/components/dashboard/AppNav";
-import { AuthStatus } from "@/components/dashboard/AuthStatus";
-import { ThemeSwitcher } from "@/components/dashboard/ThemeSwitcher";
+import { AppHeader } from "@/components/dashboard/AppHeader";
 import { formatCurrency, formatNumber, formatPercent } from "@/components/dashboard/format";
 import {
   getMarketOverview,
@@ -33,23 +31,11 @@ export default async function MarketPage({ searchParams }: Props) {
 
   return (
     <main className="min-h-screen app-bg">
-      <header className="border-b app-surface">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-normal app-heading">
-              Market Overview
-            </h1>
-            <p className="mt-1 max-w-2xl text-xs leading-5 app-muted">
-              Global market mood, regional breadth, and major equity market proxies for daily risk context.
-            </p>
-          </div>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <AppNav current="market" />
-            <ThemeSwitcher />
-            <AuthStatus />
-          </div>
-        </div>
-      </header>
+      <AppHeader
+        current="market"
+        title="Market Overview"
+        description="Global market mood, regional breadth, and major equity market proxies for daily risk context."
+      />
 
       <div className="mx-auto max-w-7xl space-y-3 px-4 py-4 sm:px-6 lg:px-8">
         <section className="grid gap-3 xl:grid-cols-[360px_1fr]">

@@ -46,18 +46,26 @@ export default async function DashboardPage({ searchParams }: Props) {
   const selectedChartRange = getSelectedChartRange(resolvedSearchParams);
   const selectedChartInterval = getSelectedChartInterval(resolvedSearchParams);
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const isAuthenticated = Boolean(user);
   const showDataSource = await currentUserIsAdmin(supabase);
   const message = getPageMessage(resolvedSearchParams);
-  const autoloadMessage = await maybeAutoloadDashboardData(
-    selectedSymbol,
-    resolvedSearchParams
-  );
-  const { data, fallbackMessage } = await loadDashboardData(selectedSymbol);
+  const autoloadMessage = isAuthenticated
+    ? await maybeAutoloadDashboardData(selectedSymbol, resolvedSearchParams)
+    : null;
+  const { data, fallbackMessage } = isAuthenticated
+    ? await loadDashboardData(selectedSymbol)
+    : await loadPublicDashboardData(selectedSymbol);
   const pageMessage = message ?? autoloadMessage ?? fallbackMessage;
 
   return (
     <main className="min-h-screen app-bg">
-      <OverviewStrip data={data} showDataSource={showDataSource} />
+      <OverviewStrip
+        data={data}
+        showDataSource={showDataSource}
+      />
 
       <div className="mx-auto max-w-7xl space-y-3 px-4 py-4 sm:px-6 lg:px-8">
         <PageMessage message={pageMessage} />
@@ -68,6 +76,7 @@ export default async function DashboardPage({ searchParams }: Props) {
           activeTab={selectedTab}
           activeTechnicalTab={selectedTechnicalTab}
           data={data}
+          isAuthenticated={isAuthenticated}
           showDataSource={showDataSource}
         />
       </div>
@@ -134,6 +143,32 @@ async function loadDashboardData(
   }
 }
 
+async function loadPublicDashboardData(
+  symbol: string
+): Promise<{ data: DashboardData; fallbackMessage: PageMessageValue }> {
+  try {
+    const supabase = await createClient();
+
+    return {
+      data: await getDashboardBySymbol(supabase, symbol),
+      fallbackMessage: null,
+    };
+  } catch {
+    return {
+      data: emptyDashboardData({
+        ...mockDashboardData.ticker,
+        symbol,
+        name: `${symbol} ticker`,
+        exchange: null,
+        sector: null,
+        industry: null,
+        logoUrl: null,
+      }),
+      fallbackMessage: null,
+    };
+  }
+}
+
 function isDashboardCacheEmpty(data: DashboardData) {
   return (
     !data.quote &&
@@ -150,21 +185,9 @@ async function loadFallbackDashboardData(symbol: string): Promise<DashboardData>
     const supabase = await createClient();
     const ticker = await getTickerBySymbol(supabase, symbol);
 
-    return {
-      ticker,
-      quote: null,
-      analystRatings: null,
-      analystPriceTargets: null,
-      earnings: [],
-      fundamentals: null,
-      financialStatements: { annual: [], quarterly: [] },
-      ohlc: [],
-      news: [],
-    };
+    return emptyDashboardData(ticker);
   } catch {
-    return {
-      ...mockDashboardData,
-      ticker: {
+    return emptyDashboardData({
         ...mockDashboardData.ticker,
         symbol,
         name: `${symbol} ticker`,
@@ -172,17 +195,22 @@ async function loadFallbackDashboardData(symbol: string): Promise<DashboardData>
         sector: null,
         industry: null,
         logoUrl: null,
-      },
-      quote: null,
-      analystRatings: null,
-      analystPriceTargets: null,
-      earnings: [],
-      fundamentals: null,
-      financialStatements: { annual: [], quarterly: [] },
-      ohlc: [],
-      news: [],
-    };
+      });
   }
+}
+
+function emptyDashboardData(ticker: DashboardData["ticker"]): DashboardData {
+  return {
+    ticker,
+    quote: null,
+    analystRatings: null,
+    analystPriceTargets: null,
+    earnings: [],
+    fundamentals: null,
+    financialStatements: { annual: [], quarterly: [] },
+    ohlc: [],
+    news: [],
+  };
 }
 
 function getSelectedSymbol(searchParams: Awaited<Props["searchParams"]>) {
@@ -203,6 +231,7 @@ function getSelectedTab(searchParams: Awaited<Props["searchParams"]>): Dashboard
   if (
     tab === "summary" ||
     tab === "chart" ||
+    tab === "volume" ||
     tab === "technical" ||
     tab === "analyst" ||
     tab === "earnings" ||

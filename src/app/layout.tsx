@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Inter, Montserrat } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
+
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
   subsets: ["latin"],
 });
 
@@ -13,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Financial Dashboard",
-  description: "Multi-user stock research dashboard",
+  title: "Way2Investing",
+  description: "Data-driven investment intelligence dashboard",
 };
 
 export default function RootLayout({
@@ -25,32 +30,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${montserrat.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                var theme = localStorage.getItem("financial-dashboard-theme") || "black";
-                document.documentElement.dataset.theme = theme;
-                document.addEventListener("click", function (event) {
-                  var target = event.target && event.target.closest
-                    ? event.target.closest("[data-theme-option]")
-                    : null;
-                  if (!target) return;
-                  theme = target.getAttribute("data-theme-option") || "black";
-                  document.documentElement.dataset.theme = theme;
-                  localStorage.setItem("financial-dashboard-theme", theme);
-                });
-              } catch (_) {
-                document.documentElement.dataset.theme = "black";
-              }
-            `,
-          }}
-        />
-      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
