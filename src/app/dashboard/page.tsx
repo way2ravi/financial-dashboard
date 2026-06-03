@@ -52,12 +52,17 @@ export default async function DashboardPage({ searchParams }: Props) {
   const isAuthenticated = Boolean(user);
   const showDataSource = await currentUserIsAdmin(supabase);
   const message = getPageMessage(resolvedSearchParams);
-  const autoloadMessage = isAuthenticated
+  const autoloadRequested = getSearchParam(resolvedSearchParams.autoload) === "1";
+  const autoloadMessage = selectedSymbol && isAuthenticated && autoloadRequested
     ? await maybeAutoloadDashboardData(selectedSymbol, resolvedSearchParams)
     : null;
-  const { data, fallbackMessage } = isAuthenticated
-    ? await loadDashboardData(selectedSymbol)
-    : await loadPublicDashboardData(selectedSymbol);
+  const { data, fallbackMessage } = selectedSymbol
+    ? isAuthenticated
+      ? await loadDashboardData(selectedSymbol, selectedTab, {
+          refreshIncomplete: !autoloadRequested,
+        })
+      : await loadPublicDashboardData(selectedSymbol)
+    : { data: emptyDashboardData(emptyTicker()), fallbackMessage: null };
   const pageMessage = message ?? autoloadMessage ?? fallbackMessage;
 
   return (
@@ -69,16 +74,20 @@ export default async function DashboardPage({ searchParams }: Props) {
 
       <div className="mx-auto max-w-7xl space-y-3 px-4 py-4 sm:px-6 lg:px-8">
         <PageMessage message={pageMessage} />
-        <DashboardTabs
-          activeChartInterval={selectedChartInterval}
-          activeChartRange={selectedChartRange}
-          activeChartType={selectedChartType}
-          activeTab={selectedTab}
-          activeTechnicalTab={selectedTechnicalTab}
-          data={data}
-          isAuthenticated={isAuthenticated}
-          showDataSource={showDataSource}
-        />
+        {selectedSymbol ? (
+          <DashboardTabs
+            activeChartInterval={selectedChartInterval}
+            activeChartRange={selectedChartRange}
+            activeChartType={selectedChartType}
+            activeTab={selectedTab}
+            activeTechnicalTab={selectedTechnicalTab}
+            data={data}
+            isAuthenticated={isAuthenticated}
+            showDataSource={showDataSource}
+          />
+        ) : (
+          <EmptyDashboardState />
+        )}
       </div>
     </main>
   );
@@ -108,13 +117,15 @@ async function maybeAutoloadDashboardData(
 }
 
 async function loadDashboardData(
-  symbol: string
+  symbol: string,
+  selectedTab: DashboardTabId,
+  options: { refreshIncomplete?: boolean } = {}
 ): Promise<{ data: DashboardData; fallbackMessage: PageMessageValue }> {
   try {
     const supabase = await createClient();
     const data = await getDashboardBySymbol(supabase, symbol);
 
-    if (isDashboardCacheEmpty(data)) {
+    if (options.refreshIncomplete !== false && shouldRefreshDashboardData(data, selectedTab)) {
       const autoloadMessage = await maybeAutoloadDashboardData(symbol, {
         autoload: "1",
       });
@@ -180,6 +191,42 @@ function isDashboardCacheEmpty(data: DashboardData) {
   );
 }
 
+function shouldRefreshDashboardData(data: DashboardData, selectedTab: DashboardTabId) {
+  if (isDashboardCacheEmpty(data)) {
+    return true;
+  }
+
+  if (selectedTab === "chart") {
+    return data.ohlc.length < 2;
+  }
+
+  if (selectedTab === "technical" || selectedTab === "volume") {
+    return data.ohlc.length < 30;
+  }
+
+  if (selectedTab === "analyst") {
+    return !data.analystRatings || !data.analystPriceTargets;
+  }
+
+  if (selectedTab === "earnings") {
+    return data.earnings.length === 0;
+  }
+
+  if (selectedTab === "fundamentals") {
+    return (
+      !data.fundamentals ||
+      (data.financialStatements.annual.length === 0 &&
+        data.financialStatements.quarterly.length === 0)
+    );
+  }
+
+  if (selectedTab === "news") {
+    return data.news.length === 0;
+  }
+
+  return false;
+}
+
 async function loadFallbackDashboardData(symbol: string): Promise<DashboardData> {
   try {
     const supabase = await createClient();
@@ -213,12 +260,41 @@ function emptyDashboardData(ticker: DashboardData["ticker"]): DashboardData {
   };
 }
 
+function emptyTicker(): DashboardData["ticker"] {
+  return {
+    id: 0,
+    symbol: "",
+    exchange: null,
+    name: "Search a ticker",
+    sector: null,
+    industry: null,
+    currency: null,
+    logoUrl: null,
+    isActive: true,
+  };
+}
+
+function EmptyDashboardState() {
+  return (
+    <section className="rounded-lg border app-surface p-6 text-center shadow-sm">
+      <div className="mx-auto max-w-xl">
+        <h2 className="text-base font-semibold app-heading">Search a ticker to begin</h2>
+        <p className="mt-2 text-sm leading-6 app-muted">
+          Use the ticker search above to load a company dashboard. No stock is selected by default.
+        </p>
+      </div>
+    </section>
+  );
+}
+
 function getSelectedSymbol(searchParams: Awaited<Props["searchParams"]>) {
   const rawSymbol = Array.isArray(searchParams.symbol)
     ? searchParams.symbol[0]
     : searchParams.symbol;
 
-  return (rawSymbol || mockDashboardData.ticker.symbol).trim().toUpperCase();
+  const symbol = rawSymbol?.trim().toUpperCase() ?? "";
+
+  return symbol || null;
 }
 
 function getSelectedTab(searchParams: Awaited<Props["searchParams"]>): DashboardTabId {

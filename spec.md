@@ -16,11 +16,13 @@ The dashboard should support:
 - Net worth dashboard with allocation charts and rule-based financial guidance
 - Daily earnings calendar by selected date
 - Latest quote overview
+- Public basic ticker snapshot for logged-out visitors
 - Analyst ratings
 - Analyst price targets
 - Last quarterly earnings
 - Fundamentals and valuation ratios
 - OHLC price chart data
+- Dedicated volume analysis tab with buy/sell pressure and recent volume table
 - Consolidated stock summary with plain-English Buy / Hold / Sell-style indication
 - Technical analysis tab with indicators, moving averages, support/resistance, and stop-loss guidance
 - Company news and sentiment
@@ -276,6 +278,12 @@ GET /api/cron/refresh
 
 Avoid creating separate public routes for every panel too early.
 
+Ticker search remains public so visitors can discover companies. Detailed dashboard data APIs and provider refresh routes require a signed-in user:
+
+- `GET /api/tickers/[symbol]/dashboard` returns `401` for anonymous users.
+- `POST /api/tickers/[symbol]/load` returns `401` for anonymous users so public visitors cannot consume provider quota.
+- The server-rendered dashboard page can still show basic public content from the shared market-data cache.
+
 Preferred dashboard response:
 
 ```ts
@@ -286,6 +294,7 @@ type DashboardData = {
   analystPriceTargets: AnalystPriceTargetsSnapshot | null;
   earnings: EarningsQuarterly[];
   fundamentals: FundamentalsSnapshot | null;
+  financialStatements: FinancialStatements;
   ohlc: OhlcDaily[];
   news: CompanyNewsArticle[];
 };
@@ -399,7 +408,7 @@ x-cron-secret: CRON_SECRET
 
 It uses the server-only Supabase service-role client and refreshes a bounded set of active tickers sequentially to reduce provider rate-limit pressure.
 Symbol-level failures are returned in the response and logged without stopping the rest of the batch.
-The optional `modules` parameter can limit refreshes to `quote`, `analystRatings`, `priceTargets`, `earnings`, `fundamentals`, `ohlc`, and/or `news`.
+The optional `modules` parameter can limit refreshes to `quote`, `analystRatings`, `priceTargets`, `earnings`, `fundamentals`, `financialStatements`, `ohlc`, and/or `news`.
 
 The Vercel deployment schedule is configured in `vercel.json`:
 
@@ -551,17 +560,42 @@ Black is the default theme.
 
 The dashboard does not include embedded Watchlist or Today's Earnings blocks. Those are separate top-level pages so the ticker research page remains compact.
 
+### Access model
+
+The MVP uses a balanced public/member model rather than locking the whole page.
+
+Public visitors can see enough basic information to understand the product:
+
+- Ticker symbol, company name, exchange, sector, and logo
+- Latest quote overview: last price, day change, open, day range, and volume
+- Basic price chart tab
+- Quarterly earnings table
+- Company news headlines
+- Ticker search and navigation
+
+Signed-in users unlock the deeper decision-support modules:
+
+- Summary verdict and consolidated Buy Watch / Hold / Watch / Avoid-style indication
+- Volume analysis, including buy/sell volume estimates and recent volume table
+- Technical analysis, stop/limit guidance, support/resistance, indicators, and moving averages
+- Analyst ratings and price targets
+- Fundamentals, financial statements, valuation commentary, and P/E verdict
+- Watchlist, portfolio, and wealth personalization
+
+Locked modules render a neutral sign-in placeholder instead of hidden real data, so sensitive member-only outputs are not merely blurred in the HTML.
+
 Dashboard tabs:
 
 1. `Summary` - first/default tab. Consolidates analyst data, price targets, earnings, fundamentals, technicals, and news into a plain-English indication for the end user. The UI should show an overall graphical score, confidence, and per-category signal cards. The wording should be practical and understandable, such as Buy Watch, Hold / Watch, or Avoid / Sell Bias.
-2. `Chart` - a dedicated price chart tab for the selected stock. This is separate from technical analysis so users can inspect price action without scrolling through every indicator.
-3. `Technical` - technical indicators, summary, moving averages, momentum, volume, support/resistance, and a stop-loss card at the top. Stop-loss guidance is calculated from available technical data, such as recent support, ATR/volatility, and short-term moving averages.
-4. `Analyst` - analyst ratings table plus low, mean, and high price targets with separate freshness information for ratings and targets.
-5. `Earnings` - quarterly earnings table with EPS actual, EPS estimate, EPS surprise, revenue actual, revenue estimate, and revenue surprise columns.
-6. `Fundamentals` - valuation/profitability/liquidity ratios with visual indicators and a plain-English P/E read that avoids calling a stock cheap unless growth, profitability, and debt support it.
-7. `News` - company news headlines and sentiment from provider feeds.
+2. `Chart` - a dedicated public price chart tab for the selected stock. This is separate from technical and volume analysis so users can inspect price action without scrolling through every indicator.
+3. `Volume` - member-only volume analysis with latest volume, 20-candle average, activity ratio, buy/sell pressure circles, and a recent volume table. Volume is not embedded inside the public Chart tab.
+4. `Technical` - member-only technical indicators, summary, moving averages, momentum, support/resistance, and stop/limit guidance. Stop/limit guidance is calculated from available technical data, such as recent support, ATR/volatility, and short-term moving averages.
+5. `Analyst` - member-only analyst ratings table plus low, mean, and high price targets with separate freshness information for ratings and targets.
+6. `Earnings` - public quarterly earnings table with EPS actual, EPS estimate, EPS surprise, revenue actual, revenue estimate, and revenue surprise columns.
+7. `Fundamentals` - member-only valuation/profitability/liquidity ratios, financial statements, visual indicators, and a plain-English P/E read that avoids calling a stock cheap unless growth, profitability, and debt support it.
+8. `News` - public company news headlines and sentiment from provider feeds.
 
-The primary dashboard refresh action is the ticker `Load` button. It fetches quote, analyst ratings, price targets, earnings, fundamentals, OHLC, and news for the requested symbol before navigation.
+The primary dashboard refresh action is ticker selection/search. Signed-in users can trigger provider refreshes that fetch quote, analyst ratings, price targets, earnings, fundamentals, financial statements, OHLC, and news for the requested symbol before navigation. The server-rendered dashboard also performs a tab-aware completeness check for signed-in users: if the selected tab needs missing data, such as fewer than 30 cached OHLC rows for Technical or Volume, it refreshes the symbol before rendering that tab.
 
 ## Watchlist Page
 
@@ -580,7 +614,8 @@ Initial provider candidates:
 - Finnhub for quotes, analyst ratings, price targets, fundamentals, and candles
 - Twelve Data for quote, ticker search, and daily OHLC fallback
 - Alpha Vantage for quote, ticker search, daily OHLC, fundamentals, and quarterly earnings fallback
-- Financial Modeling Prep for quote, OHLC, analyst rating, price target, and fundamentals fallback
+- Financial Modeling Prep for quote, OHLC, analyst rating, price target, fundamentals, and financial-statement fallback
+- SEC company facts for US financial-statement fallback when paid provider plans block statement endpoints
 - Finnhub and Alpha Vantage for company news fallback
 - MarketData.app for analyst data and earnings alternatives
 - EarningsAPI for broad earnings calendar data
@@ -595,7 +630,10 @@ Refresh services should try providers in module-specific order and cache the fir
 - Users can read and mutate only their own portfolios and portfolio transactions.
 - Users can read and mutate only their own wealth settings and wealth items.
 - Market data is publicly readable.
+- Public dashboard pages may render basic cached market information, but detailed dashboard API routes require authentication.
+- Member-only modules should not render hidden real data for anonymous visitors; they should render a sign-in placeholder.
 - Market data writes happen through server/admin paths only.
+- Provider refresh endpoints require authentication or admin/cron authorization depending on route.
 - Provider logs are admin-readable only.
 - Service-role key must remain server-only.
 

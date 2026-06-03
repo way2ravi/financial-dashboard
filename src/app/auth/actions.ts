@@ -22,7 +22,7 @@ export async function signIn(formData: FormData) {
     redirect(loginMessageUrl("error", error.message));
   }
 
-  redirect("/dashboard?symbol=AAPL");
+  redirect("/dashboard");
 }
 
 export async function signUp(formData: FormData) {
