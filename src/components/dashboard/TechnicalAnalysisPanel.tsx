@@ -71,6 +71,7 @@ type LimitMethod = {
 
 export type TechnicalSubTab =
   | "stop-limit"
+  | "ranges"
   | "signals"
   | "moving-averages"
   | "momentum"
@@ -78,6 +79,7 @@ export type TechnicalSubTab =
 
 const technicalTabs: Array<{ id: TechnicalSubTab; label: string }> = [
   { id: "stop-limit", label: "Stop & Limit" },
+  { id: "ranges", label: "Range Lows / Highs" },
   { id: "signals", label: "Signals" },
   { id: "moving-averages", label: "Moving Averages" },
   { id: "momentum", label: "Momentum" },
@@ -180,6 +182,10 @@ export function TechnicalAnalysisPanel({
         />
       ) : null}
 
+      {activeSection === "ranges" ? (
+        <RangeLevelsPanel candles={candles} latestClose={analysis.latestClose} />
+      ) : null}
+
       {activeSection === "signals" ? (
         <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
           {analysis.signals.map((signal) => (
@@ -208,6 +214,94 @@ export function TechnicalAnalysisPanel({
         </div>
       ) : null}
     </section>
+  );
+}
+
+function RangeLevelsPanel({
+  candles,
+  latestClose,
+}: {
+  candles: Candle[];
+  latestClose: number;
+}) {
+  const ranges = buildRangeLevels(candles, latestClose);
+
+  return (
+    <div className="mt-3 rounded-lg border app-subtle p-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <div className="text-[11px] font-medium uppercase tracking-normal app-muted">
+            Low / high by interval
+          </div>
+          <p className="mt-1 text-xs leading-5 app-muted">
+            Shows where the latest close sits inside each cached trading range. Near lows can mark
+            risk zones; near highs can mark breakout or resistance zones.
+          </p>
+        </div>
+        <div className="rounded-lg border app-surface px-3 py-2 text-right">
+          <div className="text-[11px] font-medium uppercase tracking-normal app-muted">
+            Latest close
+          </div>
+          <div className="text-sm font-semibold app-heading">{formatCurrency(latestClose)}</div>
+        </div>
+      </div>
+
+      <div className="mt-3 overflow-x-auto">
+        <table className="w-full min-w-[780px] border-separate border-spacing-0 text-left text-xs">
+          <thead className="app-surface">
+            <tr className="uppercase tracking-normal app-muted">
+              <th className="border-b app-border-soft px-3 py-2 font-semibold">Interval</th>
+              <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">Low</th>
+              <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">High</th>
+              <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">From low</th>
+              <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">From high</th>
+              <th className="border-b app-border-soft px-3 py-2 font-semibold">Position</th>
+              <th className="border-b app-border-soft px-3 py-2 font-semibold">Read</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ranges.map((range) => (
+              <tr
+                key={range.label}
+                className="app-muted transition hover:bg-[var(--app-surface-muted)]"
+              >
+                <td className="border-b app-border-soft px-3 py-2.5 font-semibold app-heading">
+                  {range.label}
+                </td>
+                <td className="border-b app-border-soft px-3 py-2.5 text-right">
+                  {formatCurrency(range.low)}
+                </td>
+                <td className="border-b app-border-soft px-3 py-2.5 text-right">
+                  {formatCurrency(range.high)}
+                </td>
+                <td className="border-b app-border-soft px-3 py-2.5 text-right app-positive">
+                  +{formatPercent(range.fromLowPercent, 1)}
+                </td>
+                <td className="border-b app-border-soft px-3 py-2.5 text-right app-negative">
+                  {formatPercent(range.fromHighPercent, 1)}
+                </td>
+                <td className="border-b app-border-soft px-3 py-2.5">
+                  <div className="h-2 overflow-hidden rounded-full bg-[var(--app-border-soft)]">
+                    <div
+                      className={`h-full rounded-full ${getRangeBarClass(range.positionPercent)}`}
+                      style={{ width: `${Math.max(4, Math.min(100, range.positionPercent))}%` }}
+                    />
+                  </div>
+                  <div className="mt-1 text-[11px] app-muted">
+                    {formatPercent(range.positionPercent, 0)} of range
+                  </div>
+                </td>
+                <td className="border-b app-border-soft px-3 py-2.5">
+                  <span className={getRangeReadClass(range.positionPercent)}>
+                    {getRangeRead(range.positionPercent)}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
 
@@ -1076,6 +1170,69 @@ function calculateAtr(candles: Candle[], period: number) {
   });
 
   return trueRanges.reduce((sum, value) => sum + value, 0) / trueRanges.length;
+}
+
+function buildRangeLevels(candles: Candle[], latestClose: number) {
+  const intervals = [
+    { label: "5D", days: 5 },
+    { label: "1M", days: 21 },
+    { label: "3M", days: 63 },
+    { label: "6M", days: 126 },
+    { label: "Cached", days: candles.length },
+  ];
+
+  return intervals
+    .map((interval) => {
+      const slice = candles.slice(-Math.min(interval.days, candles.length));
+      const low = Math.min(...slice.map((candle) => candle.low));
+      const high = Math.max(...slice.map((candle) => candle.high));
+      const range = Math.max(high - low, 0.01);
+      const positionPercent = ((latestClose - low) / range) * 100;
+      const fromLowPercent = low === 0 ? 0 : ((latestClose - low) / low) * 100;
+      const fromHighPercent = high === 0 ? 0 : ((latestClose - high) / high) * 100;
+
+      return {
+        fromHighPercent,
+        fromLowPercent,
+        high,
+        label: interval.label,
+        low,
+        positionPercent: Math.max(0, Math.min(100, positionPercent)),
+      };
+    })
+    .filter((range) => Number.isFinite(range.low) && Number.isFinite(range.high));
+}
+
+function getRangeRead(positionPercent: number) {
+  if (positionPercent >= 80) {
+    return "Near range high";
+  }
+
+  if (positionPercent <= 20) {
+    return "Near range low";
+  }
+
+  if (positionPercent >= 60) {
+    return "Upper half";
+  }
+
+  if (positionPercent <= 40) {
+    return "Lower half";
+  }
+
+  return "Middle range";
+}
+
+function getRangeReadClass(positionPercent: number) {
+  if (positionPercent >= 80) return "font-semibold app-positive";
+  if (positionPercent <= 20) return "font-semibold app-negative";
+  return "font-semibold app-heading";
+}
+
+function getRangeBarClass(positionPercent: number) {
+  if (positionPercent >= 80) return "bg-[var(--app-positive)]";
+  if (positionPercent <= 20) return "bg-[var(--app-negative)]";
+  return "bg-[var(--app-primary)]";
 }
 
 function toCandles(ohlc: OhlcDaily[]): Candle[] {

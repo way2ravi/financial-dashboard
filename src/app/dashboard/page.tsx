@@ -328,6 +328,7 @@ function getSelectedTechnicalTab(
 
   if (
     tech === "signals" ||
+    tech === "ranges" ||
     tech === "moving-averages" ||
     tech === "momentum" ||
     tech === "stop-limit" ||

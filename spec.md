@@ -26,7 +26,7 @@ The dashboard should support:
 - OHLC price chart data
 - Dedicated volume analysis tab with buy/sell pressure and recent volume table
 - Consolidated stock summary with plain-English Buy / Hold / Sell-style indication
-- Technical analysis tab with indicators, moving averages, support/resistance, and stop-loss guidance
+- Technical analysis tab with indicators, interval lows/highs, moving averages, support/resistance, and stop-loss guidance
 - Company news and sentiment
 - Cached market data through Supabase
 - External provider refresh through isolated provider modules
@@ -593,7 +593,7 @@ Dashboard tabs:
 1. `Summary` - first/default tab. Consolidates analyst data, price targets, earnings, fundamentals, technicals, and news into a plain-English indication for the end user. The UI should show an overall graphical score, confidence, and per-category signal cards. The wording should be practical and understandable, such as Buy Watch, Hold / Watch, or Avoid / Sell Bias.
 2. `Chart` - a dedicated public price chart tab for the selected stock. This is separate from technical and volume analysis so users can inspect price action without scrolling through every indicator.
 3. `Volume` - member-only volume analysis with latest volume, 20-candle average, activity ratio, buy/sell pressure circles, and a recent volume table. Volume is not embedded inside the public Chart tab.
-4. `Technical` - member-only technical indicators, summary, moving averages, momentum, support/resistance, and stop/limit guidance. Stop/limit guidance is calculated from available technical data, such as recent support, ATR/volatility, and short-term moving averages.
+4. `Technical` - member-only technical indicators, summary, interval low/high ranges, moving averages, momentum, support/resistance, and stop/limit guidance. Stop/limit guidance is calculated from available technical data, such as recent support, ATR/volatility, and short-term moving averages. The range view should show lows, highs, distance from each level, and current price position across common intervals such as 5D, 1M, 3M, 6M, and cached history.
 5. `Analyst` - member-only analyst ratings table plus low, mean, and high price targets with separate freshness information for ratings and targets.
 6. `Earnings` - public quarterly earnings table with EPS actual, EPS estimate, EPS surprise, revenue actual, revenue estimate, revenue surprise, and a market-reaction read. The reaction compares cached OHLC closes around each report date and gives plain-English advice such as whether the market rewarded, ignored, or punished the report. If the earnings provider does not return revenue actual, the table can fall back to cached quarterly income-statement revenue and mark the value.
 7. `Fundamentals` - member-only valuation/profitability/liquidity ratios, financial statements, visual indicators, and a plain-English P/E read that avoids calling a stock cheap unless growth, profitability, and debt support it.
