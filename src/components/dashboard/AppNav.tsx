@@ -7,12 +7,14 @@ type Props = {
     | "market"
     | "portfolio"
     | "screener"
+    | "stock"
     | "watchlist"
     | "wealth";
 };
 
 const links = [
   { key: "dashboard", label: "Dashboard", href: "/dashboard" },
+  { key: "stock", label: "Stock", href: "/stock" },
   { key: "market", label: "Market", href: "/market" },
   { key: "watchlist", label: "Watchlist", href: "/watchlist" },
   { key: "wealth", label: "Wealth", href: "/wealth" },

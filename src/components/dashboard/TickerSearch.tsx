@@ -148,7 +148,7 @@ export function TickerSearch({ initialSymbol }: Props) {
   return (
     <form
       ref={containerRef}
-      action="/dashboard"
+      action="/stock"
       method="get"
       className="relative w-full max-w-2xl"
       onSubmit={() => {
@@ -297,7 +297,7 @@ function TickerRow({
 }) {
   return (
     <Link
-      href={`/dashboard?symbol=${encodeURIComponent(ticker.symbol)}&autoload=1`}
+      href={`/stock?symbol=${encodeURIComponent(ticker.symbol)}&autoload=1`}
       className="grid grid-cols-[auto_1fr_auto] items-center gap-3 border-b app-border-soft px-4 py-2.5 text-left last:border-b-0 hover:bg-[var(--app-surface-muted)]"
       role="option"
       aria-selected={selected}

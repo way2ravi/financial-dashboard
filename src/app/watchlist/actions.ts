@@ -16,7 +16,7 @@ export async function addCurrentSymbolToWatchlist(formData: FormData) {
     } = await supabase.auth.getUser();
 
     await addSymbolToWatchlist(supabase, user, symbol);
-    revalidatePath("/dashboard");
+    revalidatePath("/stock");
     revalidatePath("/watchlist");
   } catch (error) {
     redirect(messageUrl(symbol, "error", getActionErrorMessage(error), returnTo));
@@ -36,7 +36,7 @@ export async function removeCurrentSymbolFromWatchlist(formData: FormData) {
     } = await supabase.auth.getUser();
 
     await removeSymbolFromWatchlist(supabase, user, symbol);
-    revalidatePath("/dashboard");
+    revalidatePath("/stock");
     revalidatePath("/watchlist");
   } catch (error) {
     redirect(messageUrl(symbol, "error", getActionErrorMessage(error), returnTo));
@@ -53,7 +53,7 @@ function getSymbol(formData: FormData) {
 function getReturnTo(formData: FormData) {
   const value = formData.get("return_to");
 
-  return value === "/watchlist" ? value : "/dashboard";
+  return value === "/watchlist" ? value : "/stock";
 }
 
 function getActionErrorMessage(error: unknown) {
@@ -72,7 +72,7 @@ function messageUrl(
   symbol: string,
   type: "error" | "notice",
   message: string,
-  returnTo: "/dashboard" | "/watchlist"
+  returnTo: "/stock" | "/watchlist"
 ) {
   const params = new URLSearchParams({
     [type]: message,
@@ -84,5 +84,5 @@ function messageUrl(
 
   params.set("symbol", symbol);
 
-  return `/dashboard?${params.toString()}`;
+  return `/stock?${params.toString()}`;
 }

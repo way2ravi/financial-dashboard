@@ -9,6 +9,7 @@ type Props = {
     | "market"
     | "portfolio"
     | "screener"
+    | "stock"
     | "watchlist"
     | "wealth";
   description?: string;

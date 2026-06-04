@@ -344,7 +344,7 @@ function EarningsCalendarTable({
               <tr key={item.id} className="app-muted transition hover:bg-[var(--app-surface-muted)]">
                 <td className="border-b app-border-soft px-3 py-2.5">
                   <Link
-                    href={`/dashboard?symbol=${item.symbol}&autoload=1`}
+                    href={`/stock?symbol=${item.symbol}&autoload=1`}
                     className="font-semibold app-heading hover:underline"
                   >
                     {item.symbol}

@@ -135,7 +135,7 @@ function ScreenerRow({ item }: { item: ScreenerResult }) {
       <td className="border-b app-border-soft px-3 py-2.5">
         <Link
           className="font-semibold app-heading hover:underline"
-          href={`/dashboard?symbol=${item.symbol}&autoload=1`}
+          href={`/stock?symbol=${item.symbol}&autoload=1`}
         >
           {item.symbol}
         </Link>

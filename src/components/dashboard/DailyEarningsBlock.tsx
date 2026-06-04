@@ -54,7 +54,7 @@ export async function DailyEarningsBlock({ currentSymbol }: Props) {
           {visibleItems.map((item) => (
             <Link
               key={item.id}
-              href={`/dashboard?symbol=${item.symbol}&autoload=1`}
+              href={`/stock?symbol=${item.symbol}&autoload=1`}
               className={`block rounded-lg border p-2.5 text-xs ${
                 item.symbol === currentSymbol
                   ? "app-surface ring-2 ring-[var(--app-primary)]"

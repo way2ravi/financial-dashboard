@@ -67,7 +67,7 @@ export async function Watchlist({ currentSymbol }: Props) {
               <TickerLogo ticker={item.ticker} size="sm" />
               <div className="min-w-0">
                 <Link
-                  href={`/dashboard?symbol=${item.ticker.symbol}`}
+                  href={`/stock?symbol=${item.ticker.symbol}`}
                   className="text-sm font-semibold app-heading hover:underline"
                 >
                   {item.ticker.symbol}

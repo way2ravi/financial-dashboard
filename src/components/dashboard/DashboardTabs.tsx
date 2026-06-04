@@ -187,5 +187,5 @@ function dashboardTabHref(symbol: string, tab: DashboardTabId) {
     params.set("tab", tab);
   }
 
-  return `/dashboard?${params.toString()}`;
+  return `/stock?${params.toString()}`;
 }

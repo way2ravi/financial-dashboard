@@ -27,7 +27,7 @@ export function OverviewStrip({ data, showDataSource = false }: Props) {
           <BrandMark />
 
           <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:flex-1 lg:justify-end">
-            <AppNav current="dashboard" />
+            <AppNav current="stock" />
             <AuthStatus />
           </div>
         </div>

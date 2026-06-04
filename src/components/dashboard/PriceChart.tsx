@@ -563,7 +563,7 @@ function chartHref(
   if (range !== "6m") params.set("range", range);
   if (interval !== "daily") params.set("interval", interval);
 
-  return `/dashboard?${params.toString()}`;
+  return `/stock?${params.toString()}`;
 }
 
 function ChartStat({

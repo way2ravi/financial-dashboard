@@ -101,7 +101,7 @@ function WatchlistTable({ watchlist }: { watchlist: WatchlistItem[] }) {
                     <TickerLogo ticker={item.ticker} size="sm" />
                     <Link
                       className="font-semibold app-heading hover:underline"
-                      href={`/dashboard?symbol=${item.ticker.symbol}&autoload=1`}
+                      href={`/stock?symbol=${item.ticker.symbol}&autoload=1`}
                     >
                       {item.ticker.symbol}
                     </Link>

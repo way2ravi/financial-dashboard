@@ -294,7 +294,7 @@ function MarketTable({ markets }: { markets: GlobalMarketRow[] }) {
                 <td className="border-b app-border-soft px-3 py-2.5">
                   <Link
                     className="font-semibold app-heading hover:underline"
-                    href={`/dashboard?symbol=${market.symbol}`}
+                    href={`/stock?symbol=${market.symbol}`}
                   >
                     {market.symbol}
                   </Link>

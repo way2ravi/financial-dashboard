@@ -409,5 +409,5 @@ function dashboardTabHref(symbol: string, tab: SummaryShortcutTab) {
     params.set("tab", tab);
   }
 
-  return `/dashboard?${params.toString()}`;
+  return `/stock?${params.toString()}`;
 }
