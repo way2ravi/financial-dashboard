@@ -11,12 +11,13 @@ import { formatCurrency, formatPercent } from "@/components/dashboard/format";
 import { PageMessage } from "@/components/dashboard/PageMessage";
 import { WealthAdvicePanel } from "@/components/wealth/WealthAdvicePanel";
 import { WealthCharts } from "@/components/wealth/WealthCharts";
-import { WealthItemForm } from "@/components/wealth/WealthItemForm";
+import { WealthEntryModal } from "@/components/wealth/WealthEntryModal";
 import { WealthTrendChart } from "@/components/wealth/WealthTrendChart";
 import { getWealthDashboardForUser } from "@/lib/services";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/types/database";
 import type { WealthItem } from "@/lib/types";
+import { getPortalCurrencyOption, portalCurrencyOptions } from "@/lib/types/currency";
 import {
   getWealthCategoryLabel,
   getWealthSubcategoryLabel,
@@ -39,7 +40,7 @@ export default async function WealthPage({ searchParams }: Props) {
     data: { user },
   } = await supabase.auth.getUser();
   const { dashboard, setupError } = await loadWealthDashboard(supabase, user);
-  const currency = dashboard.settings?.baseCurrency ?? "USD";
+  const currency = getPortalCurrencyOption(dashboard.settings?.baseCurrency).code;
   const editingItem =
     editItemId !== null
       ? dashboard.items.find((item) => item.id === editItemId) ?? null
@@ -82,6 +83,13 @@ export default async function WealthPage({ searchParams }: Props) {
           </section>
         ) : (
           <>
+            <PortalPreferencesPanel
+              currency={currency}
+              editingItem={editingItem}
+              monthlyExpensesEstimate={dashboard.settings?.monthlyExpensesEstimate ?? null}
+              totalEntries={dashboard.items.length}
+            />
+
             <WealthSnapshot
               currency={currency}
               netWorth={dashboard.netWorth}
@@ -163,87 +171,101 @@ export default async function WealthPage({ searchParams }: Props) {
               totalLiabilities={dashboard.totalLiabilities}
             />
 
-            <div className="grid gap-3 lg:grid-cols-[320px_1fr]">
-              <aside className="space-y-3 lg:sticky lg:top-4 lg:self-start">
-                <section className="rounded-lg border app-surface p-4 shadow-sm">
-                  <h2 className="text-sm font-semibold app-heading">Settings</h2>
-                  <p className="mt-1 text-xs app-muted">
-                    Used for charts and emergency-fund guidance.
-                  </p>
-                  <form action={saveWealthSettingsAction} className="mt-3 space-y-2">
-                    <label className="block text-xs font-medium app-muted">
-                      Display currency
-                      <select
-                        name="base_currency"
-                        defaultValue={dashboard.settings?.baseCurrency ?? "USD"}
-                        className="mt-1 h-9 w-full rounded-lg border app-input px-3 text-xs outline-none"
-                      >
-                        <option value="USD">USD</option>
-                        <option value="GBP">GBP</option>
-                        <option value="EUR">EUR</option>
-                        <option value="INR">INR</option>
-                        <option value="CAD">CAD</option>
-                        <option value="AUD">AUD</option>
-                      </select>
-                    </label>
-                    <label className="block text-xs font-medium app-muted">
-                      Monthly expenses (estimate)
-                      <input
-                        name="monthly_expenses_estimate"
-                        type="number"
-                        min="0"
-                        step="1"
-                        defaultValue={
-                          dashboard.settings?.monthlyExpensesEstimate ?? undefined
-                        }
-                        placeholder="4000"
-                        className="mt-1 h-9 w-full rounded-lg border app-input px-3 text-xs outline-none"
-                      />
-                    </label>
-                    <button
-                      type="submit"
-                      className="h-9 w-full rounded-lg app-primary-button px-4 text-xs font-semibold"
-                    >
-                      Save settings
-                    </button>
-                  </form>
-                </section>
-
-                <section className="rounded-lg border app-surface p-4 shadow-sm">
-                  <h2 className="text-sm font-semibold app-heading">
-                    {editingItem ? "Edit entry" : "Add entry"}
-                  </h2>
-                  <div className="mt-3">
-                    <WealthItemForm
-                      key={editingItem?.id ?? "new"}
-                      action={editingItem ? updateWealthItemAction : addWealthItemAction}
-                      submitLabel={editingItem ? "Update entry" : "Add entry"}
-                      item={editingItem}
-                    />
-                  </div>
-                  {editingItem ? (
-                    <Link
-                      href="/wealth"
-                      className="mt-2 block text-center text-xs font-semibold app-muted hover:app-heading"
-                    >
-                      Cancel edit
-                    </Link>
-                  ) : null}
-                </section>
-              </aside>
-
-              <div className="min-w-0 space-y-3">
-                <WealthAdvicePanel advice={dashboard.advice} />
-                <WealthItemsTable
-                  currency={currency}
-                  items={dashboard.items}
-                />
-              </div>
+            <div className="grid gap-3 xl:grid-cols-[0.9fr_1.1fr]">
+              <WealthAdvicePanel advice={dashboard.advice} />
+              <WealthItemsTable currency={currency} items={dashboard.items} />
             </div>
           </>
         )}
       </div>
     </main>
+  );
+}
+
+function PortalPreferencesPanel({
+  currency,
+  editingItem,
+  monthlyExpensesEstimate,
+  totalEntries,
+}: {
+  currency: string;
+  editingItem: WealthItem | null;
+  monthlyExpensesEstimate: number | null;
+  totalEntries: number;
+}) {
+  const selectedCurrency = getPortalCurrencyOption(currency);
+
+  return (
+    <section className="rounded-lg border app-surface p-4 shadow-sm">
+      <div className="grid gap-4 xl:grid-cols-[1fr_auto] xl:items-end">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full border app-border-soft px-2.5 py-1 text-[11px] font-semibold app-muted">
+              Portal currency
+            </span>
+            <span className="rounded-full border app-border-soft px-2.5 py-1 text-[11px] font-semibold app-heading">
+              {selectedCurrency.flag} {selectedCurrency.country} / {selectedCurrency.code}
+            </span>
+            <span className="rounded-full border app-border-soft px-2.5 py-1 text-[11px] font-semibold app-muted">
+              {totalEntries} balance-sheet entr{totalEntries === 1 ? "y" : "ies"}
+            </span>
+          </div>
+          <h2 className="mt-3 text-sm font-semibold app-heading">
+            Portal preferences and quick actions
+          </h2>
+          <p className="mt-1 max-w-3xl text-xs leading-5 app-muted">
+            This display currency is used across the Wealth module today and is the portal-level
+            preference for future portfolio, market, and planning screens.
+          </p>
+        </div>
+
+        <WealthEntryModal
+          addAction={addWealthItemAction}
+          editingItem={editingItem}
+          updateAction={updateWealthItemAction}
+        />
+      </div>
+
+      <form
+        action={saveWealthSettingsAction}
+        className="mt-4 grid gap-3 md:grid-cols-[1fr_1fr_auto]"
+      >
+        <label className="block text-xs font-medium app-muted">
+          Country / currency
+          <select
+            name="base_currency"
+            defaultValue={currency}
+            className="mt-1 h-9 w-full rounded-lg border app-input px-3 text-xs outline-none"
+          >
+            {portalCurrencyOptions.map((option) => (
+              <option key={option.code} value={option.code}>
+                {option.flag} {option.country} - {option.code} {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="block text-xs font-medium app-muted">
+          Monthly expenses estimate
+          <input
+            name="monthly_expenses_estimate"
+            type="number"
+            min="0"
+            step="1"
+            defaultValue={monthlyExpensesEstimate ?? undefined}
+            placeholder="4000"
+            className="mt-1 h-9 w-full rounded-lg border app-input px-3 text-xs outline-none"
+          />
+        </label>
+
+        <button
+          type="submit"
+          className="h-9 self-end rounded-lg app-primary-button px-4 text-xs font-semibold"
+        >
+          Save preferences
+        </button>
+      </form>
+    </section>
   );
 }
 

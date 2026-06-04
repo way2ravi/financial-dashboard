@@ -14,12 +14,14 @@ The dashboard should support:
 - Net worth and wealth manager for user-entered assets and liabilities
 - Liquid assets, fixed assets, investments, loans, overdrafts, and other debt
 - Net worth dashboard with allocation charts and rule-based financial guidance
+- Portal-level display currency preference with country/currency selector
 - Daily earnings calendar by selected date
 - Latest quote overview
 - Public basic ticker snapshot for logged-out visitors
 - Analyst ratings
 - Analyst price targets
 - Last quarterly earnings
+- Earnings market-reaction advice using cached post-report price action
 - Fundamentals and valuation ratios
 - OHLC price chart data
 - Dedicated volume analysis tab with buy/sell pressure and recent volume table
@@ -88,6 +90,7 @@ src/
     wealth/
       WealthCharts.tsx
       WealthAdvicePanel.tsx
+      WealthEntryModal.tsx
       WealthItemForm.tsx
 
   lib/
@@ -489,9 +492,9 @@ removeWealthItemAction
 
 ### Data model
 
-`wealth_user_settings` (one row per user):
+`wealth_user_settings` (one row per user, used as the portal preference source):
 
-- `base_currency` — display currency for charts and totals
+- `base_currency` — portal-level display currency for charts, totals, and future cross-module formatting
 - `monthly_expenses_estimate` — optional; used for emergency-fund and debt-service guidance
 
 `wealth_items` (many rows per user):
@@ -535,14 +538,15 @@ The UI labels this as educational guidance, not licensed financial advice.
 - User-entered wealth data does not use market-data providers.
 - Reads and writes use the authenticated Supabase server client; RLS restricts rows to `auth.uid()`.
 - Stock portfolio market value is not auto-merged; users may add investment entries manually for a complete net-worth picture.
+- The Wealth top panel owns the current portal display currency. The current implementation applies it across Wealth totals and establishes the shared preference for later portfolio, market, and planning screens.
 
 ### UI
 
 - Summary metrics (net worth, assets, liabilities, ratios)
+- Top portal preferences panel with country flag, country name, currency dropdown, monthly expense estimate, and quick add buttons
 - SVG donut charts for asset and liability mix
 - Bar comparison of assets vs liabilities
-- Settings form (currency, monthly expenses)
-- Add/edit form with dynamic category and subcategory options (`WealthItemForm` client component)
+- Add/edit balance-sheet entries in a modal (`WealthEntryModal`) with dynamic category and subcategory options (`WealthItemForm` client component)
 - Balance-sheet table grouped into assets and liabilities
 - Link to `/portfolio` for optional manual alignment with brokerage holdings
 
@@ -591,7 +595,7 @@ Dashboard tabs:
 3. `Volume` - member-only volume analysis with latest volume, 20-candle average, activity ratio, buy/sell pressure circles, and a recent volume table. Volume is not embedded inside the public Chart tab.
 4. `Technical` - member-only technical indicators, summary, moving averages, momentum, support/resistance, and stop/limit guidance. Stop/limit guidance is calculated from available technical data, such as recent support, ATR/volatility, and short-term moving averages.
 5. `Analyst` - member-only analyst ratings table plus low, mean, and high price targets with separate freshness information for ratings and targets.
-6. `Earnings` - public quarterly earnings table with EPS actual, EPS estimate, EPS surprise, revenue actual, revenue estimate, and revenue surprise columns.
+6. `Earnings` - public quarterly earnings table with EPS actual, EPS estimate, EPS surprise, revenue actual, revenue estimate, revenue surprise, and a market-reaction read. The reaction compares cached OHLC closes around each report date and gives plain-English advice such as whether the market rewarded, ignored, or punished the report. If the earnings provider does not return revenue actual, the table can fall back to cached quarterly income-statement revenue and mark the value.
 7. `Fundamentals` - member-only valuation/profitability/liquidity ratios, financial statements, visual indicators, and a plain-English P/E read that avoids calling a stock cheap unless growth, profitability, and debt support it.
 8. `News` - public company news headlines and sentiment from provider feeds.
 

@@ -27,6 +27,7 @@ import {
   wealthAssetSubcategories,
   wealthLiabilitySubcategories,
 } from "@/lib/types/wealth";
+import { isSupportedPortalCurrency } from "@/lib/types/currency";
 import { AppError } from "./errors";
 
 type DbClient = SupabaseClient<Database>;
@@ -590,7 +591,7 @@ function getAllowedSubcategories(category: WealthCategory) {
 
 function normalizeCurrency(value: string | null | undefined) {
   const normalized = (value ?? "USD").trim().toUpperCase();
-  return normalized || "USD";
+  return normalized && isSupportedPortalCurrency(normalized) ? normalized : "USD";
 }
 
 function normalizeOptionalAmount(value: number | null | undefined) {

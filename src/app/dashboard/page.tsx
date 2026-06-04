@@ -209,7 +209,7 @@ function shouldRefreshDashboardData(data: DashboardData, selectedTab: DashboardT
   }
 
   if (selectedTab === "earnings") {
-    return data.earnings.length === 0;
+    return data.earnings.length === 0 || data.ohlc.length < 2;
   }
 
   if (selectedTab === "fundamentals") {

@@ -151,7 +151,12 @@ export function DashboardTabs({
       ) : null}
 
       {activeTab === "earnings" ? (
-        <EarningsTable earnings={data.earnings} showDataSource={showDataSource} />
+        <EarningsTable
+          earnings={data.earnings}
+          financialStatements={data.financialStatements}
+          ohlc={data.ohlc}
+          showDataSource={showDataSource}
+        />
       ) : null}
 
       {activeTab === "fundamentals" ? (

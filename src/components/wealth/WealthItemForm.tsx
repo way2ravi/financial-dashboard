@@ -13,16 +13,22 @@ import {
 
 type Props = {
   action: (formData: FormData) => void | Promise<void>;
+  initialRecordType?: WealthRecordType;
   submitLabel: string;
   item?: WealthItem | null;
 };
 
-export function WealthItemForm({ action, submitLabel, item }: Props) {
+export function WealthItemForm({
+  action,
+  initialRecordType = "asset",
+  submitLabel,
+  item,
+}: Props) {
   const [recordType, setRecordType] = useState<WealthRecordType>(
-    item?.recordType ?? "asset"
+    item?.recordType ?? initialRecordType
   );
   const [category, setCategory] = useState<WealthCategory>(
-    item?.category ?? defaultCategory("asset")
+    item?.category ?? defaultCategory(initialRecordType)
   );
 
   const subcategoryOptions = useMemo(() => getSubcategoryOptions(recordType, category), [

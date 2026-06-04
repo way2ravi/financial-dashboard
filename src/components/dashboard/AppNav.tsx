@@ -23,7 +23,7 @@ const links = [
 
 export function AppNav({ current }: Props) {
   return (
-    <nav className="flex min-w-0 overflow-x-auto rounded-lg border app-surface p-1 shadow-sm lg:overflow-visible" aria-label="Main navigation">
+    <nav className="hidden min-w-0 overflow-x-auto rounded-lg border app-surface p-1 shadow-sm md:flex lg:overflow-visible" aria-label="Main navigation">
       {links.map((link) => (
         <Link
           key={link.key}
