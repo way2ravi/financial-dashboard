@@ -26,7 +26,7 @@ The dashboard should support:
 - OHLC price chart data
 - Dedicated volume analysis tab with buy/sell pressure and recent volume table
 - Consolidated stock summary with plain-English Buy / Hold / Sell-style indication
-- Technical analysis tab with indicators, interval lows/highs, moving averages, support/resistance, and stop-loss guidance
+- Technical analysis tab with indicators, interval lows/highs with plain-English advice, moving averages, support/resistance, and stop-loss guidance
 - Company news and sentiment
 - Cached market data through Supabase
 - External provider refresh through isolated provider modules

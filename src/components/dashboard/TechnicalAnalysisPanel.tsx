@@ -69,6 +69,27 @@ type LimitMethod = {
   weight: number;
 };
 
+type RangeLevel = {
+  fromHighPercent: number;
+  fromLowPercent: number;
+  high: number;
+  label: string;
+  low: number;
+  positionPercent: number;
+};
+
+type RangeAdvice = {
+  action: string;
+  details: Array<{
+    label: string;
+    value: string;
+    tone?: SignalTone;
+  }>;
+  summary: string;
+  title: string;
+  tone: SignalTone;
+};
+
 export type TechnicalSubTab =
   | "stop-limit"
   | "ranges"
@@ -225,6 +246,7 @@ function RangeLevelsPanel({
   latestClose: number;
 }) {
   const ranges = buildRangeLevels(candles, latestClose);
+  const advice = buildRangeAdvice(ranges, latestClose);
 
   return (
     <div className="mt-3 rounded-lg border app-subtle p-3">
@@ -245,6 +267,8 @@ function RangeLevelsPanel({
           <div className="text-sm font-semibold app-heading">{formatCurrency(latestClose)}</div>
         </div>
       </div>
+
+      <RangeAdvicePanel advice={advice} />
 
       <div className="mt-3 overflow-x-auto">
         <table className="w-full min-w-[780px] border-separate border-spacing-0 text-left text-xs">
@@ -300,6 +324,37 @@ function RangeLevelsPanel({
             ))}
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+}
+
+function RangeAdvicePanel({ advice }: { advice: RangeAdvice }) {
+  return (
+    <div className="mt-3 rounded-lg border app-surface p-3">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <div className="text-[11px] font-medium uppercase tracking-normal app-muted">
+            Range advice
+          </div>
+          <div className={`mt-1 text-sm font-semibold ${getToneClass(advice.tone)}`}>
+            {advice.title}
+          </div>
+          <p className="mt-1 max-w-3xl text-xs leading-5 app-muted">{advice.summary}</p>
+          <p className="mt-2 text-xs font-medium app-heading">{advice.action}</p>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2 lg:min-w-[420px]">
+          {advice.details.map((detail) => (
+            <div key={detail.label} className="rounded-lg border app-subtle px-3 py-2">
+              <div className="text-[11px] font-medium uppercase tracking-normal app-muted">
+                {detail.label}
+              </div>
+              <div className={`mt-1 text-sm font-semibold ${detail.tone ? getToneClass(detail.tone) : "app-heading"}`}>
+                {detail.value}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -1172,7 +1227,7 @@ function calculateAtr(candles: Candle[], period: number) {
   return trueRanges.reduce((sum, value) => sum + value, 0) / trueRanges.length;
 }
 
-function buildRangeLevels(candles: Candle[], latestClose: number) {
+function buildRangeLevels(candles: Candle[], latestClose: number): RangeLevel[] {
   const intervals = [
     { label: "5D", days: 5 },
     { label: "1M", days: 21 },
@@ -1201,6 +1256,84 @@ function buildRangeLevels(candles: Candle[], latestClose: number) {
       };
     })
     .filter((range) => Number.isFinite(range.low) && Number.isFinite(range.high));
+}
+
+function buildRangeAdvice(ranges: RangeLevel[], latestClose: number): RangeAdvice {
+  const shortTerm = ranges.find((range) => range.label === "5D") ?? ranges[0];
+  const oneMonth = ranges.find((range) => range.label === "1M") ?? shortTerm;
+  const threeMonth = ranges.find((range) => range.label === "3M") ?? oneMonth;
+  const nearHighCount = ranges.filter((range) => range.positionPercent >= 80).length;
+  const nearLowCount = ranges.filter((range) => range.positionPercent <= 20).length;
+  const upperCount = ranges.filter((range) => range.positionPercent >= 60).length;
+  const lowerCount = ranges.filter((range) => range.positionPercent <= 40).length;
+  const nearestSupport = ranges
+    .map((range) => range.low)
+    .filter((value) => value <= latestClose)
+    .sort((a, b) => b - a)[0];
+  const nearestResistance = ranges
+    .map((range) => range.high)
+    .filter((value) => value >= latestClose)
+    .sort((a, b) => a - b)[0];
+  const supportText = nearestSupport ? formatCurrency(nearestSupport) : "No clear support";
+  const resistanceText = nearestResistance ? formatCurrency(nearestResistance) : "Price above cached highs";
+  const oneMonthPosition = oneMonth ? `${formatPercent(oneMonth.positionPercent, 0)} of 1M range` : "Unavailable";
+  const threeMonthPosition = threeMonth ? `${formatPercent(threeMonth.positionPercent, 0)} of 3M range` : "Unavailable";
+
+  let title = "Balanced range position";
+  let summary =
+    "The latest close is sitting around the middle of the tracked ranges. Range data alone is not giving a strong buy or sell signal.";
+  let action =
+    "Use confirmation from trend, volume, analyst data, and fundamentals before deciding. Middle-range stocks often need patience.";
+  let tone: SignalTone = "neutral";
+
+  if (nearHighCount >= 3) {
+    title = "Breakout or resistance watch";
+    summary =
+      "Price is pressing the high end of several intervals. That is constructive strength, but it also means the stock can reject if buyers do not follow through.";
+    action = `Watch for a close above ${resistanceText} with stronger volume. If it fails there, avoid chasing and wait for a pullback.`;
+    tone = "bullish";
+  } else if (nearLowCount >= 3) {
+    title = "Support test with downside risk";
+    summary =
+      "Price is near the low end of several intervals. This can become a value area only if support holds; otherwise it can signal continuing weakness.";
+    action = `Watch whether buyers defend ${supportText}. A break below that area should be treated carefully and paired with a clear stop plan.`;
+    tone = "bearish";
+  } else if (shortTerm?.positionPercent >= 80 && threeMonth?.positionPercent <= 55) {
+    title = "Short-term bounce into overhead range";
+    summary =
+      "The short-term range looks strong, but the broader range has not fully confirmed. The stock may be bouncing into nearby resistance.";
+    action = `Do not rely only on the short-term move. Look for follow-through above ${resistanceText} before treating it as a cleaner breakout.`;
+  } else if (shortTerm?.positionPercent <= 20 && threeMonth?.positionPercent >= 55) {
+    title = "Pullback inside a broader range";
+    summary =
+      "The short-term range is weak, but the broader range is still holding up better. This can be a normal pullback if support stays intact.";
+    action = `Use ${supportText} as the first support area to watch. A bounce from there is healthier than buying before price stabilizes.`;
+  } else if (upperCount > lowerCount) {
+    title = "Constructive but not stretched";
+    summary =
+      "Price is above the middle of more ranges than it is below. This usually points to a constructive setup without being as extended as a full range-high test.";
+    action = `Nearest resistance is around ${resistanceText}. A controlled move toward that level is healthier than a fast spike without volume.`;
+    tone = "bullish";
+  } else if (lowerCount > upperCount) {
+    title = "Weak but not broken";
+    summary =
+      "Price is below the middle of more ranges than it is above. Sellers have some control, but it is not necessarily a breakdown unless support fails.";
+    action = `Nearest support is around ${supportText}. Wait for a base or reversal signal before considering fresh entry.`;
+    tone = "bearish";
+  }
+
+  return {
+    action,
+    details: [
+      { label: "Nearest support", value: supportText, tone: "bearish" },
+      { label: "Nearest resistance", value: resistanceText, tone: "bullish" },
+      { label: "1M position", value: oneMonthPosition },
+      { label: "3M position", value: threeMonthPosition },
+    ],
+    summary,
+    title,
+    tone,
+  };
 }
 
 function getRangeRead(positionPercent: number) {
