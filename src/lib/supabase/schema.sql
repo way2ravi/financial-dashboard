@@ -39,6 +39,7 @@ create table if not exists public.portfolios (
   id bigserial primary key,
   user_id uuid not null references auth.users(id) on delete cascade,
   name text not null,
+  asset_class text not null default 'stocks' check (asset_class in ('stocks', 'crypto', 'commodity', 'real_estate', 'other')),
   base_currency text not null default 'USD',
   description text,
   created_at timestamptz not null default now(),
@@ -53,7 +54,10 @@ create table if not exists public.portfolio_transactions (
   id bigserial primary key,
   portfolio_id bigint not null references public.portfolios(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
-  ticker_id bigint not null references public.tickers(id) on delete restrict,
+  asset_class text not null default 'stocks' check (asset_class in ('stocks', 'crypto', 'commodity', 'real_estate', 'other')),
+  ticker_id bigint references public.tickers(id) on delete restrict,
+  asset_symbol text,
+  asset_name text,
   transaction_type text not null check (transaction_type in ('buy', 'sell')),
   trade_date date not null,
   quantity numeric not null check (quantity > 0),
@@ -61,6 +65,10 @@ create table if not exists public.portfolio_transactions (
   fees numeric not null default 0 check (fees >= 0),
   notes text,
   created_at timestamptz not null default now(),
+  check (
+    (asset_class = 'stocks' and ticker_id is not null)
+    or (asset_class <> 'stocks' and coalesce(nullif(trim(asset_name), ''), nullif(trim(asset_symbol), '')) is not null)
+  ),
   foreign key (portfolio_id, user_id) references public.portfolios(id, user_id) on delete cascade
 );
 

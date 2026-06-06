@@ -10,8 +10,10 @@ The dashboard should support:
 - User watchlists
 - User portfolios
 - Buy/sell transaction tracking
+- Portfolio asset classes for stocks, crypto, commodities, real estate, and other assets
 - Portfolio holdings and performance summaries
 - Net worth and wealth manager for user-entered assets and liabilities
+- Automatic Wealth roll-up from portfolio totals
 - Liquid assets, fixed assets, investments, loans, overdrafts, and other debt
 - Net worth dashboard with allocation charts and rule-based financial guidance
 - Portal-level display currency preference with country/currency selector
@@ -471,15 +473,17 @@ The seed file inserts manual AAPL sample data for:
 
 ## Portfolio Module
 
-Users can create multiple portfolios and record a buy/sell ledger per portfolio.
+Users can create multiple portfolios and record a buy/sell ledger per portfolio. Each portfolio has one asset class selected at creation time, so the same workflow supports stocks, crypto, commodities, real estate, and other asset types without a separate asset-creation panel.
 
 Initial portfolio scope:
 
 - Multiple named portfolios per signed-in user
+- Asset class selected during portfolio creation: stocks, crypto, commodities, real estate, or other assets
 - Buy and sell transactions by ticker
+- Non-stock portfolios use the same transaction ledger with asset name, optional symbol/tag, quantity, price, fees, and notes
 - Quantity, trade date, execution price, fees, and notes
 - Holdings calculated from transactions using average-cost accounting
-- Current market value from cached `quotes_latest`
+- Stock market value from cached `quotes_latest`; non-stock market value from the latest recorded ledger price
 - Realized gain from sell transactions
 - Unrealized gain and return percent for open holdings
 - Portfolio total value, invested capital, realized gain, unrealized gain, and total return
@@ -553,7 +557,7 @@ The UI labels this as educational guidance, not licensed financial advice.
 
 - User-entered wealth data does not use market-data providers.
 - Reads and writes use the authenticated Supabase server client; RLS restricts rows to `auth.uid()`.
-- Stock portfolio market value is not auto-merged; users may add investment entries manually for a complete net-worth picture.
+- Portfolio totals are auto-merged into Wealth as generated read-only asset rows. Real estate portfolios count as fixed assets; stock, crypto, commodity, and other portfolios count as investments.
 - The Wealth top panel owns the current portal display currency. The current implementation applies it across Wealth totals and establishes the shared preference for later portfolio, market, and planning screens.
 
 ### UI
@@ -564,7 +568,7 @@ The UI labels this as educational guidance, not licensed financial advice.
 - Bar comparison of assets vs liabilities
 - Add/edit balance-sheet entries in a modal (`WealthEntryModal`) with dynamic category and subcategory options (`WealthItemForm` client component)
 - Balance-sheet table grouped into assets and liabilities
-- Link to `/portfolio` for optional manual alignment with brokerage holdings
+- Read-only synced portfolio rows link back to `/portfolio` for edits at the source
 
 ## Dashboard UI
 

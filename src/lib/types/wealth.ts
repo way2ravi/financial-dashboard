@@ -109,6 +109,7 @@ export const wealthAssetSubcategories: Record<WealthAssetCategory, Array<{ id: s
     { id: "other_liquid", label: "Other liquid" },
   ],
   fixed: [
+    { id: "portfolio_real_estate", label: "Portfolio real estate" },
     { id: "real_estate", label: "Real estate" },
     { id: "vehicle", label: "Vehicle" },
     { id: "land", label: "Land" },
@@ -118,6 +119,10 @@ export const wealthAssetSubcategories: Record<WealthAssetCategory, Array<{ id: s
     { id: "other_fixed", label: "Other fixed asset" },
   ],
   investment: [
+    { id: "portfolio_stocks", label: "Portfolio stocks" },
+    { id: "portfolio_crypto", label: "Portfolio crypto" },
+    { id: "portfolio_commodity", label: "Portfolio commodities" },
+    { id: "portfolio_other", label: "Portfolio other assets" },
     { id: "stocks", label: "Stocks" },
     { id: "bonds", label: "Bonds" },
     { id: "mutual_funds", label: "Mutual funds" },

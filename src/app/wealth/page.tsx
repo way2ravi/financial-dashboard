@@ -538,11 +538,11 @@ function WealthItemsTable({
       <div className="border-b app-border-soft px-4 py-3">
         <h2 className="text-sm font-semibold app-heading">Your balance sheet</h2>
         <p className="mt-1 text-xs app-muted">
-          Stock portfolios in{" "}
+          Portfolio totals from{" "}
           <Link href="/portfolio" className="font-semibold underline">
             Portfolio
           </Link>{" "}
-          can be added here as investment entries for a full net-worth view.
+          are included automatically as read-only asset rows.
         </p>
       </div>
 
@@ -599,6 +599,7 @@ function ItemGroup({
                   <div className="font-semibold app-heading">{item.name}</div>
                   <div className="text-[11px] app-muted">
                     {getWealthSubcategoryLabel(item.category, item.subcategory)}
+                    {isSyncedPortfolioItem(item) ? " - Synced from Portfolio" : ""}
                   </div>
                 </td>
                 <td className="border-b app-border-soft px-3 py-2.5">
@@ -617,23 +618,32 @@ function ItemGroup({
                 </td>
                 <td className="border-b app-border-soft px-3 py-2.5">{item.asOfDate}</td>
                 <td className="border-b app-border-soft px-3 py-2.5">
-                  <div className="flex flex-wrap gap-2">
+                  {isSyncedPortfolioItem(item) ? (
                     <Link
-                      href={`/wealth?edit=${item.id}`}
+                      href="/portfolio"
                       className="rounded-md border px-2 py-1 text-[11px] font-semibold app-heading"
                     >
-                      Edit
+                      Portfolio
                     </Link>
-                    <form action={removeWealthItemAction}>
-                      <input type="hidden" name="item_id" value={item.id} />
-                      <button
-                        type="submit"
-                        className="rounded-md border border-rose-500/40 px-2 py-1 text-[11px] font-semibold text-rose-400"
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      <Link
+                        href={`/wealth?edit=${item.id}`}
+                        className="rounded-md border px-2 py-1 text-[11px] font-semibold app-heading"
                       >
-                        Remove
-                      </button>
-                    </form>
-                  </div>
+                        Edit
+                      </Link>
+                      <form action={removeWealthItemAction}>
+                        <input type="hidden" name="item_id" value={item.id} />
+                        <button
+                          type="submit"
+                          className="rounded-md border border-rose-500/40 px-2 py-1 text-[11px] font-semibold text-rose-400"
+                        >
+                          Remove
+                        </button>
+                      </form>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}
@@ -642,6 +652,10 @@ function ItemGroup({
       </div>
     </div>
   );
+}
+
+function isSyncedPortfolioItem(item: WealthItem) {
+  return item.id < 0;
 }
 
 function Metric({

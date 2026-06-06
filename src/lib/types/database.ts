@@ -443,7 +443,10 @@ export type Database = {
           id: number;
           portfolio_id: number;
           user_id: string;
-          ticker_id: number;
+          asset_class: string;
+          ticker_id: number | null;
+          asset_symbol: string | null;
+          asset_name: string | null;
           transaction_type: string;
           trade_date: string;
           quantity: number;
@@ -456,7 +459,10 @@ export type Database = {
           id?: number;
           portfolio_id: number;
           user_id: string;
-          ticker_id: number;
+          asset_class?: string;
+          ticker_id?: number | null;
+          asset_symbol?: string | null;
+          asset_name?: string | null;
           transaction_type: string;
           trade_date: string;
           quantity: number;
@@ -469,7 +475,10 @@ export type Database = {
           id?: number;
           portfolio_id?: number;
           user_id?: string;
-          ticker_id?: number;
+          asset_class?: string;
+          ticker_id?: number | null;
+          asset_symbol?: string | null;
+          asset_name?: string | null;
           transaction_type?: string;
           trade_date?: string;
           quantity?: number;
@@ -485,6 +494,7 @@ export type Database = {
           id: number;
           user_id: string;
           name: string;
+          asset_class: string;
           base_currency: string;
           description: string | null;
           created_at: string;
@@ -494,6 +504,7 @@ export type Database = {
           id?: number;
           user_id: string;
           name: string;
+          asset_class?: string;
           base_currency?: string;
           description?: string | null;
           created_at?: string;
@@ -503,6 +514,7 @@ export type Database = {
           id?: number;
           user_id?: string;
           name?: string;
+          asset_class?: string;
           base_currency?: string;
           description?: string | null;
           created_at?: string;

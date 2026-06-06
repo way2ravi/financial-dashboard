@@ -15,7 +15,7 @@ import {
 import { getPortfolioSummariesForUser } from "@/lib/services";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/types/database";
-import type { PortfolioSummary } from "@/lib/types";
+import type { PortfolioAssetClass, PortfolioSummary } from "@/lib/types";
 
 type Props = {
   searchParams: Promise<{
@@ -44,7 +44,7 @@ export default async function PortfolioPage({ searchParams }: Props) {
       <AppHeader
         current="portfolio"
         title="Portfolio"
-        description="Create portfolios, record buy and sell trades, and track holdings performance."
+        description="Create portfolios for stocks, crypto, commodities, real estate, or other holdings and track them in one ledger."
       />
 
       <div className="mx-auto grid max-w-7xl gap-3 px-4 py-4 sm:px-6 lg:grid-cols-[320px_1fr] lg:px-8">
@@ -86,6 +86,20 @@ export default async function PortfolioPage({ searchParams }: Props) {
                   />
                 </label>
                 <label className="block text-xs font-medium app-muted">
+                  Asset class
+                  <select
+                    name="asset_class"
+                    defaultValue="stocks"
+                    className="mt-1 h-9 w-full rounded-lg border app-input px-3 text-xs outline-none"
+                  >
+                    {portfolioAssetClassOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-xs font-medium app-muted">
                   Display currency
                   <select
                     name="base_currency"
@@ -124,7 +138,7 @@ export default async function PortfolioPage({ searchParams }: Props) {
                       {summary.holdings.length} holdings - {formatCurrency(summary.marketValue, false, summary.portfolio.baseCurrency)}
                     </div>
                     <div className="mt-1 text-[11px] app-muted">
-                      Currency: {summary.portfolio.baseCurrency}
+                      {getPortfolioAssetClassLabel(summary.portfolio.assetClass)} - {summary.portfolio.baseCurrency}
                     </div>
                   </Link>
                 ))}
@@ -237,7 +251,11 @@ function PortfolioDetail({
                 "Performance based on recorded trades and cached quotes."}
             </p>
           </div>
-          <AddTransactionForm currency={currency} portfolioId={summary.portfolio.id} />
+          <AddTransactionForm
+            assetClass={summary.portfolio.assetClass}
+            currency={currency}
+            portfolioId={summary.portfolio.id}
+          />
         </div>
 
         <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
@@ -261,6 +279,7 @@ function PortfolioDetail({
         </div>
         <div className="mt-2 grid gap-2 sm:grid-cols-4">
           <Metric label="Currency" value={currency} />
+          <Metric label="Asset class" value={getPortfolioAssetClassLabel(summary.portfolio.assetClass)} />
           <Metric label="Open positions" value={formatNumber(summary.openPositions, 0)} />
           <Metric label="Closed positions" value={formatNumber(summary.closedPositions, 0)} />
           <Metric label="Trades" value={formatNumber(summary.tradeCount, 0)} />
@@ -280,7 +299,7 @@ function PortfolioDetail({
             <table className="w-full min-w-[840px] border-separate border-spacing-0 text-left text-xs">
               <thead className="app-subtle">
                 <tr className="uppercase tracking-normal app-muted">
-                  <th className="border-b app-border-soft px-3 py-2 font-semibold">Symbol</th>
+                  <th className="border-b app-border-soft px-3 py-2 font-semibold">Asset</th>
                   <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">Quantity</th>
                   <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">Avg cost</th>
                   <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">Cost basis</th>
@@ -292,9 +311,10 @@ function PortfolioDetail({
               </thead>
               <tbody>
                 {summary.holdings.map((holding) => (
-                  <tr key={holding.ticker.id} className="app-muted transition hover:bg-[var(--app-surface-muted)]">
+                  <tr key={holding.assetKey} className="app-muted transition hover:bg-[var(--app-surface-muted)]">
                     <td className="border-b app-border-soft px-3 py-2.5 font-semibold app-heading">
-                      {holding.ticker.symbol}
+                      <div>{holding.symbol}</div>
+                      <div className="text-[11px] font-normal app-muted">{holding.name}</div>
                     </td>
                     <td className="border-b app-border-soft px-3 py-2.5 text-right">
                       {formatNumber(holding.quantity, 4)}
@@ -349,10 +369,10 @@ function PortfolioDetail({
                 </div>
                 <div>
                   <div className="font-semibold app-heading">
-                    {transaction.quantity} {transaction.ticker.symbol} @ {formatCurrency(transaction.price, false, currency)}
+                    {transaction.quantity} {transaction.assetSymbol} @ {formatCurrency(transaction.price, false, currency)}
                   </div>
                   <div className="text-xs app-muted">
-                    {transaction.tradeDate} - Fees {formatCurrency(transaction.fees, false, currency)}
+                    {transaction.assetName} - {transaction.tradeDate} - Fees {formatCurrency(transaction.fees, false, currency)}
                     {transaction.notes ? ` - ${transaction.notes}` : ""}
                   </div>
                 </div>
@@ -375,12 +395,16 @@ function PortfolioDetail({
 }
 
 function AddTransactionForm({
+  assetClass,
   currency,
   portfolioId,
 }: {
+  assetClass: PortfolioAssetClass;
   currency: string;
   portfolioId: number;
 }) {
+  const isStockPortfolio = assetClass === "stocks";
+
   return (
     <form
       action={addPortfolioTransactionAction}
@@ -395,9 +419,15 @@ function AddTransactionForm({
         <option value="sell">Sell</option>
       </select>
       <input
+        name="asset_name"
+        placeholder={isStockPortfolio ? "Company name from ticker" : "Asset name"}
+        required={!isStockPortfolio}
+        className="h-9 rounded-lg border app-input px-3 text-xs outline-none"
+      />
+      <input
         name="symbol"
-        placeholder="Symbol"
-        required
+        placeholder={isStockPortfolio ? "Ticker symbol" : "Symbol / tag"}
+        required={isStockPortfolio}
         className="h-9 rounded-lg border app-input px-3 text-xs uppercase outline-none"
       />
       <input
@@ -444,6 +474,21 @@ function AddTransactionForm({
         Add trade
       </button>
     </form>
+  );
+}
+
+const portfolioAssetClassOptions: Array<{ value: PortfolioAssetClass; label: string }> = [
+  { value: "stocks", label: "Stocks" },
+  { value: "crypto", label: "Crypto" },
+  { value: "commodity", label: "Commodities" },
+  { value: "real_estate", label: "Real estate" },
+  { value: "other", label: "Other assets" },
+];
+
+function getPortfolioAssetClassLabel(assetClass: PortfolioAssetClass) {
+  return (
+    portfolioAssetClassOptions.find((option) => option.value === assetClass)?.label ??
+    "Stocks"
   );
 }
 

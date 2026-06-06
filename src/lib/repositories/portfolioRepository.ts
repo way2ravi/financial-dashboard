@@ -1,6 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
-import type { Portfolio, PortfolioTransaction, QuoteLatest, Ticker } from "@/lib/types/market";
+import type {
+  Portfolio,
+  PortfolioAssetClass,
+  PortfolioTransaction,
+  QuoteLatest,
+  Ticker,
+} from "@/lib/types/market";
 import { mapPortfolio, mapPortfolioTransaction, mapQuoteLatest, mapTicker } from "./mappers";
 
 type DbClient = SupabaseClient<Database>;
@@ -48,6 +54,7 @@ export async function createPortfolio(
   input: {
     userId: string;
     name: string;
+    assetClass?: PortfolioAssetClass;
     baseCurrency?: string;
     description?: string | null;
   }
@@ -57,6 +64,7 @@ export async function createPortfolio(
     .insert({
       user_id: input.userId,
       name: input.name,
+      asset_class: input.assetClass ?? "stocks",
       base_currency: input.baseCurrency ?? "USD",
       description: input.description ?? null,
     })
@@ -75,7 +83,10 @@ export async function addPortfolioTransaction(
   input: {
     userId: string;
     portfolioId: number;
-    tickerId: number;
+    assetClass: PortfolioAssetClass;
+    tickerId?: number | null;
+    assetSymbol?: string | null;
+    assetName?: string | null;
     transactionType: "buy" | "sell";
     tradeDate: string;
     quantity: number;
@@ -87,7 +98,10 @@ export async function addPortfolioTransaction(
   const { error } = await supabase.from("portfolio_transactions").insert({
     user_id: input.userId,
     portfolio_id: input.portfolioId,
-    ticker_id: input.tickerId,
+    asset_class: input.assetClass,
+    ticker_id: input.tickerId ?? null,
+    asset_symbol: input.assetSymbol ?? null,
+    asset_name: input.assetName ?? null,
     transaction_type: input.transactionType,
     trade_date: input.tradeDate,
     quantity: input.quantity,
@@ -135,18 +149,22 @@ export async function getPortfolioTransactions(
   }
 
   const transactionRows = rows ?? [];
-  const tickerIds = [...new Set(transactionRows.map((row) => row.ticker_id))];
-
-  if (tickerIds.length === 0) {
-    return [];
-  }
+  const tickerIds = [
+    ...new Set(
+      transactionRows
+        .map((row) => row.ticker_id)
+        .filter((tickerId): tickerId is number => tickerId !== null)
+    ),
+  ];
 
   const tickersById = await getTickersById(supabase, tickerIds);
 
-  return transactionRows.flatMap((row) => {
-    const ticker = tickersById.get(row.ticker_id);
-    return ticker ? [mapPortfolioTransaction(row, ticker)] : [];
-  });
+  return transactionRows.map((row) =>
+    mapPortfolioTransaction(
+      row,
+      row.ticker_id === null ? null : tickersById.get(row.ticker_id) ?? null
+    )
+  );
 }
 
 export async function getLatestQuotesByTickerId(
@@ -173,6 +191,10 @@ async function getTickersById(
   supabase: DbClient,
   tickerIds: number[]
 ): Promise<Map<number, Ticker>> {
+  if (tickerIds.length === 0) {
+    return new Map<number, Ticker>();
+  }
+
   const { data, error } = await supabase
     .from("tickers")
     .select(TICKER_COLUMNS)

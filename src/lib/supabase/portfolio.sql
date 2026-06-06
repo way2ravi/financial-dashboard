@@ -2,6 +2,7 @@ create table if not exists public.portfolios (
   id bigserial primary key,
   user_id uuid not null references auth.users(id) on delete cascade,
   name text not null,
+  asset_class text not null default 'stocks' check (asset_class in ('stocks', 'crypto', 'commodity', 'real_estate', 'other')),
   base_currency text not null default 'USD',
   description text,
   created_at timestamptz not null default now(),
@@ -16,7 +17,10 @@ create table if not exists public.portfolio_transactions (
   id bigserial primary key,
   portfolio_id bigint not null references public.portfolios(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
-  ticker_id bigint not null references public.tickers(id) on delete restrict,
+  asset_class text not null default 'stocks' check (asset_class in ('stocks', 'crypto', 'commodity', 'real_estate', 'other')),
+  ticker_id bigint references public.tickers(id) on delete restrict,
+  asset_symbol text,
+  asset_name text,
   transaction_type text not null check (transaction_type in ('buy', 'sell')),
   trade_date date not null,
   quantity numeric not null check (quantity > 0),
@@ -26,6 +30,45 @@ create table if not exists public.portfolio_transactions (
   created_at timestamptz not null default now(),
   foreign key (portfolio_id, user_id) references public.portfolios(id, user_id) on delete cascade
 );
+
+alter table public.portfolios
+  add column if not exists asset_class text not null default 'stocks';
+
+alter table public.portfolios
+  drop constraint if exists portfolios_asset_class_check;
+
+alter table public.portfolios
+  add constraint portfolios_asset_class_check
+  check (asset_class in ('stocks', 'crypto', 'commodity', 'real_estate', 'other'));
+
+alter table public.portfolio_transactions
+  add column if not exists asset_class text not null default 'stocks',
+  add column if not exists asset_symbol text,
+  add column if not exists asset_name text;
+
+alter table public.portfolio_transactions
+  alter column ticker_id drop not null;
+
+alter table public.portfolio_transactions
+  drop constraint if exists portfolio_transactions_asset_class_check;
+
+alter table public.portfolio_transactions
+  add constraint portfolio_transactions_asset_class_check
+  check (asset_class in ('stocks', 'crypto', 'commodity', 'real_estate', 'other'));
+
+alter table public.portfolio_transactions
+  drop constraint if exists portfolio_transactions_asset_identity_check;
+
+alter table public.portfolio_transactions
+  add constraint portfolio_transactions_asset_identity_check
+  check (
+    (asset_class = 'stocks' and ticker_id is not null)
+    or (asset_class <> 'stocks' and coalesce(nullif(trim(asset_name), ''), nullif(trim(asset_symbol), '')) is not null)
+  );
+
+update public.portfolio_transactions
+set asset_class = 'stocks'
+where asset_class is null;
 
 do $$
 begin

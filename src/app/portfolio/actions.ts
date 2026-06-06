@@ -20,6 +20,7 @@ export async function createPortfolioAction(formData: FormData) {
 
     await createPortfolioForUser(supabase, user, {
       name: getString(formData, "name"),
+      assetClass: getString(formData, "asset_class"),
       baseCurrency: getString(formData, "base_currency"),
       description: getString(formData, "description"),
     });
@@ -44,6 +45,7 @@ export async function addPortfolioTransactionAction(formData: FormData) {
     await addTransactionForUser(supabase, user, {
       portfolioId,
       symbol: getString(formData, "symbol"),
+      assetName: getString(formData, "asset_name"),
       transactionType: getTransactionType(formData),
       tradeDate: getString(formData, "trade_date"),
       quantity: getNumber(formData, "quantity"),

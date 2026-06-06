@@ -239,6 +239,7 @@ export function mapPortfolio(row: Tables["portfolios"]["Row"]): Portfolio {
     id: row.id,
     userId: row.user_id,
     name: row.name,
+    assetClass: row.asset_class as Portfolio["assetClass"],
     baseCurrency: row.base_currency,
     description: row.description,
     createdAt: row.created_at,
@@ -248,13 +249,18 @@ export function mapPortfolio(row: Tables["portfolios"]["Row"]): Portfolio {
 
 export function mapPortfolioTransaction(
   row: Tables["portfolio_transactions"]["Row"],
-  ticker: Ticker
+  ticker: Ticker | null
 ): PortfolioTransaction {
+  const assetSymbol = ticker?.symbol ?? row.asset_symbol ?? row.asset_name ?? "";
+
   return {
     id: row.id,
     portfolioId: row.portfolio_id,
     userId: row.user_id,
+    assetClass: row.asset_class as PortfolioTransaction["assetClass"],
     ticker,
+    assetSymbol,
+    assetName: ticker?.name ?? row.asset_name ?? assetSymbol,
     transactionType: row.transaction_type as PortfolioTransaction["transactionType"],
     tradeDate: row.trade_date,
     quantity: row.quantity,

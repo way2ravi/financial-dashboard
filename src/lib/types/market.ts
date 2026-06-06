@@ -271,6 +271,7 @@ export type Portfolio = {
   id: number;
   userId: string;
   name: string;
+  assetClass: PortfolioAssetClass;
   baseCurrency: string;
   description: string | null;
   createdAt: string;
@@ -278,12 +279,21 @@ export type Portfolio = {
 };
 
 export type PortfolioTransactionType = "buy" | "sell";
+export type PortfolioAssetClass =
+  | "stocks"
+  | "crypto"
+  | "commodity"
+  | "real_estate"
+  | "other";
 
 export type PortfolioTransaction = {
   id: number;
   portfolioId: number;
   userId: string;
-  ticker: Ticker;
+  assetClass: PortfolioAssetClass;
+  ticker: Ticker | null;
+  assetSymbol: string;
+  assetName: string;
   transactionType: PortfolioTransactionType;
   tradeDate: string;
   quantity: number;
@@ -294,7 +304,11 @@ export type PortfolioTransaction = {
 };
 
 export type PortfolioHolding = {
-  ticker: Ticker;
+  assetKey: string;
+  assetClass: PortfolioAssetClass;
+  ticker: Ticker | null;
+  symbol: string;
+  name: string;
   quantity: number;
   averageCost: number;
   costBasis: number;

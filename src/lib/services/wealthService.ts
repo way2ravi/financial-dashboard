@@ -29,6 +29,7 @@ import {
 } from "@/lib/types/wealth";
 import { isSupportedPortalCurrency } from "@/lib/types/currency";
 import { AppError } from "./errors";
+import { getPortfolioSummariesForUser } from "./portfolioService";
 
 type DbClient = SupabaseClient<Database>;
 
@@ -40,10 +41,12 @@ export async function getWealthDashboardForUser(
     return emptyDashboard();
   }
 
-  const [settings, items] = await Promise.all([
+  const [settings, wealthItems, portfolioSummaries] = await Promise.all([
     getWealthUserSettings(supabase, user.id),
     getWealthItemsForUser(supabase, user.id),
+    getPortfolioSummariesForUser(supabase, user),
   ]);
+  const items = [...wealthItems, ...buildPortfolioWealthItems(user.id, portfolioSummaries)];
 
   const dashboard = buildWealthDashboard(settings, items);
   const snapshots = await getSnapshotsSafely(supabase, user.id, dashboard);
@@ -217,6 +220,36 @@ function buildWealthDashboard(
   };
 
   return metrics;
+}
+
+function buildPortfolioWealthItems(
+  userId: string,
+  summaries: Awaited<ReturnType<typeof getPortfolioSummariesForUser>>
+): WealthItem[] {
+  let nextId = -1;
+  const today = new Date().toISOString().slice(0, 10);
+
+  return summaries
+    .filter((summary) => summary.marketValue > 0)
+    .map((summary) => {
+      const fixedAsset = summary.portfolio.assetClass === "real_estate";
+
+      return {
+        id: nextId--,
+        userId,
+        recordType: "asset",
+        category: fixedAsset ? "fixed" : "investment",
+        subcategory: `portfolio_${summary.portfolio.assetClass}`,
+        name: summary.portfolio.name,
+        currentValue: summary.marketValue,
+        interestRate: null,
+        monthlyPayment: null,
+        asOfDate: today,
+        notes: "Synced from Portfolio",
+        createdAt: today,
+        updatedAt: today,
+      } satisfies WealthItem;
+    });
 }
 
 async function getSnapshotsSafely(
