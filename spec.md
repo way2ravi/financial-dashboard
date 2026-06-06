@@ -479,8 +479,16 @@ Initial portfolio scope:
 
 - Multiple named portfolios per signed-in user
 - Asset class selected during portfolio creation: stocks, crypto, commodities, real estate, or other assets
-- Buy and sell transactions by ticker
+- Portfolio name, description, and display currency can be edited after creation
+- Portfolios can be deleted by the owning user; portfolio transactions are removed through database cascade
+- Stock holdings link from Portfolio to the Stock module (`/stock?symbol=<symbol>&autoload=1`)
+- Stock portfolios support buy and sell transactions by ticker
 - Non-stock portfolios use the same transaction ledger with asset name, optional symbol/tag, quantity, price, fees, and notes
+- Users can edit and remove portfolio ledger entries
+- Holdings expose a popup history view with ledger rows, edit/remove actions, breakeven context, and pre-submit P/L preview for new entries
+- Stock history popups allow buy and sell entries; crypto and commodity history popups allow buy, sell, and value-update entries
+- Real estate and other-asset history popups are valuation-focused: no buy/sell controls inside the popup, only dated valuation updates
+- Value updates change latest market value without changing quantity or cost basis
 - Quantity, trade date, execution price, fees, and notes
 - Holdings calculated from transactions using average-cost accounting
 - Stock market value from cached `quotes_latest`; non-stock market value from the latest recorded ledger price
@@ -566,6 +574,7 @@ The UI labels this as educational guidance, not licensed financial advice.
 - Top portal preferences panel with country flag, country name, currency dropdown, monthly expense estimate, and quick add buttons
 - SVG donut charts for asset and liability mix
 - Bar comparison of assets vs liabilities
+- Personalized guidance appears above the balance-sheet table
 - Add/edit balance-sheet entries in a modal (`WealthEntryModal`) with dynamic category and subcategory options (`WealthItemForm` client component)
 - Balance-sheet table grouped into assets and liabilities
 - Read-only synced portfolio rows link back to `/portfolio` for edits at the source

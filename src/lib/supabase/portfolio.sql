@@ -21,7 +21,7 @@ create table if not exists public.portfolio_transactions (
   ticker_id bigint references public.tickers(id) on delete restrict,
   asset_symbol text,
   asset_name text,
-  transaction_type text not null check (transaction_type in ('buy', 'sell')),
+  transaction_type text not null check (transaction_type in ('buy', 'sell', 'valuation')),
   trade_date date not null,
   quantity numeric not null check (quantity > 0),
   price numeric not null check (price >= 0),
@@ -48,6 +48,13 @@ alter table public.portfolio_transactions
 
 alter table public.portfolio_transactions
   alter column ticker_id drop not null;
+
+alter table public.portfolio_transactions
+  drop constraint if exists portfolio_transactions_transaction_type_check;
+
+alter table public.portfolio_transactions
+  add constraint portfolio_transactions_transaction_type_check
+  check (transaction_type in ('buy', 'sell', 'valuation'));
 
 alter table public.portfolio_transactions
   drop constraint if exists portfolio_transactions_asset_class_check;
@@ -114,6 +121,7 @@ drop policy if exists "Users can update own portfolios" on public.portfolios;
 drop policy if exists "Users can delete own portfolios" on public.portfolios;
 drop policy if exists "Users can read own portfolio transactions" on public.portfolio_transactions;
 drop policy if exists "Users can create own portfolio transactions" on public.portfolio_transactions;
+drop policy if exists "Users can update own portfolio transactions" on public.portfolio_transactions;
 drop policy if exists "Users can delete own portfolio transactions" on public.portfolio_transactions;
 
 create policy "Users can read own portfolios"
@@ -151,6 +159,21 @@ create policy "Users can create own portfolio transactions"
 on public.portfolio_transactions
 for insert
 to authenticated
+with check (
+  auth.uid() = user_id
+  and exists (
+    select 1
+    from public.portfolios
+    where portfolios.id = portfolio_transactions.portfolio_id
+      and portfolios.user_id = auth.uid()
+  )
+);
+
+create policy "Users can update own portfolio transactions"
+on public.portfolio_transactions
+for update
+to authenticated
+using (auth.uid() = user_id)
 with check (
   auth.uid() = user_id
   and exists (

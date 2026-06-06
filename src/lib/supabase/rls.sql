@@ -28,6 +28,7 @@ drop policy if exists "Users can update own portfolios" on public.portfolios;
 drop policy if exists "Users can delete own portfolios" on public.portfolios;
 drop policy if exists "Users can read own portfolio transactions" on public.portfolio_transactions;
 drop policy if exists "Users can create own portfolio transactions" on public.portfolio_transactions;
+drop policy if exists "Users can update own portfolio transactions" on public.portfolio_transactions;
 drop policy if exists "Users can delete own portfolio transactions" on public.portfolio_transactions;
 drop policy if exists "Users can read own wealth settings" on public.wealth_user_settings;
 drop policy if exists "Users can insert own wealth settings" on public.wealth_user_settings;
@@ -120,6 +121,21 @@ create policy "Users can create own portfolio transactions"
 on public.portfolio_transactions
 for insert
 to authenticated
+with check (
+  auth.uid() = user_id
+  and exists (
+    select 1
+    from public.portfolios
+    where portfolios.id = portfolio_transactions.portfolio_id
+      and portfolios.user_id = auth.uid()
+  )
+);
+
+create policy "Users can update own portfolio transactions"
+on public.portfolio_transactions
+for update
+to authenticated
+using (auth.uid() = user_id)
 with check (
   auth.uid() = user_id
   and exists (

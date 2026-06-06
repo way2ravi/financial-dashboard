@@ -171,10 +171,8 @@ export default async function WealthPage({ searchParams }: Props) {
               totalLiabilities={dashboard.totalLiabilities}
             />
 
-            <div className="grid gap-3 xl:grid-cols-[0.9fr_1.1fr]">
-              <WealthAdvicePanel advice={dashboard.advice} />
-              <WealthItemsTable currency={currency} items={dashboard.items} />
-            </div>
+            <WealthAdvicePanel advice={dashboard.advice} />
+            <WealthItemsTable currency={currency} items={dashboard.items} />
           </>
         )}
       </div>

@@ -278,7 +278,7 @@ export type Portfolio = {
   updatedAt: string;
 };
 
-export type PortfolioTransactionType = "buy" | "sell";
+export type PortfolioTransactionType = "buy" | "sell" | "valuation";
 export type PortfolioAssetClass =
   | "stocks"
   | "crypto"

@@ -78,6 +78,52 @@ export async function createPortfolio(
   return mapPortfolio(data);
 }
 
+export async function updatePortfolio(
+  supabase: DbClient,
+  userId: string,
+  portfolioId: number,
+  input: {
+    name: string;
+    baseCurrency?: string;
+    description?: string | null;
+  }
+): Promise<Portfolio> {
+  const { data, error } = await supabase
+    .from("portfolios")
+    .update({
+      name: input.name,
+      base_currency: input.baseCurrency ?? "USD",
+      description: input.description ?? null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", portfolioId)
+    .eq("user_id", userId)
+    .select("*")
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return mapPortfolio(data);
+}
+
+export async function deletePortfolio(
+  supabase: DbClient,
+  userId: string,
+  portfolioId: number
+): Promise<void> {
+  const { error } = await supabase
+    .from("portfolios")
+    .delete()
+    .eq("id", portfolioId)
+    .eq("user_id", userId);
+
+  if (error) {
+    throw error;
+  }
+}
+
 export async function addPortfolioTransaction(
   supabase: DbClient,
   input: {
@@ -87,7 +133,7 @@ export async function addPortfolioTransaction(
     tickerId?: number | null;
     assetSymbol?: string | null;
     assetName?: string | null;
-    transactionType: "buy" | "sell";
+    transactionType: PortfolioTransaction["transactionType"];
     tradeDate: string;
     quantity: number;
     price: number;
@@ -109,6 +155,45 @@ export async function addPortfolioTransaction(
     fees: input.fees,
     notes: input.notes ?? null,
   });
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function updatePortfolioTransaction(
+  supabase: DbClient,
+  userId: string,
+  transactionId: number,
+  input: {
+    assetClass: PortfolioAssetClass;
+    tickerId?: number | null;
+    assetSymbol?: string | null;
+    assetName?: string | null;
+    transactionType: PortfolioTransaction["transactionType"];
+    tradeDate: string;
+    quantity: number;
+    price: number;
+    fees: number;
+    notes?: string | null;
+  }
+): Promise<void> {
+  const { error } = await supabase
+    .from("portfolio_transactions")
+    .update({
+      asset_class: input.assetClass,
+      ticker_id: input.tickerId ?? null,
+      asset_symbol: input.assetSymbol ?? null,
+      asset_name: input.assetName ?? null,
+      transaction_type: input.transactionType,
+      trade_date: input.tradeDate,
+      quantity: input.quantity,
+      price: input.price,
+      fees: input.fees,
+      notes: input.notes ?? null,
+    })
+    .eq("id", transactionId)
+    .eq("user_id", userId);
 
   if (error) {
     throw error;

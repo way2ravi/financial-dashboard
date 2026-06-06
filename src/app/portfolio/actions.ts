@@ -6,7 +6,10 @@ import {
   addTransactionForUser,
   createPortfolioForUser,
   isAppError,
+  removePortfolioForUser,
   removeTransactionForUser,
+  updatePortfolioForUser,
+  updateTransactionForUser,
 } from "@/lib/services";
 import { createClient } from "@/lib/supabase/server";
 import type { PortfolioTransactionType } from "@/lib/types";
@@ -26,6 +29,7 @@ export async function createPortfolioAction(formData: FormData) {
     });
 
     revalidatePath("/portfolio");
+    revalidatePath("/wealth");
   } catch (error) {
     redirect(portfolioMessageUrl("error", getActionErrorMessage(error)));
   }
@@ -55,6 +59,7 @@ export async function addPortfolioTransactionAction(formData: FormData) {
     });
 
     revalidatePath("/portfolio");
+    revalidatePath("/wealth");
   } catch (error) {
     redirect(portfolioMessageUrl("error", getActionErrorMessage(error), portfolioId));
   }
@@ -62,7 +67,89 @@ export async function addPortfolioTransactionAction(formData: FormData) {
   redirect(portfolioMessageUrl("notice", "Trade added", portfolioId));
 }
 
+export async function updatePortfolioAction(formData: FormData) {
+  const portfolioId = getNumber(formData, "portfolio_id");
+
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    await updatePortfolioForUser(supabase, user, portfolioId, {
+      name: getString(formData, "name"),
+      baseCurrency: getString(formData, "base_currency"),
+      description: getString(formData, "description"),
+    });
+
+    revalidatePath("/portfolio");
+    revalidatePath("/wealth");
+  } catch (error) {
+    redirect(portfolioMessageUrl("error", getActionErrorMessage(error), portfolioId));
+  }
+
+  redirect(portfolioMessageUrl("notice", "Portfolio updated", portfolioId));
+}
+
+export async function removePortfolioAction(formData: FormData) {
+  const portfolioId = getNumber(formData, "portfolio_id");
+
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    await removePortfolioForUser(supabase, user, portfolioId);
+
+    revalidatePath("/portfolio");
+    revalidatePath("/wealth");
+  } catch (error) {
+    redirect(portfolioMessageUrl("error", getActionErrorMessage(error), portfolioId));
+  }
+
+  redirect(portfolioMessageUrl("notice", "Portfolio removed"));
+}
+
+export async function updatePortfolioTransactionAction(formData: FormData) {
+  const portfolioId = getNumber(formData, "portfolio_id");
+
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    await updateTransactionForUser(
+      supabase,
+      user,
+      getNumber(formData, "transaction_id"),
+      {
+        portfolioId,
+        symbol: getString(formData, "symbol"),
+        assetName: getString(formData, "asset_name"),
+        transactionType: getTransactionType(formData),
+        tradeDate: getString(formData, "trade_date"),
+        quantity: getNumber(formData, "quantity"),
+        price: getNumber(formData, "price"),
+        fees: getOptionalNumber(formData, "fees"),
+        notes: getString(formData, "notes"),
+      }
+    );
+
+    revalidatePath("/portfolio");
+    revalidatePath("/wealth");
+  } catch (error) {
+    redirect(portfolioMessageUrl("error", getActionErrorMessage(error), portfolioId));
+  }
+
+  redirect(portfolioMessageUrl("notice", "Trade updated", portfolioId));
+}
+
 export async function removePortfolioTransactionAction(formData: FormData) {
+  const portfolioId = getNumber(formData, "portfolio_id");
+  const historyAsset = getString(formData, "history_asset");
+
   try {
     const supabase = await createClient();
     const {
@@ -71,11 +158,14 @@ export async function removePortfolioTransactionAction(formData: FormData) {
 
     await removeTransactionForUser(supabase, user, getNumber(formData, "transaction_id"));
     revalidatePath("/portfolio");
+    revalidatePath("/wealth");
   } catch (error) {
-    redirect(portfolioMessageUrl("error", getActionErrorMessage(error)));
+    redirect(
+      portfolioMessageUrl("error", getActionErrorMessage(error), portfolioId, historyAsset)
+    );
   }
 
-  redirect(portfolioMessageUrl("notice", "Trade removed"));
+  redirect(portfolioMessageUrl("notice", "Trade removed", portfolioId, historyAsset));
 }
 
 function getString(formData: FormData, name: string) {
@@ -99,7 +189,13 @@ function getOptionalNumber(formData: FormData, name: string) {
 }
 
 function getTransactionType(formData: FormData): PortfolioTransactionType {
-  return getString(formData, "transaction_type") === "sell" ? "sell" : "buy";
+  const value = getString(formData, "transaction_type");
+
+  if (value === "sell" || value === "valuation") {
+    return value;
+  }
+
+  return "buy";
 }
 
 function getActionErrorMessage(error: unknown) {
@@ -117,12 +213,17 @@ function getActionErrorMessage(error: unknown) {
 function portfolioMessageUrl(
   type: "error" | "notice",
   message: string,
-  portfolioId?: number
+  portfolioId?: number,
+  historyAsset?: string
 ) {
   const params = new URLSearchParams({ [type]: message });
 
   if (portfolioId) {
     params.set("portfolio", String(portfolioId));
+  }
+
+  if (historyAsset) {
+    params.set("history_asset", historyAsset);
   }
 
   return `/portfolio?${params.toString()}`;

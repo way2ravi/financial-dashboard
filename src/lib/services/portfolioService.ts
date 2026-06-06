@@ -2,12 +2,15 @@ import type { SupabaseClient, User } from "@supabase/supabase-js";
 import {
   addPortfolioTransaction,
   createPortfolio,
+  deletePortfolio,
   deletePortfolioTransaction,
   findTickerBySymbol,
   getLatestQuotesByTickerId,
   getPortfolioById,
   getPortfolioTransactions,
   getUserPortfolios,
+  updatePortfolio,
+  updatePortfolioTransaction,
 } from "@/lib/repositories";
 import type { Database } from "@/lib/types/database";
 import type {
@@ -66,6 +69,57 @@ export async function createPortfolioForUser(
   });
 }
 
+export async function updatePortfolioForUser(
+  supabase: DbClient,
+  user: User | null,
+  portfolioId: number,
+  input: {
+    baseCurrency?: string | null;
+    name: string;
+    description?: string | null;
+  }
+): Promise<Portfolio> {
+  if (!user) {
+    throw new AppError("You must be signed in to update a portfolio", 401);
+  }
+
+  const existing = await getPortfolioById(supabase, user.id, portfolioId);
+
+  if (!existing) {
+    throw new AppError("Portfolio was not found", 404);
+  }
+
+  const name = input.name.trim();
+
+  if (!name) {
+    throw new AppError("Portfolio name is required", 400);
+  }
+
+  return updatePortfolio(supabase, user.id, portfolioId, {
+    name,
+    baseCurrency: normalizeCurrency(input.baseCurrency),
+    description: input.description?.trim() || null,
+  });
+}
+
+export async function removePortfolioForUser(
+  supabase: DbClient,
+  user: User | null,
+  portfolioId: number
+): Promise<void> {
+  if (!user) {
+    throw new AppError("You must be signed in to remove a portfolio", 401);
+  }
+
+  const existing = await getPortfolioById(supabase, user.id, portfolioId);
+
+  if (!existing) {
+    throw new AppError("Portfolio was not found", 404);
+  }
+
+  await deletePortfolio(supabase, user.id, portfolioId);
+}
+
 export async function addTransactionForUser(
   supabase: DbClient,
   user: User | null,
@@ -85,7 +139,74 @@ export async function addTransactionForUser(
     throw new AppError("You must be signed in to add portfolio transactions", 401);
   }
 
-  const portfolio = await getPortfolioById(supabase, user.id, input.portfolioId);
+  const { portfolio, row } = await prepareTransactionForUser(supabase, user.id, input);
+
+  await addPortfolioTransaction(supabase, {
+    userId: user.id,
+    portfolioId: portfolio.id,
+    ...row,
+  });
+}
+
+export async function updateTransactionForUser(
+  supabase: DbClient,
+  user: User | null,
+  transactionId: number,
+  input: {
+    portfolioId: number;
+    symbol: string;
+    assetName?: string | null;
+    transactionType: PortfolioTransactionType;
+    tradeDate: string;
+    quantity: number;
+    price: number;
+    fees: number;
+    notes?: string | null;
+  }
+): Promise<void> {
+  if (!user) {
+    throw new AppError("You must be signed in to update portfolio transactions", 401);
+  }
+
+  const { row } = await prepareTransactionForUser(
+    supabase,
+    user.id,
+    input,
+    transactionId
+  );
+
+  await updatePortfolioTransaction(supabase, user.id, transactionId, row);
+}
+
+export async function removeTransactionForUser(
+  supabase: DbClient,
+  user: User | null,
+  transactionId: number
+): Promise<void> {
+  if (!user) {
+    throw new AppError("You must be signed in to remove transactions", 401);
+  }
+
+  await deletePortfolioTransaction(supabase, user.id, transactionId);
+}
+
+async function prepareTransactionForUser(
+  supabase: DbClient,
+  userId: string,
+  input: {
+    portfolioId: number;
+    symbol: string;
+    assetName?: string | null;
+    transactionType: PortfolioTransactionType;
+    tradeDate: string;
+    quantity: number;
+    price: number;
+    fees: number;
+    notes?: string | null;
+  },
+  excludeTransactionId?: number
+) {
+  const portfolio = await getPortfolioById(supabase, userId, input.portfolioId);
 
   if (!portfolio) {
     throw new AppError("Portfolio was not found", 404);
@@ -100,12 +221,16 @@ export async function addTransactionForUser(
     throw new AppError(`Ticker ${symbol} was not found`, 404);
   }
 
+  if (assetClass === "stocks" && input.transactionType === "valuation") {
+    throw new AppError("Stock values are updated from cached market quotes", 400);
+  }
+
   if (assetClass !== "stocks" && !assetName && !symbol) {
     throw new AppError("Asset name is required", 400);
   }
 
-  if (!["buy", "sell"].includes(input.transactionType)) {
-    throw new AppError("Transaction type must be buy or sell", 400);
+  if (!["buy", "sell", "valuation"].includes(input.transactionType)) {
+    throw new AppError("Transaction type must be buy, sell, or update value", 400);
   }
 
   if (!input.tradeDate) {
@@ -116,8 +241,14 @@ export async function addTransactionForUser(
     throw new AppError("Quantity, price, and fees must be valid positive values", 400);
   }
 
+  if (input.transactionType === "valuation" && input.fees > 0) {
+    throw new AppError("Value updates cannot include fees", 400);
+  }
+
   if (input.transactionType === "sell") {
-    const transactions = await getPortfolioTransactions(supabase, user.id, portfolio.id);
+    const transactions = (
+      await getPortfolioTransactions(supabase, userId, portfolio.id)
+    ).filter((transaction) => transaction.id !== excludeTransactionId);
     const openQuantity = getOpenQuantityForAsset(
       transactions,
       getTransactionAssetKey({
@@ -136,32 +267,21 @@ export async function addTransactionForUser(
     }
   }
 
-  await addPortfolioTransaction(supabase, {
-    userId: user.id,
-    portfolioId: portfolio.id,
-    assetClass,
-    tickerId: ticker?.id ?? null,
-    assetSymbol: ticker?.symbol ?? (symbol || null),
-    assetName: ticker?.name ?? assetName,
-    transactionType: input.transactionType,
-    tradeDate: input.tradeDate,
-    quantity: input.quantity,
-    price: input.price,
-    fees: input.fees,
-    notes: input.notes?.trim() || null,
-  });
-}
-
-export async function removeTransactionForUser(
-  supabase: DbClient,
-  user: User | null,
-  transactionId: number
-): Promise<void> {
-  if (!user) {
-    throw new AppError("You must be signed in to remove transactions", 401);
-  }
-
-  await deletePortfolioTransaction(supabase, user.id, transactionId);
+  return {
+    portfolio,
+    row: {
+      assetClass,
+      tickerId: ticker?.id ?? null,
+      assetSymbol: ticker?.symbol ?? (symbol || null),
+      assetName: ticker?.name ?? assetName,
+      transactionType: input.transactionType,
+      tradeDate: input.tradeDate,
+      quantity: input.quantity,
+      price: input.price,
+      fees: input.transactionType === "valuation" ? 0 : input.fees,
+      notes: input.notes?.trim() || null,
+    },
+  };
 }
 
 async function buildPortfolioSummary(
@@ -259,7 +379,7 @@ function buildHoldings(
       if (transaction.transactionType === "buy") {
         existing.quantity += transaction.quantity;
         existing.costBasis += transaction.quantity * transaction.price + transaction.fees;
-      } else {
+      } else if (transaction.transactionType === "sell") {
         const averageCost =
           existing.quantity > 0 ? existing.costBasis / existing.quantity : transaction.price;
         const sellQuantity = Math.min(transaction.quantity, existing.quantity);
@@ -342,9 +462,15 @@ function getOpenQuantityForAsset(
   return transactions
     .filter((transaction) => getTransactionAssetKey(transaction) === assetKey)
     .reduce((quantity, transaction) => {
-      return transaction.transactionType === "buy"
-        ? quantity + transaction.quantity
-        : quantity - transaction.quantity;
+      if (transaction.transactionType === "buy") {
+        return quantity + transaction.quantity;
+      }
+
+      if (transaction.transactionType === "sell") {
+        return quantity - transaction.quantity;
+      }
+
+      return quantity;
     }, 0);
 }
 
@@ -352,7 +478,11 @@ function getClosedPositionCount(
   transactions: PortfolioTransaction[],
   holdings: PortfolioHolding[]
 ) {
-  const tradedAssetKeys = new Set(transactions.map(getTransactionAssetKey));
+  const tradedAssetKeys = new Set(
+    transactions
+      .filter((transaction) => transaction.transactionType !== "valuation")
+      .map(getTransactionAssetKey)
+  );
   const openAssetKeys = new Set(holdings.map((holding) => holding.assetKey));
 
   return [...tradedAssetKeys].filter((assetKey) => !openAssetKeys.has(assetKey)).length;

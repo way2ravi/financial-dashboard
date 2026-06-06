@@ -58,7 +58,7 @@ create table if not exists public.portfolio_transactions (
   ticker_id bigint references public.tickers(id) on delete restrict,
   asset_symbol text,
   asset_name text,
-  transaction_type text not null check (transaction_type in ('buy', 'sell')),
+  transaction_type text not null check (transaction_type in ('buy', 'sell', 'valuation')),
   trade_date date not null,
   quantity numeric not null check (quantity > 0),
   price numeric not null check (price >= 0),

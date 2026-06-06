@@ -74,7 +74,7 @@ src/lib/supabase/wealth.sql
 
 The dashboard ticker `Load` action searches/caches the symbol and refreshes quote, analyst ratings, price targets, earnings, fundamentals, and OHLC before opening the dashboard. For NSE/BSE symbols, quote and OHLC refresh prefer Zerodha when its environment variables are configured.
 The earnings page reads the Supabase earnings calendar cache first and refreshes the selected date from Finnhub when no rows are cached or when `refresh=1` is requested.
-The portfolio creation flow supports an asset class: stocks, crypto, commodities, real estate, or other assets. The same portfolio ledger records buy/sell entries for the selected asset class, and portfolio totals are included automatically in Wealth as read-only rows.
+The portfolio creation flow supports an asset class: stocks, crypto, commodities, real estate, or other assets. The same portfolio ledger records buy/sell entries for the selected asset class, exposes per-holding history in a popup from the Holdings table with edit/remove actions, and previews quantity, average cost, and P/L before adding a buy/sell/value-update entry. Non-stock portfolios can record value updates without changing quantity or cost basis. Portfolio totals are included automatically in Wealth as read-only rows.
 
 ## Verification
 
