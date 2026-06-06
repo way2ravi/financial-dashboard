@@ -62,33 +62,8 @@ create index if not exists portfolio_transactions_portfolio_id_idx
 create index if not exists portfolio_transactions_user_id_idx
   on public.portfolio_transactions (user_id);
 
-create table if not exists public.portfolio_manual_assets (
-  id bigserial primary key,
-  portfolio_id bigint not null references public.portfolios(id) on delete cascade,
-  user_id uuid not null references auth.users(id) on delete cascade,
-  asset_type text not null check (asset_type in ('crypto', 'commodity', 'real_estate', 'other')),
-  name text not null,
-  symbol text,
-  quantity numeric not null default 1 check (quantity > 0),
-  current_value numeric not null check (current_value >= 0),
-  cost_basis numeric check (cost_basis is null or cost_basis >= 0),
-  currency text not null default 'USD',
-  as_of_date date not null default current_date,
-  notes text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  foreign key (portfolio_id, user_id) references public.portfolios(id, user_id) on delete cascade
-);
-
-create index if not exists portfolio_manual_assets_portfolio_id_idx
-  on public.portfolio_manual_assets (portfolio_id, asset_type, name);
-
-create index if not exists portfolio_manual_assets_user_id_idx
-  on public.portfolio_manual_assets (user_id);
-
 alter table public.portfolios enable row level security;
 alter table public.portfolio_transactions enable row level security;
-alter table public.portfolio_manual_assets enable row level security;
 
 drop policy if exists "Users can read own portfolios" on public.portfolios;
 drop policy if exists "Users can create own portfolios" on public.portfolios;
@@ -144,45 +119,7 @@ with check (
 );
 
 create policy "Users can delete own portfolio transactions"
-  on public.portfolio_transactions
-  for delete
-  to authenticated
-  using (auth.uid() = user_id);
-
-drop policy if exists "Users can read own manual portfolio assets" on public.portfolio_manual_assets;
-drop policy if exists "Users can create own manual portfolio assets" on public.portfolio_manual_assets;
-drop policy if exists "Users can update own manual portfolio assets" on public.portfolio_manual_assets;
-drop policy if exists "Users can delete own manual portfolio assets" on public.portfolio_manual_assets;
-
-create policy "Users can read own manual portfolio assets"
-  on public.portfolio_manual_assets
-  for select
-  to authenticated
-  using (auth.uid() = user_id);
-
-create policy "Users can create own manual portfolio assets"
-  on public.portfolio_manual_assets
-  for insert
-  to authenticated
-  with check (
-    auth.uid() = user_id
-    and exists (
-      select 1
-      from public.portfolios p
-      where p.id = portfolio_id
-        and p.user_id = auth.uid()
-    )
-  );
-
-create policy "Users can update own manual portfolio assets"
-  on public.portfolio_manual_assets
-  for update
-  to authenticated
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
-
-create policy "Users can delete own manual portfolio assets"
-  on public.portfolio_manual_assets
-  for delete
-  to authenticated
-  using (auth.uid() = user_id);
+on public.portfolio_transactions
+for delete
+to authenticated
+using (auth.uid() = user_id);

@@ -1,20 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
-import type {
-  Portfolio,
-  PortfolioManualAsset,
-  PortfolioManualAssetType,
-  PortfolioTransaction,
-  QuoteLatest,
-  Ticker,
-} from "@/lib/types/market";
-import {
-  mapPortfolio,
-  mapPortfolioManualAsset,
-  mapPortfolioTransaction,
-  mapQuoteLatest,
-  mapTicker,
-} from "./mappers";
+import type { Portfolio, PortfolioTransaction, QuoteLatest, Ticker } from "@/lib/types/market";
+import { mapPortfolio, mapPortfolioTransaction, mapQuoteLatest, mapTicker } from "./mappers";
 
 type DbClient = SupabaseClient<Database>;
 
@@ -128,77 +115,6 @@ export async function deletePortfolioTransaction(
   if (error) {
     throw error;
   }
-}
-
-export async function addPortfolioManualAsset(
-  supabase: DbClient,
-  input: {
-    userId: string;
-    portfolioId: number;
-    assetType: PortfolioManualAssetType;
-    name: string;
-    symbol?: string | null;
-    quantity: number;
-    currentValue: number;
-    costBasis?: number | null;
-    currency: string;
-    asOfDate: string;
-    notes?: string | null;
-  }
-): Promise<void> {
-  const { error } = await supabase.from("portfolio_manual_assets").insert({
-    user_id: input.userId,
-    portfolio_id: input.portfolioId,
-    asset_type: input.assetType,
-    name: input.name,
-    symbol: input.symbol ?? null,
-    quantity: input.quantity,
-    current_value: input.currentValue,
-    cost_basis: input.costBasis ?? null,
-    currency: input.currency,
-    as_of_date: input.asOfDate,
-    notes: input.notes ?? null,
-  });
-
-  if (error) {
-    throw error;
-  }
-}
-
-export async function deletePortfolioManualAsset(
-  supabase: DbClient,
-  userId: string,
-  assetId: number
-): Promise<void> {
-  const { error } = await supabase
-    .from("portfolio_manual_assets")
-    .delete()
-    .eq("id", assetId)
-    .eq("user_id", userId);
-
-  if (error) {
-    throw error;
-  }
-}
-
-export async function getPortfolioManualAssets(
-  supabase: DbClient,
-  userId: string,
-  portfolioId: number
-): Promise<PortfolioManualAsset[]> {
-  const { data, error } = await supabase
-    .from("portfolio_manual_assets")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("portfolio_id", portfolioId)
-    .order("asset_type", { ascending: true })
-    .order("name", { ascending: true });
-
-  if (error) {
-    throw error;
-  }
-
-  return (data ?? []).map(mapPortfolioManualAsset);
 }
 
 export async function getPortfolioTransactions(

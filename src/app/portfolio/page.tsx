@@ -1,10 +1,8 @@
 import Link from "next/link";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import {
-  addPortfolioManualAssetAction,
   addPortfolioTransactionAction,
   createPortfolioAction,
-  removePortfolioManualAssetAction,
   removePortfolioTransactionAction,
 } from "@/app/portfolio/actions";
 import { AppHeader } from "@/components/dashboard/AppHeader";
@@ -14,10 +12,10 @@ import {
   formatNumber,
   formatPercent,
 } from "@/components/dashboard/format";
-import { getManualAssetTypeLabel, getPortfolioSummariesForUser } from "@/lib/services";
+import { getPortfolioSummariesForUser } from "@/lib/services";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/types/database";
-import type { PortfolioManualAssetType, PortfolioSummary } from "@/lib/types";
+import type { PortfolioSummary } from "@/lib/types";
 
 type Props = {
   searchParams: Promise<{
@@ -46,7 +44,7 @@ export default async function PortfolioPage({ searchParams }: Props) {
       <AppHeader
         current="portfolio"
         title="Portfolio"
-        description="Track stocks, real estate, crypto, commodities, and other assets in one portfolio view."
+        description="Create portfolios, record buy and sell trades, and track holdings performance."
       />
 
       <div className="mx-auto grid max-w-7xl gap-3 px-4 py-4 sm:px-6 lg:grid-cols-[320px_1fr] lg:px-8">
@@ -141,12 +139,10 @@ export default async function PortfolioPage({ searchParams }: Props) {
               Portfolio database setup needed
             </h2>
             <p className="mt-2 text-xs app-muted">
-              Run the updated Supabase SQL files so portfolios, trades, and manual assets exist.
+              Run the updated Supabase SQL files so portfolios and portfolio transactions exist.
             </p>
             <div className="mt-4 rounded-lg border app-subtle p-3 font-mono text-xs app-muted">
               src/lib/supabase/schema.sql
-              <br />
-              src/lib/supabase/portfolio.sql
               <br />
               src/lib/supabase/rls.sql
             </div>
@@ -183,8 +179,7 @@ async function loadPortfolioSummaries(
 
     if (
       message.includes("portfolios") ||
-      message.includes("portfolio_transactions") ||
-      message.includes("portfolio_manual_assets")
+      message.includes("portfolio_transactions")
     ) {
       return { summaries: [], setupError: true };
     }
@@ -336,8 +331,6 @@ function PortfolioDetail({
         )}
       </section>
 
-      <ManualAssetsSection summary={summary} currency={currency} />
-
       <section className="rounded-lg border app-surface p-4 shadow-sm">
         <h2 className="text-sm font-semibold app-heading">Buy / Sell History</h2>
         {summary.transactions.length === 0 ? (
@@ -378,203 +371,6 @@ function PortfolioDetail({
         )}
       </section>
     </div>
-  );
-}
-
-function ManualAssetsSection({
-  currency,
-  summary,
-}: {
-  currency: string;
-  summary: PortfolioSummary;
-}) {
-  const today = new Date().toISOString().slice(0, 10);
-
-  return (
-    <section className="overflow-hidden rounded-lg border app-surface shadow-sm">
-      <div className="grid gap-3 border-b app-border-soft px-4 py-3 lg:grid-cols-[1fr_auto] lg:items-start">
-        <div>
-          <h2 className="text-sm font-semibold app-heading">Manual assets</h2>
-          <p className="mt-1 text-xs app-muted">
-            Add real estate, crypto, gold, oil, and other values that should roll into Wealth.
-          </p>
-        </div>
-        <AddManualAssetForm
-          currency={currency}
-          portfolioId={summary.portfolio.id}
-          today={today}
-        />
-      </div>
-
-      {summary.assetClassTotals.length > 0 ? (
-        <div className="grid gap-2 border-b app-border-soft p-4 sm:grid-cols-2 xl:grid-cols-4">
-          {summary.assetClassTotals.map((total) => (
-            <Metric
-              key={total.key}
-              label={total.label}
-              value={formatCurrency(total.value, false, currency)}
-            />
-          ))}
-        </div>
-      ) : null}
-
-      {summary.manualAssets.length === 0 ? (
-        <div className="m-4 rounded-lg border app-subtle p-3 text-xs app-muted">
-          No manual assets yet. Add property, crypto, gold, oil, or another asset above.
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[860px] border-separate border-spacing-0 text-left text-xs">
-            <thead className="app-subtle">
-              <tr className="uppercase tracking-normal app-muted">
-                <th className="border-b app-border-soft px-3 py-2 font-semibold">Asset</th>
-                <th className="border-b app-border-soft px-3 py-2 font-semibold">Type</th>
-                <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">Quantity</th>
-                <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">Cost basis</th>
-                <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">Value</th>
-                <th className="border-b app-border-soft px-3 py-2 font-semibold">As of</th>
-                <th className="border-b app-border-soft px-3 py-2 font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {summary.manualAssets.map((asset) => (
-                <tr key={asset.id} className="app-muted transition hover:bg-[var(--app-surface-muted)]">
-                  <td className="border-b app-border-soft px-3 py-2.5">
-                    <div className="font-semibold app-heading">{asset.name}</div>
-                    <div className="text-[11px] app-muted">
-                      {[asset.symbol, asset.notes].filter(Boolean).join(" - ") || asset.currency}
-                    </div>
-                  </td>
-                  <td className="border-b app-border-soft px-3 py-2.5">
-                    {getManualAssetTypeLabel(asset.assetType)}
-                  </td>
-                  <td className="border-b app-border-soft px-3 py-2.5 text-right">
-                    {formatNumber(asset.quantity, 4)}
-                  </td>
-                  <td className="border-b app-border-soft px-3 py-2.5 text-right">
-                    {asset.costBasis === null
-                      ? "-"
-                      : formatCurrency(asset.costBasis, false, asset.currency)}
-                  </td>
-                  <td className="border-b app-border-soft px-3 py-2.5 text-right font-semibold app-heading">
-                    {formatCurrency(asset.currentValue, false, asset.currency)}
-                  </td>
-                  <td className="border-b app-border-soft px-3 py-2.5">{asset.asOfDate}</td>
-                  <td className="border-b app-border-soft px-3 py-2.5">
-                    <form action={removePortfolioManualAssetAction}>
-                      <input name="asset_id" type="hidden" value={asset.id} />
-                      <button
-                        type="submit"
-                        className="rounded-md border border-rose-500/40 px-2 py-1 text-[11px] font-semibold text-rose-400"
-                      >
-                        Remove
-                      </button>
-                    </form>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </section>
-  );
-}
-
-function AddManualAssetForm({
-  currency,
-  portfolioId,
-  today,
-}: {
-  currency: string;
-  portfolioId: number;
-  today: string;
-}) {
-  const assetTypes: Array<{ value: PortfolioManualAssetType; label: string }> = [
-    { value: "real_estate", label: "Real estate" },
-    { value: "crypto", label: "Crypto" },
-    { value: "commodity", label: "Commodity" },
-    { value: "other", label: "Other" },
-  ];
-
-  return (
-    <form
-      action={addPortfolioManualAssetAction}
-      className="grid gap-2 rounded-lg border app-subtle p-3 sm:grid-cols-2 lg:w-[560px]"
-    >
-      <input name="portfolio_id" type="hidden" value={portfolioId} />
-      <select
-        name="asset_type"
-        className="h-9 rounded-lg border app-input px-3 text-xs outline-none"
-      >
-        {assetTypes.map((type) => (
-          <option key={type.value} value={type.value}>
-            {type.label}
-          </option>
-        ))}
-      </select>
-      <input
-        name="name"
-        placeholder="Name"
-        required
-        className="h-9 rounded-lg border app-input px-3 text-xs outline-none"
-      />
-      <input
-        name="symbol"
-        placeholder="Symbol / tag"
-        className="h-9 rounded-lg border app-input px-3 text-xs uppercase outline-none"
-      />
-      <input
-        name="quantity"
-        type="number"
-        min="0"
-        step="0.0001"
-        defaultValue="1"
-        placeholder="Quantity"
-        className="h-9 rounded-lg border app-input px-3 text-xs outline-none"
-      />
-      <input
-        name="current_value"
-        type="number"
-        min="0"
-        step="0.01"
-        required
-        placeholder={`Current value (${currency})`}
-        className="h-9 rounded-lg border app-input px-3 text-xs outline-none"
-      />
-      <input
-        name="cost_basis"
-        type="number"
-        min="0"
-        step="0.01"
-        placeholder={`Cost basis (${currency})`}
-        className="h-9 rounded-lg border app-input px-3 text-xs outline-none"
-      />
-      <input
-        name="currency"
-        defaultValue={currency}
-        maxLength={3}
-        className="h-9 rounded-lg border app-input px-3 text-xs uppercase outline-none"
-      />
-      <input
-        name="as_of_date"
-        type="date"
-        required
-        defaultValue={today}
-        className="h-9 rounded-lg border app-input px-3 text-xs outline-none"
-      />
-      <input
-        name="notes"
-        placeholder="Notes"
-        className="h-9 rounded-lg border app-input px-3 text-xs outline-none sm:col-span-2"
-      />
-      <button
-        type="submit"
-        className="h-9 rounded-lg app-primary-button px-4 text-xs font-semibold sm:col-span-2"
-      >
-        Add asset
-      </button>
-    </form>
   );
 }
 

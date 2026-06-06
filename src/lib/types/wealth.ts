@@ -118,10 +118,6 @@ export const wealthAssetSubcategories: Record<WealthAssetCategory, Array<{ id: s
     { id: "other_fixed", label: "Other fixed asset" },
   ],
   investment: [
-    { id: "portfolio_stocks", label: "Portfolio stocks" },
-    { id: "portfolio_crypto", label: "Portfolio crypto" },
-    { id: "portfolio_commodity", label: "Portfolio commodities" },
-    { id: "portfolio_other", label: "Portfolio other assets" },
     { id: "stocks", label: "Stocks" },
     { id: "bonds", label: "Bonds" },
     { id: "mutual_funds", label: "Mutual funds" },

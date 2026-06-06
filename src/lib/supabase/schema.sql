@@ -70,30 +70,6 @@ create index if not exists portfolio_transactions_portfolio_id_idx
 create index if not exists portfolio_transactions_user_id_idx
   on public.portfolio_transactions (user_id);
 
-create table if not exists public.portfolio_manual_assets (
-  id bigserial primary key,
-  portfolio_id bigint not null references public.portfolios(id) on delete cascade,
-  user_id uuid not null references auth.users(id) on delete cascade,
-  asset_type text not null check (asset_type in ('crypto', 'commodity', 'real_estate', 'other')),
-  name text not null,
-  symbol text,
-  quantity numeric not null default 1 check (quantity > 0),
-  current_value numeric not null check (current_value >= 0),
-  cost_basis numeric check (cost_basis is null or cost_basis >= 0),
-  currency text not null default 'USD',
-  as_of_date date not null default current_date,
-  notes text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  foreign key (portfolio_id, user_id) references public.portfolios(id, user_id) on delete cascade
-);
-
-create index if not exists portfolio_manual_assets_portfolio_id_idx
-  on public.portfolio_manual_assets (portfolio_id, asset_type, name);
-
-create index if not exists portfolio_manual_assets_user_id_idx
-  on public.portfolio_manual_assets (user_id);
-
 create table if not exists public.wealth_user_settings (
   user_id uuid primary key references auth.users(id) on delete cascade,
   base_currency text not null default 'USD',

@@ -3,15 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
-  addManualAssetForUser,
   addTransactionForUser,
   createPortfolioForUser,
   isAppError,
-  removeManualAssetForUser,
   removeTransactionForUser,
 } from "@/lib/services";
 import { createClient } from "@/lib/supabase/server";
-import type { PortfolioManualAssetType, PortfolioTransactionType } from "@/lib/types";
+import type { PortfolioTransactionType } from "@/lib/types";
 
 export async function createPortfolioAction(formData: FormData) {
   try {
@@ -78,54 +76,6 @@ export async function removePortfolioTransactionAction(formData: FormData) {
   redirect(portfolioMessageUrl("notice", "Trade removed"));
 }
 
-export async function addPortfolioManualAssetAction(formData: FormData) {
-  const portfolioId = getNumber(formData, "portfolio_id");
-
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    await addManualAssetForUser(supabase, user, {
-      portfolioId,
-      assetType: getManualAssetType(formData),
-      name: getString(formData, "name"),
-      symbol: getString(formData, "symbol"),
-      quantity: getOptionalNumber(formData, "quantity") || 1,
-      currentValue: getNumber(formData, "current_value"),
-      costBasis: getNullableNumber(formData, "cost_basis"),
-      currency: getString(formData, "currency"),
-      asOfDate: getString(formData, "as_of_date"),
-      notes: getString(formData, "notes"),
-    });
-
-    revalidatePath("/portfolio");
-    revalidatePath("/wealth");
-  } catch (error) {
-    redirect(portfolioMessageUrl("error", getActionErrorMessage(error), portfolioId));
-  }
-
-  redirect(portfolioMessageUrl("notice", "Asset added", portfolioId));
-}
-
-export async function removePortfolioManualAssetAction(formData: FormData) {
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    await removeManualAssetForUser(supabase, user, getNumber(formData, "asset_id"));
-    revalidatePath("/portfolio");
-    revalidatePath("/wealth");
-  } catch (error) {
-    redirect(portfolioMessageUrl("error", getActionErrorMessage(error)));
-  }
-
-  redirect(portfolioMessageUrl("notice", "Asset removed"));
-}
-
 function getString(formData: FormData, name: string) {
   const value = formData.get(name);
   return typeof value === "string" ? value.trim() : "";
@@ -146,28 +96,8 @@ function getOptionalNumber(formData: FormData, name: string) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function getNullableNumber(formData: FormData, name: string) {
-  const value = getString(formData, name);
-  if (!value) {
-    return null;
-  }
-
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
 function getTransactionType(formData: FormData): PortfolioTransactionType {
   return getString(formData, "transaction_type") === "sell" ? "sell" : "buy";
-}
-
-function getManualAssetType(formData: FormData): PortfolioManualAssetType {
-  const value = getString(formData, "asset_type");
-
-  if (value === "crypto" || value === "commodity" || value === "real_estate") {
-    return value;
-  }
-
-  return "other";
 }
 
 function getActionErrorMessage(error: unknown) {

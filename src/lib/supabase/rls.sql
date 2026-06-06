@@ -3,7 +3,6 @@ alter table public.tickers enable row level security;
 alter table public.user_watchlist enable row level security;
 alter table public.portfolios enable row level security;
 alter table public.portfolio_transactions enable row level security;
-alter table public.portfolio_manual_assets enable row level security;
 alter table public.wealth_user_settings enable row level security;
 alter table public.wealth_items enable row level security;
 alter table public.quotes_latest enable row level security;
@@ -30,10 +29,6 @@ drop policy if exists "Users can delete own portfolios" on public.portfolios;
 drop policy if exists "Users can read own portfolio transactions" on public.portfolio_transactions;
 drop policy if exists "Users can create own portfolio transactions" on public.portfolio_transactions;
 drop policy if exists "Users can delete own portfolio transactions" on public.portfolio_transactions;
-drop policy if exists "Users can read own manual portfolio assets" on public.portfolio_manual_assets;
-drop policy if exists "Users can create own manual portfolio assets" on public.portfolio_manual_assets;
-drop policy if exists "Users can update own manual portfolio assets" on public.portfolio_manual_assets;
-drop policy if exists "Users can delete own manual portfolio assets" on public.portfolio_manual_assets;
 drop policy if exists "Users can read own wealth settings" on public.wealth_user_settings;
 drop policy if exists "Users can insert own wealth settings" on public.wealth_user_settings;
 drop policy if exists "Users can update own wealth settings" on public.wealth_user_settings;
@@ -137,39 +132,6 @@ with check (
 
 create policy "Users can delete own portfolio transactions"
 on public.portfolio_transactions
-for delete
-to authenticated
-using (auth.uid() = user_id);
-
-create policy "Users can read own manual portfolio assets"
-on public.portfolio_manual_assets
-for select
-to authenticated
-using (auth.uid() = user_id);
-
-create policy "Users can create own manual portfolio assets"
-on public.portfolio_manual_assets
-for insert
-to authenticated
-with check (
-  auth.uid() = user_id
-  and exists (
-    select 1
-    from public.portfolios
-    where portfolios.id = portfolio_manual_assets.portfolio_id
-      and portfolios.user_id = auth.uid()
-  )
-);
-
-create policy "Users can update own manual portfolio assets"
-on public.portfolio_manual_assets
-for update
-to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
-
-create policy "Users can delete own manual portfolio assets"
-on public.portfolio_manual_assets
 for delete
 to authenticated
 using (auth.uid() = user_id);

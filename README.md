@@ -1,6 +1,6 @@
 # Financial Dashboard
 
-Next.js, Supabase, and Vercel stock research dashboard with watchlists, analyst data, daily earnings calendar, quarterly earnings, fundamentals, OHLC cache refresh, user portfolio tracking, and net-worth management.
+Next.js, Supabase, and Vercel stock research dashboard with watchlists, analyst data, daily earnings calendar, quarterly earnings, fundamentals, OHLC cache refresh, and user portfolio tracking.
 
 ## Local Setup
 
@@ -43,7 +43,7 @@ src/lib/supabase/rls.sql
 src/lib/supabase/seed.sql
 ```
 
-For an existing database that needs the latest portfolio module, including manual real estate, crypto, commodity, and other assets, run:
+For an existing database that only needs the portfolio module, run:
 
 ```txt
 src/lib/supabase/portfolio.sql
@@ -66,7 +66,7 @@ src/lib/supabase/wealth.sql
 - `/dashboard?symbol=AAPL`
 - `/earnings`
 - `/portfolio`
-- `/wealth` — net worth, assets, liabilities, synced portfolio totals, charts, and guidance
+- `/wealth` — net worth, assets, liabilities, charts, and guidance
 - `/login`
 - `/api/earnings/calendar?date=2026-05-28`
 - `/api/admin/refresh/[symbol]`
@@ -74,7 +74,6 @@ src/lib/supabase/wealth.sql
 
 The dashboard ticker `Load` action searches/caches the symbol and refreshes quote, analyst ratings, price targets, earnings, fundamentals, and OHLC before opening the dashboard. For NSE/BSE symbols, quote and OHLC refresh prefer Zerodha when its environment variables are configured.
 The earnings page reads the Supabase earnings calendar cache first and refreshes the selected date from Finnhub when no rows are cached or when `refresh=1` is requested.
-The portfolio page supports stock trades plus manually valued real estate, crypto, commodity, and other assets. Portfolio asset-class totals are included automatically in Wealth as read-only balance-sheet rows.
 
 ## Verification
 
