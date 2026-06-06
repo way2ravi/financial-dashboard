@@ -10,8 +10,10 @@ The dashboard should support:
 - User watchlists
 - User portfolios
 - Buy/sell transaction tracking
+- Manual portfolio assets for real estate, crypto, commodities, and other non-stock holdings
 - Portfolio holdings and performance summaries
 - Net worth and wealth manager for user-entered assets and liabilities
+- Automatic Wealth roll-up from portfolio asset-class totals
 - Liquid assets, fixed assets, investments, loans, overdrafts, and other debt
 - Net worth dashboard with allocation charts and rule-based financial guidance
 - Portal-level display currency preference with country/currency selector
@@ -174,6 +176,7 @@ Handle Supabase database access:
 - Read and write fundamentals
 - Read and write OHLC data
 - Read and write watchlists
+- Read and write portfolios, transactions, and manual portfolio assets
 - Read and write wealth settings and balance-sheet items
 
 Repositories should not call external APIs.
@@ -234,6 +237,7 @@ Never expose the service role key to the browser.
 - `user_watchlist`
 - `portfolios`
 - `portfolio_transactions`
+- `portfolio_manual_assets`
 - `wealth_user_settings`
 - `wealth_items`
 
@@ -478,14 +482,16 @@ Initial portfolio scope:
 - Multiple named portfolios per signed-in user
 - Buy and sell transactions by ticker
 - Quantity, trade date, execution price, fees, and notes
+- Manual assets for real estate, crypto, commodities such as gold or oil, and other non-stock holdings
+- Manual asset valuation fields: quantity, current value, optional cost basis, currency, as-of date, and notes
 - Holdings calculated from transactions using average-cost accounting
 - Current market value from cached `quotes_latest`
 - Realized gain from sell transactions
 - Unrealized gain and return percent for open holdings
-- Portfolio total value, invested capital, realized gain, unrealized gain, and total return
+- Portfolio total value, invested capital, realized gain, unrealized gain, total return, and asset-class totals
 
 Portfolio data is private to the owning user through RLS. Market prices still come from the shared market-data cache.
-The database also enforces portfolio ownership at the transaction level with a composite `(portfolio_id, user_id)` foreign key, so a transaction cannot be attached to another user's portfolio even if application code is wrong.
+The database also enforces portfolio ownership at the transaction and manual-asset level with composite `(portfolio_id, user_id)` foreign keys, so rows cannot be attached to another user's portfolio even if application code is wrong.
 
 ## Wealth Manager Module
 
@@ -553,7 +559,7 @@ The UI labels this as educational guidance, not licensed financial advice.
 
 - User-entered wealth data does not use market-data providers.
 - Reads and writes use the authenticated Supabase server client; RLS restricts rows to `auth.uid()`.
-- Stock portfolio market value is not auto-merged; users may add investment entries manually for a complete net-worth picture.
+- Portfolio asset-class totals are auto-merged into Wealth as generated read-only asset rows. Stocks, crypto, commodities, and other manual portfolio assets are treated as investments; real estate is treated as a fixed asset.
 - The Wealth top panel owns the current portal display currency. The current implementation applies it across Wealth totals and establishes the shared preference for later portfolio, market, and planning screens.
 
 ### UI
@@ -564,7 +570,7 @@ The UI labels this as educational guidance, not licensed financial advice.
 - Bar comparison of assets vs liabilities
 - Add/edit balance-sheet entries in a modal (`WealthEntryModal`) with dynamic category and subcategory options (`WealthItemForm` client component)
 - Balance-sheet table grouped into assets and liabilities
-- Link to `/portfolio` for optional manual alignment with brokerage holdings
+- Read-only synced portfolio rows link back to `/portfolio` for edits at the source
 
 ## Dashboard UI
 

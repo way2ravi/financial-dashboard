@@ -438,7 +438,7 @@ export type Database = {
         };
         Relationships: [];
       };
-      portfolio_transactions: {
+        portfolio_transactions: {
         Row: {
           id: number;
           portfolio_id: number;
@@ -478,9 +478,60 @@ export type Database = {
           notes?: string | null;
           created_at?: string;
         };
-        Relationships: [];
-      };
-      portfolios: {
+          Relationships: [];
+        };
+        portfolio_manual_assets: {
+          Row: {
+            id: number;
+            portfolio_id: number;
+            user_id: string;
+            asset_type: string;
+            name: string;
+            symbol: string | null;
+            quantity: number;
+            current_value: number;
+            cost_basis: number | null;
+            currency: string;
+            as_of_date: string;
+            notes: string | null;
+            created_at: string;
+            updated_at: string;
+          };
+          Insert: {
+            id?: number;
+            portfolio_id: number;
+            user_id: string;
+            asset_type: string;
+            name: string;
+            symbol?: string | null;
+            quantity?: number;
+            current_value: number;
+            cost_basis?: number | null;
+            currency?: string;
+            as_of_date?: string;
+            notes?: string | null;
+            created_at?: string;
+            updated_at?: string;
+          };
+          Update: {
+            id?: number;
+            portfolio_id?: number;
+            user_id?: string;
+            asset_type?: string;
+            name?: string;
+            symbol?: string | null;
+            quantity?: number;
+            current_value?: number;
+            cost_basis?: number | null;
+            currency?: string;
+            as_of_date?: string;
+            notes?: string | null;
+            created_at?: string;
+            updated_at?: string;
+          };
+          Relationships: [];
+        };
+        portfolios: {
         Row: {
           id: number;
           user_id: string;

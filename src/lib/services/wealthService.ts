@@ -29,6 +29,7 @@ import {
 } from "@/lib/types/wealth";
 import { isSupportedPortalCurrency } from "@/lib/types/currency";
 import { AppError } from "./errors";
+import { getPortfolioSummariesForUser } from "./portfolioService";
 
 type DbClient = SupabaseClient<Database>;
 
@@ -40,10 +41,12 @@ export async function getWealthDashboardForUser(
     return emptyDashboard();
   }
 
-  const [settings, items] = await Promise.all([
+  const [settings, wealthItems, portfolioSummaries] = await Promise.all([
     getWealthUserSettings(supabase, user.id),
     getWealthItemsForUser(supabase, user.id),
+    getPortfolioSummariesForUser(supabase, user),
   ]);
+  const items = [...wealthItems, ...buildPortfolioWealthItems(user.id, portfolioSummaries)];
 
   const dashboard = buildWealthDashboard(settings, items);
   const snapshots = await getSnapshotsSafely(supabase, user.id, dashboard);
@@ -217,6 +220,42 @@ function buildWealthDashboard(
   };
 
   return metrics;
+}
+
+function buildPortfolioWealthItems(
+  userId: string,
+  summaries: Awaited<ReturnType<typeof getPortfolioSummariesForUser>>
+): WealthItem[] {
+  let nextId = -1;
+  const today = new Date().toISOString().slice(0, 10);
+  const items: WealthItem[] = [];
+
+  for (const summary of summaries) {
+    for (const total of summary.assetClassTotals) {
+      if (total.value <= 0) {
+        continue;
+      }
+
+      const fixedAsset = total.key === "real_estate";
+      items.push({
+        id: nextId--,
+        userId,
+        recordType: "asset",
+        category: fixedAsset ? "fixed" : "investment",
+        subcategory: fixedAsset ? "real_estate" : `portfolio_${total.key}`,
+        name: `${summary.portfolio.name} - ${total.label}`,
+        currentValue: total.value,
+        interestRate: null,
+        monthlyPayment: null,
+        asOfDate: today,
+        notes: "Synced from Portfolio",
+        createdAt: today,
+        updatedAt: today,
+      });
+    }
+  }
+
+  return items;
 }
 
 async function getSnapshotsSafely(

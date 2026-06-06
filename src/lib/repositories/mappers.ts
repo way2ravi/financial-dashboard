@@ -9,6 +9,7 @@ import type {
   FundamentalsSnapshot,
   OhlcDaily,
   Portfolio,
+  PortfolioManualAsset,
   PortfolioTransaction,
   QuoteLatest,
   Ticker,
@@ -262,6 +263,27 @@ export function mapPortfolioTransaction(
     fees: row.fees,
     notes: row.notes,
     createdAt: row.created_at,
+  };
+}
+
+export function mapPortfolioManualAsset(
+  row: Tables["portfolio_manual_assets"]["Row"]
+): PortfolioManualAsset {
+  return {
+    id: row.id,
+    portfolioId: row.portfolio_id,
+    userId: row.user_id,
+    assetType: row.asset_type as PortfolioManualAsset["assetType"],
+    name: row.name,
+    symbol: row.symbol,
+    quantity: row.quantity,
+    currentValue: row.current_value,
+    costBasis: row.cost_basis,
+    currency: row.currency,
+    asOfDate: row.as_of_date,
+    notes: row.notes,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 

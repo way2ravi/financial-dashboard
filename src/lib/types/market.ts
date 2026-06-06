@@ -278,6 +278,28 @@ export type Portfolio = {
 };
 
 export type PortfolioTransactionType = "buy" | "sell";
+export type PortfolioManualAssetType =
+  | "crypto"
+  | "commodity"
+  | "real_estate"
+  | "other";
+
+export type PortfolioManualAsset = {
+  id: number;
+  portfolioId: number;
+  userId: string;
+  assetType: PortfolioManualAssetType;
+  name: string;
+  symbol: string | null;
+  quantity: number;
+  currentValue: number;
+  costBasis: number | null;
+  currency: string;
+  asOfDate: string;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
 
 export type PortfolioTransaction = {
   id: number;
@@ -306,6 +328,12 @@ export type PortfolioHolding = {
   realizedGain: number;
 };
 
+export type PortfolioAssetClassTotal = {
+  key: "stocks" | PortfolioManualAssetType;
+  label: string;
+  value: number;
+};
+
 export type PortfolioSummary = {
   portfolio: Portfolio;
   investedCapital: number;
@@ -318,6 +346,8 @@ export type PortfolioSummary = {
   closedPositions: number;
   openPositions: number;
   tradeCount: number;
+  manualAssets: PortfolioManualAsset[];
+  assetClassTotals: PortfolioAssetClassTotal[];
   holdings: PortfolioHolding[];
   transactions: PortfolioTransaction[];
 };

@@ -1,10 +1,13 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import {
+  addPortfolioManualAsset,
   addPortfolioTransaction,
   createPortfolio,
+  deletePortfolioManualAsset,
   deletePortfolioTransaction,
   findTickerBySymbol,
   getLatestQuotesByTickerId,
+  getPortfolioManualAssets,
   getPortfolioById,
   getPortfolioTransactions,
   getUserPortfolios,
@@ -12,7 +15,9 @@ import {
 import type { Database } from "@/lib/types/database";
 import type {
   Portfolio,
+  PortfolioAssetClassTotal,
   PortfolioHolding,
+  PortfolioManualAssetType,
   PortfolioSummary,
   PortfolioTransaction,
   PortfolioTransactionType,
@@ -127,6 +132,65 @@ export async function addTransactionForUser(
   });
 }
 
+export async function addManualAssetForUser(
+  supabase: DbClient,
+  user: User | null,
+  input: {
+    portfolioId: number;
+    assetType: PortfolioManualAssetType;
+    name: string;
+    symbol?: string | null;
+    quantity: number;
+    currentValue: number;
+    costBasis?: number | null;
+    currency?: string | null;
+    asOfDate: string;
+    notes?: string | null;
+  }
+): Promise<void> {
+  if (!user) {
+    throw new AppError("You must be signed in to add portfolio assets", 401);
+  }
+
+  const portfolio = await getPortfolioById(supabase, user.id, input.portfolioId);
+
+  if (!portfolio) {
+    throw new AppError("Portfolio was not found", 404);
+  }
+
+  const name = input.name.trim();
+
+  if (!name) {
+    throw new AppError("Asset name is required", 400);
+  }
+
+  if (!["crypto", "commodity", "real_estate", "other"].includes(input.assetType)) {
+    throw new AppError("Asset type is invalid", 400);
+  }
+
+  if (input.quantity <= 0 || input.currentValue < 0 || (input.costBasis ?? 0) < 0) {
+    throw new AppError("Quantity, value, and cost basis must be valid positive values", 400);
+  }
+
+  if (!input.asOfDate) {
+    throw new AppError("Valuation date is required", 400);
+  }
+
+  await addPortfolioManualAsset(supabase, {
+    userId: user.id,
+    portfolioId: portfolio.id,
+    assetType: input.assetType,
+    name,
+    symbol: input.symbol?.trim().toUpperCase() || null,
+    quantity: input.quantity,
+    currentValue: input.currentValue,
+    costBasis: input.costBasis ?? null,
+    currency: normalizeCurrency(input.currency ?? portfolio.baseCurrency),
+    asOfDate: input.asOfDate,
+    notes: input.notes?.trim() || null,
+  });
+}
+
 export async function removeTransactionForUser(
   supabase: DbClient,
   user: User | null,
@@ -139,16 +203,31 @@ export async function removeTransactionForUser(
   await deletePortfolioTransaction(supabase, user.id, transactionId);
 }
 
+export async function removeManualAssetForUser(
+  supabase: DbClient,
+  user: User | null,
+  assetId: number
+): Promise<void> {
+  if (!user) {
+    throw new AppError("You must be signed in to remove portfolio assets", 401);
+  }
+
+  await deletePortfolioManualAsset(supabase, user.id, assetId);
+}
+
 async function buildPortfolioSummary(
   supabase: DbClient,
   userId: string,
   portfolio: Portfolio
 ): Promise<PortfolioSummary> {
   const transactions = await getPortfolioTransactions(supabase, userId, portfolio.id);
+  const manualAssets = await getPortfolioManualAssets(supabase, userId, portfolio.id);
   const tickerIds = [...new Set(transactions.map((item) => item.ticker.id))];
   const quotes = await getLatestQuotesByTickerId(supabase, tickerIds);
   const { openHoldings, totalRealizedGain } = buildHoldings(transactions, quotes);
-  const marketValue = sum(openHoldings.map((holding) => holding.marketValue ?? 0));
+  const manualAssetsValue = sum(manualAssets.map((asset) => asset.currentValue));
+  const stockMarketValue = sum(openHoldings.map((holding) => holding.marketValue ?? 0));
+  const marketValue = stockMarketValue + manualAssetsValue;
   const holdings = openHoldings.map((holding) => ({
     ...holding,
     allocationPercent:
@@ -181,11 +260,47 @@ async function buildPortfolioSummary(
     totalGainPercent:
       investedCapital > 0 ? (totalGain / investedCapital) * 100 : null,
     closedPositions: getClosedPositionCount(transactions, holdings),
-    openPositions: holdings.length,
+    openPositions: holdings.length + manualAssets.length,
     tradeCount: transactions.length,
+    manualAssets,
+    assetClassTotals: buildAssetClassTotals(stockMarketValue, manualAssets),
     holdings,
     transactions,
   };
+}
+
+function buildAssetClassTotals(
+  stockMarketValue: number,
+  manualAssets: Awaited<ReturnType<typeof getPortfolioManualAssets>>
+): PortfolioAssetClassTotal[] {
+  const totals = new Map<PortfolioAssetClassTotal["key"], PortfolioAssetClassTotal>();
+
+  if (stockMarketValue > 0) {
+    totals.set("stocks", { key: "stocks", label: "Stocks", value: stockMarketValue });
+  }
+
+  manualAssets.forEach((asset) => {
+    const current = totals.get(asset.assetType) ?? {
+      key: asset.assetType,
+      label: getManualAssetTypeLabel(asset.assetType),
+      value: 0,
+    };
+    current.value += asset.currentValue;
+    totals.set(asset.assetType, current);
+  });
+
+  return [...totals.values()].filter((total) => total.value > 0);
+}
+
+export function getManualAssetTypeLabel(assetType: PortfolioManualAssetType) {
+  const labels: Record<PortfolioManualAssetType, string> = {
+    crypto: "Crypto",
+    commodity: "Commodities",
+    real_estate: "Real estate",
+    other: "Other assets",
+  };
+
+  return labels[assetType];
 }
 
 function buildHoldings(
