@@ -253,11 +253,11 @@ function RangeLevelsPanel({
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="text-[11px] font-medium uppercase tracking-normal app-muted">
-            Low / high by interval
+            Interval lows / highs
           </div>
           <p className="mt-1 text-xs leading-5 app-muted">
-            Shows where the latest close sits inside each cached trading range. Near lows can mark
-            risk zones; near highs can mark breakout or resistance zones.
+            Shows the absolute low and high inside each cached trading interval. These are period
+            boundaries, while support/resistance levels are nearest actionable price areas.
           </p>
         </div>
         <div className="rounded-lg border app-surface px-3 py-2 text-right">
@@ -275,8 +275,8 @@ function RangeLevelsPanel({
           <thead className="app-surface">
             <tr className="uppercase tracking-normal app-muted">
               <th className="border-b app-border-soft px-3 py-2 font-semibold">Interval</th>
-              <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">Low</th>
-              <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">High</th>
+              <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">Interval low</th>
+              <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">Interval high</th>
               <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">From low</th>
               <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">From high</th>
               <th className="border-b app-border-soft px-3 py-2 font-semibold">Position</th>

@@ -23,6 +23,8 @@ import {
   getSecFinancialStatements,
   getTwelveDataDailyOhlc,
   getTwelveDataQuote,
+  getZerodhaDailyOhlc,
+  getZerodhaQuote,
 } from "@/lib/providers";
 import {
   findTickerBySymbol,
@@ -46,6 +48,7 @@ import type {
   RefreshResult,
   RefreshScope,
   SymbolRefreshResult,
+  Ticker,
 } from "@/lib/types/market";
 import { AppError } from "./errors";
 
@@ -64,6 +67,7 @@ export async function refreshQuoteForSymbol(
 
   try {
     const quote = await tryProviderFallbacks(supabase, normalizedSymbol, "quote", [
+      ...getZerodhaQuoteProvider(ticker, normalizedSymbol),
       { provider: "finnhub", run: () => getFinnhubQuote(normalizedSymbol) },
       { provider: "twelve_data", run: () => getTwelveDataQuote(normalizedSymbol) },
       { provider: "alpha_vantage", run: () => getAlphaVantageQuote(normalizedSymbol) },
@@ -116,6 +120,7 @@ export async function refreshMarketDataForSymbol(
       module: "quote",
       run: async () => {
         const quote = await tryProviderFallbacks(supabase, normalizedSymbol, "quote", [
+          ...getZerodhaQuoteProvider(ticker, normalizedSymbol),
           { provider: "finnhub", run: () => getFinnhubQuote(normalizedSymbol) },
           { provider: "twelve_data", run: () => getTwelveDataQuote(normalizedSymbol) },
           {
@@ -251,6 +256,7 @@ export async function refreshMarketDataForSymbol(
       module: "ohlc",
       run: async () => {
         const candles = await tryProviderFallbacks(supabase, normalizedSymbol, "ohlc", [
+          ...getZerodhaDailyOhlcProvider(ticker, normalizedSymbol),
           {
             provider: "twelve_data",
             run: () => getTwelveDataDailyOhlc(normalizedSymbol),
@@ -434,6 +440,38 @@ async function tryProviderFallbacks<T>(
   }
 
   throw new Error(errors.join(" | "));
+}
+
+function getZerodhaQuoteProvider(ticker: Ticker, symbol: string) {
+  return isIndianTicker(ticker)
+    ? [
+        {
+          provider: "zerodha",
+          run: () => getZerodhaQuote(symbol, ticker.exchange),
+        },
+      ]
+    : [];
+}
+
+function getZerodhaDailyOhlcProvider(
+  ticker: Ticker,
+  symbol: string
+) {
+  return isIndianTicker(ticker)
+    ? [
+        {
+          provider: "zerodha",
+          run: () => getZerodhaDailyOhlc(symbol, 180, ticker.exchange),
+        },
+      ]
+    : [];
+}
+
+function isIndianTicker(ticker: Ticker) {
+  const exchange = ticker.exchange?.trim().toUpperCase();
+  const currency = ticker.currency?.trim().toUpperCase();
+
+  return exchange === "NSE" || exchange === "BSE" || currency === "INR";
 }
 
 function getErrorMessage(error: unknown, fallback: string) {

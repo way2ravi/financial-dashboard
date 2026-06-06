@@ -26,10 +26,11 @@ The dashboard should support:
 - OHLC price chart data
 - Dedicated volume analysis tab with buy/sell pressure and recent volume table
 - Consolidated stock summary with plain-English Buy / Hold / Sell-style indication
-- Technical analysis tab with indicators, interval lows/highs with plain-English advice, moving averages, support/resistance, and stop-loss guidance
+- Technical analysis tab with indicators, interval lows/highs with plain-English advice, moving averages, nearest actionable support/resistance, and stop-loss guidance
 - Company news and sentiment
 - Cached market data through Supabase
 - External provider refresh through isolated provider modules
+- Indian NSE/BSE equity search, quotes, and daily OHLC through Zerodha Kite Connect
 - Light, dark-blue, and black screen themes
 - Admin-controlled manual refresh
 
@@ -74,8 +75,10 @@ src/
           route.ts
     dashboard/
     earnings/
+    market/
     portfolio/
     screener/
+    stock/
     watchlist/
     wealth/
       page.tsx
@@ -95,6 +98,12 @@ src/
 
   lib/
     providers/
+      alphaVantageProvider.ts
+      finnhubProvider.ts
+      fmpProvider.ts
+      secProvider.ts
+      twelveDataProvider.ts
+      zerodhaProvider.ts
     repositories/
     services/
     supabase/
@@ -174,11 +183,18 @@ Repositories should not call external APIs.
 Handle external API calls only:
 
 - Finnhub
+- Financial Modeling Prep
+- Twelve Data
+- Alpha Vantage
+- SEC company facts
+- Zerodha Kite Connect
 - MarketData.app
 - EarningsAPI
 - Future providers
 
 Providers return normalized provider-level data to services. Provider-specific response shapes should not leak into UI or repositories.
+
+Zerodha support is server-only and optional. When `ZERODHA_API_KEY` and `ZERODHA_ACCESS_TOKEN` are configured, ticker search includes NSE/BSE equity instruments, cached Indian tickers use `INR`, and quote / daily OHLC refresh for NSE, BSE, or INR tickers tries Zerodha before the general provider fallback chain.
 
 ## Supabase Clients
 
@@ -601,6 +617,12 @@ Dashboard tabs:
 
 The primary dashboard refresh action is ticker selection/search. Signed-in users can trigger provider refreshes that fetch quote, analyst ratings, price targets, earnings, fundamentals, financial statements, OHLC, and news for the requested symbol before navigation. The server-rendered dashboard also performs a tab-aware completeness check for signed-in users: if the selected tab needs missing data, such as fewer than 30 cached OHLC rows for Technical or Volume, it refreshes the symbol before rendering that tab.
 
+Technical-analysis terminology:
+
+- Interval lows/highs are absolute period boundaries for cached ranges such as 5D, 1M, 3M, and 6M.
+- Nearest actionable support/resistance is calculated around the latest close from recent cached candles and may differ from interval extremes.
+- UI copy should keep those concepts separate so users do not confuse range boundaries with nearby trading levels.
+
 ## Watchlist Page
 
 The watchlist is a dedicated top-level page:
@@ -621,11 +643,27 @@ Initial provider candidates:
 - Financial Modeling Prep for quote, OHLC, analyst rating, price target, fundamentals, and financial-statement fallback
 - SEC company facts for US financial-statement fallback when paid provider plans block statement endpoints
 - Finnhub and Alpha Vantage for company news fallback
+- Zerodha Kite Connect for NSE/BSE equity search, quote, and daily OHLC when Kite credentials are configured
 - MarketData.app for analyst data and earnings alternatives
 - EarningsAPI for broad earnings calendar data
 
 Provider choice should remain swappable.
 Refresh services should try providers in module-specific order and cache the first successful normalized response.
+
+Current refresh behavior:
+
+- Ticker search reads Supabase first, then tries Zerodha, Finnhub, Twelve Data, and Alpha Vantage provider search.
+- Quote refresh tries Zerodha first for Indian tickers, then Finnhub, Twelve Data, Alpha Vantage, and FMP.
+- Daily OHLC refresh tries Zerodha first for Indian tickers, then Twelve Data, Alpha Vantage, Finnhub, and FMP.
+- Fundamentals, financial statements, analyst data, earnings, and news use the existing module-specific provider fallback lists.
+- Provider failures are isolated per module and summarized in refresh responses.
+
+Zerodha operational notes:
+
+- Required environment variables: `ZERODHA_API_KEY` and `ZERODHA_ACCESS_TOKEN`.
+- Access tokens come from Zerodha's login/session flow and may need manual rotation.
+- Instrument metadata is fetched from Kite's NSE/BSE instrument endpoints and cached in memory for one day.
+- Symbols with `NSE:`, `BSE:`, `.NS`, or `.BO` are normalized before instrument lookup.
 
 ## Security Rules
 

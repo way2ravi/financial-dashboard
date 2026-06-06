@@ -21,6 +21,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 FINNHUB_API_KEY=
 MARKETDATA_API_KEY=
+ZERODHA_API_KEY=
+ZERODHA_ACCESS_TOKEN=
 CRON_SECRET=
 ```
 
@@ -29,6 +31,7 @@ CRON_SECRET=
 `FINNHUB_API_KEY` is required for the admin `Full` refresh, `Quick` refresh, and scheduled cron refresh.
 `CRON_SECRET` is required only for `/api/cron/refresh`; use a long random value and set the same value in Vercel.
 `MARKETDATA_API_KEY` is included for the planned secondary provider path and can stay blank for the current Finnhub-only build.
+`ZERODHA_API_KEY` and `ZERODHA_ACCESS_TOKEN` enable Indian NSE/BSE equity search, quotes, and daily OHLC through Kite Connect. The access token is generated through Zerodha's login/session flow and should be rotated whenever Zerodha invalidates the session.
 
 ## Supabase Setup
 
@@ -69,7 +72,7 @@ src/lib/supabase/wealth.sql
 - `/api/admin/refresh/[symbol]`
 - `/api/cron/refresh`
 
-The dashboard ticker `Load` action searches/caches the symbol and refreshes quote, analyst ratings, price targets, earnings, fundamentals, and OHLC before opening the dashboard.
+The dashboard ticker `Load` action searches/caches the symbol and refreshes quote, analyst ratings, price targets, earnings, fundamentals, and OHLC before opening the dashboard. For NSE/BSE symbols, quote and OHLC refresh prefer Zerodha when its environment variables are configured.
 The earnings page reads the Supabase earnings calendar cache first and refreshes the selected date from Finnhub when no rows are cached or when `refresh=1` is requested.
 
 ## Verification

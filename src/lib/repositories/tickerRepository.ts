@@ -200,7 +200,7 @@ export async function upsertTickerSearchResults(
     name: result.description,
     sector: null,
     industry: result.type,
-    currency: "USD",
+    currency: result.currency ?? inferCurrency(result.exchange),
     logo_url: null,
     is_active: true,
     updated_at: new Date().toISOString(),
@@ -319,6 +319,16 @@ function omitLogoUrl<T extends { logo_url?: string | null }>(row: T) {
   void _logoUrl;
 
   return rest;
+}
+
+function inferCurrency(exchange: string | null) {
+  const normalizedExchange = exchange?.trim().toUpperCase();
+
+  if (normalizedExchange === "NSE" || normalizedExchange === "BSE") {
+    return "INR";
+  }
+
+  return "USD";
 }
 
 function isMissingLogoColumn(error: unknown) {

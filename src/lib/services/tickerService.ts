@@ -3,6 +3,7 @@ import {
   searchAlphaVantageSymbols,
   searchFinnhubSymbols,
   searchTwelveDataSymbols,
+  searchZerodhaSymbols,
 } from "@/lib/providers";
 import {
   findTickerBySymbol,
@@ -68,6 +69,7 @@ async function searchTickerProviders(
   limit: number
 ) {
   const providers = [
+    { provider: "zerodha", run: () => searchZerodhaSymbols(query, limit) },
     { provider: "finnhub", run: () => searchFinnhubSymbols(query, limit) },
     { provider: "twelve_data", run: () => searchTwelveDataSymbols(query, limit) },
     { provider: "alpha_vantage", run: () => searchAlphaVantageSymbols(query, limit) },

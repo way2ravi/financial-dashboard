@@ -5,7 +5,8 @@ export type ProviderName =
   | "marketdata"
   | "manual"
   | "twelve_data"
-  | "unknown";
+  | "unknown"
+  | "zerodha";
 
 export type StockExchange = "NYSE" | "NASDAQ" | "AMEX" | "OTC" | string;
 
@@ -29,6 +30,7 @@ export type ProviderTickerSearchResult = {
   description: string | null;
   type: string | null;
   exchange: string | null;
+  currency?: string | null;
   source: ProviderName | string;
 };
 
