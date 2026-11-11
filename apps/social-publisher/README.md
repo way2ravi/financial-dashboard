@@ -17,7 +17,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3001. In this checkout, the installed parent dependencies also support running `npm run dev` directly. For a clean checkout or independent deployment, install this app's dependencies. Production checks:
+Open http://localhost:3001. Install dependencies in this app's directory before running it; its build is isolated from the parent dashboard. Production checks:
 
 ```powershell
 npm run typecheck
@@ -38,7 +38,7 @@ npm run build
 
 ## Hosting at sm.way2investing.com
 
-The existing financial dashboard targets Vercel; this standalone Next.js project can be deployed as a second project from the same repository. Set its **Root Directory** to `apps/social-publisher`, framework to Next.js, and build command to `npm run build`. Configure monorepo access to files outside the root if the host requires it, or deploy a copy of this directory independently. `next.config.ts` currently sets the Turbopack filesystem root to the repository root for local shared dependencies.
+The existing financial dashboard targets Vercel; this standalone Next.js project can be deployed as a second project from the same repository. Set its **Root Directory** to `apps/social-publisher`, framework to Next.js, install command to `npm ci --include=dev`, and build command to `npm run build`. Leave the output directory at the Next.js default. The app has its own lockfile and plain-CSS PostCSS configuration. Turbopack and file tracing use the app directory, so the build does not require the dashboard's Tailwind dependencies or configuration.
 
 Add `sm.way2investing.com` as the new project's production domain. Use the **exact DNS records returned by the chosen host**; do not assume a generic CNAME target or change the existing apex/other subdomains. Verify domain ownership, DNS propagation, and HTTPS before configuring production OAuth callback URLs. Hosting/DNS have not been changed by this implementation.
 
