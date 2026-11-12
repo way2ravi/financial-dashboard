@@ -64,16 +64,16 @@ export function DashboardTabs({
 }: Props) {
   return (
     <section className="space-y-3">
-      <div className="overflow-x-auto rounded-lg border app-surface p-1 shadow-sm">
+      <div className="research-tabs overflow-x-auto border-b app-border-soft">
         <div className="flex min-w-max gap-1">
           {tabs.map((tab) => (
             <Link
               key={tab.id}
               aria-current={activeTab === tab.id ? "page" : undefined}
-              className={`rounded-md px-3 py-2 text-xs font-semibold transition ${
+              className={`border-b-2 px-3 py-3 text-xs font-semibold transition ${
                 activeTab === tab.id
-                  ? "bg-[var(--app-primary)] text-white shadow-sm"
-                  : "app-muted hover:bg-[color-mix(in_srgb,var(--app-teal)_14%,transparent)] hover:text-[var(--app-primary)]"
+                  ? "border-[var(--app-primary)] text-[var(--app-primary)]"
+                  : "border-transparent app-muted hover:text-[var(--app-primary)]"
               }`}
               href={dashboardTabHref(data.ticker.symbol, tab.id)}
             >

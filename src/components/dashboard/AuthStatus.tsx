@@ -10,12 +10,20 @@ export async function AuthStatus() {
 
   if (!user) {
     return (
-      <Link
-        href="/login"
-        className="h-10 rounded-lg border app-secondary-button px-4 py-2 text-sm font-semibold"
-      >
-        Sign in
-      </Link>
+      <div className="flex shrink-0 flex-wrap items-center gap-2">
+        <Link
+          href="/login"
+          className="inline-flex h-10 items-center justify-center whitespace-nowrap rounded-lg border app-secondary-button px-4 text-sm font-semibold"
+        >
+          Sign in
+        </Link>
+        <Link
+          href="/login#create-account"
+          className="inline-flex h-10 items-center justify-center whitespace-nowrap rounded-lg app-primary-button px-4 text-sm font-semibold"
+        >
+          Get Free Account
+        </Link>
+      </div>
     );
   }
 

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const tabs = [
-  { key: "dashboard", label: "Home", href: "/dashboard" },
+  { key: "home", label: "Home", href: "/" },
   { key: "stock", label: "Stock", href: "/stock" },
   { key: "market", label: "Market", href: "/market" },
   { key: "watchlist", label: "Watchlist", href: "/watchlist" },
@@ -23,7 +23,7 @@ export function MobileAppNav() {
   return (
     <nav
       aria-label="Mobile navigation"
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-[var(--app-border)] bg-white/95 px-2 pb-[max(0.65rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(10,58,103,0.12)] backdrop-blur md:hidden"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-[var(--app-border)] bg-white px-2 pb-[max(0.65rem,env(safe-area-inset-bottom))] pt-2 md:hidden"
     >
       <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
         {tabs.map((tab) => {

@@ -42,7 +42,7 @@ export function OverviewStrip({ data, showDataSource = false }: Props) {
                 <span>{data.ticker.sector}</span>
               </div>
               <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                <h1 className="brand-display text-3xl font-bold tracking-normal text-white">
+                <h1 className="brand-display text-3xl font-bold tracking-normal app-heading">
                   {data.ticker.symbol}
                 </h1>
                 <p className="text-sm text-[var(--app-header-muted)]">{data.ticker.name}</p>
@@ -62,7 +62,7 @@ export function OverviewStrip({ data, showDataSource = false }: Props) {
           </div>
         </div>
 
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
           <Metric label="Last price" value={formatCurrency(quote?.price)} />
           <Metric
             label="Day change"
@@ -95,7 +95,7 @@ function Metric({
         : "app-heading";
 
   return (
-    <div className="rounded-lg border border-white/15 bg-white/10 px-3 py-2.5 shadow-sm">
+    <div className="border-l app-border-soft px-3 py-2.5">
       <div className="text-[11px] font-medium uppercase tracking-normal text-[var(--app-header-muted)]">{label}</div>
       <div className={`mt-1 text-base font-semibold ${toneClass}`}>{value}</div>
     </div>

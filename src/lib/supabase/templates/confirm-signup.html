@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Confirm your Way2Investing account</title>
+  </head>
+  <body style="margin:0;padding:0;background-color:#f3f5f8;color:#24332f;font-family:Arial,Helvetica,sans-serif;">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Confirm your email to finish setting up your Way2Investing account.</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f5f8;">
+      <tr>
+        <td align="center" style="padding:32px 16px;">
+          <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="width:100%;max-width:560px;background-color:#ffffff;">
+            <tr>
+              <td style="padding:28px 24px;border-bottom:1px solid #e1e6eb;">
+                <a href="https://way2investing.com" style="color:#16604c;font-size:24px;font-weight:bold;text-decoration:none;">Way2Investing</a>
+                <p style="margin:8px 0 0;color:#586770;font-size:13px;line-height:20px;">Invest with clarity.</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:32px 24px;">
+                <h1 style="margin:0 0 16px;font-size:24px;line-height:32px;font-weight:bold;">Confirm your email address</h1>
+                <p style="margin:0 0 24px;font-size:16px;line-height:25px;">Welcome to Way2Investing. Confirm your email to finish creating your account.</p>
+                <table role="presentation" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td bgcolor="#16604c" style="border-radius:4px;text-align:center;">
+                      <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&amp;type=email" style="display:inline-block;padding:14px 24px;border:1px solid #16604c;border-radius:4px;color:#ffffff;font-size:16px;font-weight:bold;text-decoration:none;">Confirm my email</a>
+                    </td>
+                  </tr>
+                </table>
+                <p style="margin:24px 0 8px;color:#586770;font-size:13px;line-height:21px;">If the button does not work, open this link in your browser:</p>
+                <p style="margin:0;font-size:12px;line-height:20px;word-break:break-all;overflow-wrap:anywhere;">
+                  <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&amp;type=email" style="color:#16604c;">{{ .RedirectTo }}?token_hash={{ .TokenHash }}&amp;type=email</a>
+                </p>
+                <p style="margin:24px 0 0;color:#586770;font-size:13px;line-height:21px;">Use the latest confirmation email. If your link has expired, request a new one from the sign-in page.</p>
+                <p style="margin:16px 0 0;color:#586770;font-size:13px;line-height:21px;">If you did not create a Way2Investing account, you can ignore this email.</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:20px 24px;border-top:1px solid #e1e6eb;color:#586770;font-size:12px;line-height:20px;">
+                Way2Investing<br />
+                <a href="https://way2investing.com" style="color:#16604c;">way2investing.com</a>
+                <p style="margin:8px 0 0;">This is an automated email. Replies to this address are not monitored.</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

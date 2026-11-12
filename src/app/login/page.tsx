@@ -1,4 +1,4 @@
-import { signIn, signUp } from "@/app/auth/actions";
+import { resendConfirmation, signIn, signUp } from "@/app/auth/actions";
 import { BrandMark } from "@/components/dashboard/BrandMark";
 import { PageMessage } from "@/components/dashboard/PageMessage";
 
@@ -49,6 +49,14 @@ export default async function LoginPage({ searchParams }: Props) {
             showDisplayName
           />
         </div>
+        <form action={resendConfirmation} className="mt-5 max-w-md border-t app-border-soft pt-5">
+          <h2 className="text-sm font-semibold app-heading">Resend confirmation email</h2>
+          <p className="mb-4 mt-1 text-xs app-muted">Use this if your confirmation link expired or the email did not arrive.</p>
+          <Field label="Email" name="email" type="email" autoComplete="email" />
+          <button type="submit" className="mt-3 inline-flex h-10 items-center rounded-lg border app-secondary-button px-4 text-sm font-semibold">
+            Send new confirmation link
+          </button>
+        </form>
       </div>
     </main>
   );
@@ -68,7 +76,11 @@ function AuthForm({
   showDisplayName?: boolean;
 }) {
   return (
-    <form action={action} className="rounded-lg border app-surface p-5">
+    <form
+      id={showDisplayName ? "create-account" : "sign-in"}
+      action={action}
+      className="rounded-lg border app-surface p-5"
+    >
       <h2 className="text-lg font-semibold app-heading">{title}</h2>
       <p className="mt-1 text-sm app-muted">{description}</p>
 

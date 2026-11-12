@@ -1,16 +1,17 @@
 import Image from "next/image";
+import Link from "next/link";
 
-export function BrandMark() {
+export function BrandMark({ hero = false }: { hero?: boolean }) {
   return (
-    <div className="flex shrink-0 items-center">
+    <Link href="/" aria-label="Way2Investing home" className={`brand-mark ${hero ? "brand-mark-hero" : ""}`}>
       <Image
         src="/brand/way2investing-logo-filled-white.png"
         alt="Way2Investing"
         width={1603}
         height={460}
         priority
-        className="h-auto w-[180px] object-contain object-left drop-shadow-md sm:w-[220px] lg:w-[250px] xl:w-[280px]"
+        className="h-auto w-full object-contain"
       />
-    </div>
+    </Link>
   );
 }

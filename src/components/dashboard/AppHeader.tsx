@@ -29,7 +29,7 @@ export function AppHeader({ current, description, title }: Props) {
         </div>
 
         <div className="border-t border-white/15 pt-4">
-          <h1 className="brand-display text-2xl font-bold tracking-normal text-white">
+          <h1 className="brand-display text-2xl font-bold tracking-normal app-heading">
             {title}
           </h1>
           {description ? (

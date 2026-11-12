@@ -1,5 +1,7 @@
 # Financial Dashboard Handoff
 
+For the current full status, including completed work, verification status, and pending items, see [PROJECT_STATUS.md](./PROJECT_STATUS.md). The notes below are an older milestone handoff and may not include the latest wealth, market, Zerodha, screener, and multi-asset portfolio work.
+
 ## Built
 
 - Layered Next.js architecture with providers, repositories, services, Supabase clients, and typed market models.
@@ -10,6 +12,7 @@
 - Finnhub-backed refresh services for quote, analyst ratings, price targets, earnings, fundamentals, and OHLC data.
 - Admin dashboard refresh controls for `Quick` and `Full` refreshes.
 - Protected cron refresh endpoint with symbol-level failure isolation.
+- Enhanced per-stock Earnings tab with latest-report classification, four-quarter beat rate, EPS consistency, year-over-year growth, and market-reaction analysis.
 - Verification scripts: `npm.cmd run check` runs lint, TypeScript, and production build.
 
 ## Supabase Setup
@@ -45,6 +48,8 @@ CRON_SECRET=
 ```txt
 npm.cmd run check
 ```
+
+Last verified on 2026-09-03: ESLint, TypeScript, and the Next.js 16.2.6 production build passed. `npm install` reported seven high-severity advisories that still require a reviewed dependency-upgrade pass.
 
 ## Next Recommended Steps
 

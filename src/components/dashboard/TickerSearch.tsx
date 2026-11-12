@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Search } from "lucide-react";
 import type { Ticker } from "@/lib/types";
 import { TickerLogo } from "./TickerLogo";
 
@@ -25,34 +27,18 @@ const popularTickers: RecentTicker[] = [
   tickerShortcut("SOFI", "SoFi Technologies", "NASDAQ", "Equity"),
 ];
 
-const marketLinks = [
-  {
-    title: "Market posture",
-    description: "Fear, greed, global indices, and F&O readiness",
-    href: "/market",
-  },
-  {
-    title: "Today's earnings",
-    description: "Bullish and bearish earnings calendar filters",
-    href: "/earnings",
-  },
-  {
-    title: "Top movers",
-    description: "Gainers, losers, active stocks, highs, and lows",
-    href: "/screener",
-  },
-];
-
 export function TickerSearch({ initialSymbol }: Props) {
+  const router = useRouter();
   const containerRef = useRef<HTMLFormElement>(null);
   const [query, setQuery] = useState(initialSymbol);
   const [results, setResults] = useState<Ticker[]>([]);
+  const [resultsQuery, setResultsQuery] = useState("");
   const [recent, setRecent] = useState<RecentTicker[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const normalizedQuery = useMemo(() => query.trim().toUpperCase(), [query]);
-  const visibleResults = normalizedQuery ? results : [];
+  const visibleResults = normalizedQuery && resultsQuery === normalizedQuery ? results : [];
   const hasTypedQuery = normalizedQuery.length > 0;
   const suggestionGroups = hasTypedQuery
     ? [{ title: "Search Results", items: visibleResults }]
@@ -83,6 +69,7 @@ export function TickerSearch({ initialSymbol }: Props) {
         }
 
         setResults(body.data ?? []);
+        setResultsQuery(normalizedQuery);
       } catch (searchError) {
         if (controller.signal.aborted) {
           return;
@@ -116,7 +103,7 @@ export function TickerSearch({ initialSymbol }: Props) {
   }, []);
 
   function updateQuery(value: string) {
-    const nextQuery = value.toUpperCase();
+    const nextQuery = value;
 
     setQuery(nextQuery);
     setError(null);
@@ -151,28 +138,33 @@ export function TickerSearch({ initialSymbol }: Props) {
       action="/stock"
       method="get"
       className="relative w-full max-w-2xl"
-      onSubmit={() => {
+      onSubmit={(event) => {
+        event.preventDefault();
         if (normalizedQuery) {
-          rememberTicker(tickerShortcut(normalizedQuery, `${normalizedQuery} ticker`, null, null));
+          const selected = visibleResults[0] ?? tickerShortcut(normalizedQuery, `${normalizedQuery} ticker`, null, null);
+          rememberTicker(selected);
+          router.push(`/stock?symbol=${encodeURIComponent(selected.symbol)}&autoload=1`);
         }
       }}
     >
       <label htmlFor="ticker-symbol" className="sr-only">
         Search ticker
       </label>
-      <div className="flex h-10 items-center overflow-hidden rounded-lg border app-input shadow-sm">
+      <div className="flex h-10 items-center overflow-hidden rounded-lg border app-input focus-within:border-[var(--app-primary)]">
         <input
           id="ticker-symbol"
           name="symbol"
-          className="h-full min-w-0 flex-1 bg-transparent px-3 text-sm font-semibold uppercase outline-none"
+          className="h-full min-w-0 flex-1 bg-transparent px-4 text-sm outline-none"
           value={query}
-          maxLength={16}
+          maxLength={80}
+          required
           autoComplete="off"
-          placeholder="Search ticker or company..."
+          placeholder="Search for a company or ticker"
+          role="combobox"
+          aria-expanded={isOpen}
           aria-autocomplete="list"
           aria-controls="ticker-search-results"
           onChange={(event) => updateQuery(event.target.value)}
-          onInput={(event) => updateQuery(event.currentTarget.value)}
           onFocus={openSearch}
           onKeyDown={(event) => {
             if (event.key === "Escape") {
@@ -181,18 +173,18 @@ export function TickerSearch({ initialSymbol }: Props) {
           }}
         />
         <input type="hidden" name="autoload" value="1" />
-        <span className="flex h-full w-10 items-center justify-center border-l app-border-soft text-lg app-muted">
-          Q
-        </span>
+        <button type="submit" aria-label="Search stocks" title="Search stocks" className="flex h-full w-12 shrink-0 items-center justify-center app-muted hover:bg-[var(--app-subtle)]">
+          <Search size={18} aria-hidden="true" />
+        </button>
       </div>
 
       {isOpen ? (
         <div
           id="ticker-search-results"
-          className="absolute left-0 right-0 top-full z-30 mt-1 overflow-hidden rounded-lg border app-popover shadow-2xl lg:w-[760px] lg:max-w-[calc(100vw-2rem)]"
+          className="absolute left-0 right-0 top-full z-30 mt-1 max-h-[360px] overflow-y-auto rounded-lg border app-popover shadow-lg"
           role="listbox"
         >
-          <div className="grid lg:grid-cols-[1fr_300px]">
+          <div>
             <div className="min-w-0">
               {isLoading ? (
                 <div className="px-4 py-3 text-xs app-muted">Searching...</div>
@@ -215,29 +207,6 @@ export function TickerSearch({ initialSymbol }: Props) {
               ) : null}
             </div>
 
-            <aside className="hidden border-l app-border-soft app-subtle p-4 lg:block">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-sm font-semibold app-heading">Popular News</h3>
-                <Link href="/market" className="text-xs font-semibold app-muted hover:app-heading">
-                  More
-                </Link>
-              </div>
-              <div className="mt-3 space-y-3">
-                {marketLinks.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="block rounded-lg border app-surface px-3 py-2 hover:bg-[var(--app-surface-muted)]"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <span className="text-xs font-semibold app-heading">{item.title}</span>
-                    <span className="mt-1 block text-[11px] leading-4 app-muted">
-                      {item.description}
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            </aside>
           </div>
         </div>
       ) : null}

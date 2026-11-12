@@ -1,28 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f4f8fb;
+  --background: #f3f5f8;
   --foreground: #1f2933;
-  --app-bg: #f4f8fb;
+  --app-bg: #f3f5f8;
   --app-surface: #ffffff;
-  --app-surface-muted: #edf7f6;
-  --app-subtle: #edf7f6;
-  --app-border: #cfe1e5;
-  --app-border-soft: #e8f0f2;
+  --app-surface-muted: #f0f3f5;
+  --app-subtle: #f0f3f5;
+  --app-border: #d6dce2;
+  --app-border-soft: #e1e6eb;
   --app-text: #1f2933;
   --app-text-muted: #4a4a4a;
   --app-text-soft: #6d7b84;
-  --app-primary: #0a3a67;
-  --app-primary-hover: #082f54;
+  --app-primary: #16604c;
+  --app-primary-hover: #104a3a;
   --app-primary-text: #ffffff;
   --app-accent: #1dbf73;
   --app-accent-hover: #159e5e;
   --app-teal: #2bc7c4;
-  --app-positive: #1dbf73;
+  --app-positive: #168052;
   --app-negative: #d64550;
-  --app-header-bg: #0a3a67;
-  --app-header-text: #ffffff;
-  --app-header-muted: #b9d6e6;
+  --app-header-bg: #ffffff;
+  --app-header-text: #24332f;
+  --app-header-muted: #586770;
 }
 
 @theme inline {
@@ -64,9 +64,8 @@ body {
   }
 
   .app-brand-header {
-    border-color: color-mix(in srgb, var(--app-header-bg) 86%, #ffffff);
-    background:
-      linear-gradient(135deg, color-mix(in srgb, var(--app-header-bg) 96%, #000000), var(--app-header-bg) 68%, #0f547e);
+    border-color: var(--app-border-soft);
+    background: var(--app-header-bg);
     color: var(--app-header-text);
   }
 
@@ -81,14 +80,14 @@ body {
   }
 
   .app-brand-header .app-surface {
-    border-color: color-mix(in srgb, #ffffff 20%, transparent);
-    background: color-mix(in srgb, #ffffff 10%, transparent);
+    border-color: var(--app-border);
+    background: var(--app-surface);
     color: var(--app-header-text);
   }
 
   .app-brand-header .app-subtle {
-    border-color: color-mix(in srgb, #ffffff 16%, transparent);
-    background: color-mix(in srgb, #ffffff 8%, transparent);
+    border-color: var(--app-border);
+    background: var(--app-subtle);
     color: var(--app-header-text);
   }
 
@@ -184,4 +183,115 @@ body {
     color: var(--app-negative);
   }
 
+}
+
+.brand-mark {
+  display: block;
+  flex-shrink: 0;
+  width: 174px;
+  max-width: 100%;
+}
+
+.brand-mark img {
+  filter: brightness(0) saturate(100%);
+  opacity: 0.8;
+}
+
+.brand-mark-hero { width: 400px; }
+
+.app-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  min-width: 0;
+}
+
+.app-navigation-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  border-bottom: 2px solid transparent;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--app-text-muted);
+  white-space: nowrap;
+}
+
+.app-navigation-link:hover,
+.app-navigation-link[aria-current="page"] {
+  color: var(--app-primary);
+  border-bottom-color: var(--app-primary);
+}
+
+a:focus-visible, button:focus-visible, input:focus-visible {
+  outline: 2px solid var(--app-primary);
+  outline-offset: 3px;
+}
+
+.app-bg .shadow-sm { box-shadow: none; }
+.app-bg .rounded-lg { border-radius: 4px; }
+.app-bg section.app-surface {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.app-brand-header .border-white\/15 { border-color: var(--app-border-soft); }
+.app-brand-header h1.text-white { color: var(--app-text); }
+
+.home-screen { min-height: calc(100svh - 5rem); display: flex; flex-direction: column; }
+.home-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 32px;
+  padding: 16px 32px;
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+}
+.home-search {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  min-height: 510px;
+  padding: 64px 24px 100px;
+}
+.home-search-inner { width: 100%; max-width: 580px; text-align: center; }
+.home-search h1 { display: flex; justify-content: center; }
+.home-search form > div:first-of-type { height: 52px; background: white; box-shadow: none; }
+.stock-shortcut {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  border: 1px solid var(--app-border);
+  border-radius: 4px;
+  padding: 4px 12px;
+  color: var(--app-text-muted);
+}
+.stock-shortcut:hover { border-color: var(--app-primary); color: var(--app-primary); background: white; }
+.home-footer {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 32px 80px;
+  background: white;
+  border-top: 1px solid var(--app-border-soft);
+  padding: 32px max(24px, calc((100% - 1240px) / 2));
+}
+.home-footer a:hover { color: var(--app-primary); }
+
+@media (min-width: 768px) {
+  .home-screen { min-height: 100svh; }
+}
+@media (max-width: 767px) {
+  .home-header { padding: 16px 20px; }
+  .home-header .app-navigation { gap: 2px 14px; }
+  .home-search { min-height: 400px; padding: 52px 20px 72px; }
+  .brand-mark-hero { width: 320px; }
+  .home-footer { grid-template-columns: 1fr 1fr; gap: 28px; }
+  .home-footer > div:first-child { grid-column: 1 / -1; }
 }

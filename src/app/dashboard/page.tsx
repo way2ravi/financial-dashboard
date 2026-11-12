@@ -45,7 +45,7 @@ export default async function DashboardPage() {
     <main className="min-h-screen app-bg">
       <AppHeader
         current="dashboard"
-        title="Dashboard"
+        title="Personal Overview"
         description="A consolidated view of wealth, portfolios, market posture, watchlists, and stock news."
       />
 

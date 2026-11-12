@@ -1,4 +1,5 @@
 import type { EarningsQuarterly, FinancialStatements, OhlcDaily } from "@/lib/types";
+import { epsSurprisePercent, surprisePercent } from "@/lib/financial/metrics";
 import { DataFreshness, latestFreshness } from "./DataFreshness";
 import { formatCurrency, formatNumber } from "./format";
 
@@ -16,6 +17,17 @@ type EarningsReaction = {
   tone: "positive" | "negative" | "neutral";
 };
 
+type EarningsPulse = {
+  averageEpsSurprise: number | null;
+  beatCount: number;
+  comparableEpsGrowth: number | null;
+  comparableRevenueGrowth: number | null;
+  latestLabel: string;
+  latestTone: EarningsReaction["tone"];
+  reportedCount: number;
+  streak: { count: number; kind: "beat" | "miss" } | null;
+};
+
 export function EarningsTable({
   earnings,
   financialStatements,
@@ -25,6 +37,10 @@ export function EarningsTable({
   const freshness = latestFreshness(earnings);
   const candles = toValidCandles(ohlc);
   const quarterlyRevenue = getQuarterlyRevenueMap(financialStatements);
+  const rows = [...earnings]
+    .sort(compareEarningsNewestFirst)
+    .map((item) => buildEarningsRow(item, candles, quarterlyRevenue));
+  const pulse = buildEarningsPulse(rows);
 
   return (
     <section className="overflow-hidden rounded-lg border app-surface shadow-sm">
@@ -43,6 +59,7 @@ export function EarningsTable({
       ) : null}
       {earnings.length > 0 ? (
         <>
+          <EarningsPulsePanel pulse={pulse} rows={rows} />
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1120px] border-separate border-spacing-0 text-left text-xs">
           <thead className="app-subtle">
@@ -59,15 +76,7 @@ export function EarningsTable({
             </tr>
           </thead>
           <tbody>
-            {earnings.map((item) => {
-              const revenueActual =
-                item.revenueActual ?? getStatementRevenueForEarnings(item, quarterlyRevenue);
-              const revenueSurprise = getRevenueSurprisePercent(
-                revenueActual,
-                item.revenueEstimate
-              );
-              const reaction = getEarningsReaction(item, candles, revenueSurprise);
-
+            {rows.map(({ epsSurprise, item, reaction, revenueActual, revenueSurprise }) => {
               return (
                 <tr key={item.id} className="app-muted transition hover:bg-[var(--app-surface-muted)]">
                   <td className="border-b app-border-soft px-3 py-2.5 font-medium app-heading">
@@ -76,8 +85,8 @@ export function EarningsTable({
                   <td className="border-b app-border-soft px-3 py-2.5">{item.reportDate}</td>
                   <td className="border-b app-border-soft px-3 py-2.5 text-right">{formatNumber(item.epsActual)}</td>
                   <td className="border-b app-border-soft px-3 py-2.5 text-right">{formatNumber(item.epsEstimate)}</td>
-                  <td className={`border-b app-border-soft px-3 py-2.5 text-right ${getChangeClass(item.epsSurprisePercent ?? item.epsSurprise)}`}>
-                    {formatEpsSurprise(item.epsSurprise, item.epsSurprisePercent)}
+                  <td className={`border-b app-border-soft px-3 py-2.5 text-right ${getChangeClass(epsSurprise)}`}>
+                    <SurpriseValue amount={item.epsSurprise} percent={epsSurprise} />
                   </td>
                   <td className="border-b app-border-soft px-3 py-2.5 text-right">
                     {formatCurrency(revenueActual, true)}
@@ -87,7 +96,7 @@ export function EarningsTable({
                   </td>
                   <td className="border-b app-border-soft px-3 py-2.5 text-right">{formatCurrency(item.revenueEstimate, true)}</td>
                   <td className={`border-b app-border-soft px-3 py-2.5 text-right ${getChangeClass(revenueSurprise)}`}>
-                    {formatSignedPercent(revenueSurprise)}
+                    <SurpriseValue percent={revenueSurprise} />
                   </td>
                   <td className="border-b app-border-soft px-3 py-2.5">
                     <ReactionCell reaction={reaction} />
@@ -105,6 +114,94 @@ export function EarningsTable({
         </>
       ) : null}
     </section>
+  );
+}
+
+type EarningsRow = {
+  epsSurprise: number | null;
+  item: EarningsQuarterly;
+  reaction: EarningsReaction;
+  revenueActual: number | null;
+  revenueSurprise: number | null;
+};
+
+function buildEarningsRow(
+  item: EarningsQuarterly,
+  candles: Array<{ close: number; date: string }>,
+  quarterlyRevenue: Map<string, number | null>
+): EarningsRow {
+  const revenueActual =
+    item.revenueActual ?? getStatementRevenueForEarnings(item, quarterlyRevenue);
+  const revenueSurprise = surprisePercent(revenueActual, item.revenueEstimate);
+
+  return {
+    epsSurprise: epsSurprisePercent(item),
+    item,
+    reaction: getEarningsReaction(item, candles, revenueSurprise),
+    revenueActual,
+    revenueSurprise,
+  };
+}
+
+function EarningsPulsePanel({ pulse, rows }: { pulse: EarningsPulse; rows: EarningsRow[] }) {
+  const latest = rows[0];
+  const latestToneClass = getToneClass(pulse.latestTone);
+  const beatRate = pulse.reportedCount > 0 ? (pulse.beatCount / pulse.reportedCount) * 100 : null;
+
+  return (
+    <div className="border-b app-border-soft p-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <PulseCard
+          detail={latest ? `EPS ${formatSignedPercent(latest.epsSurprise)} · Revenue ${formatSignedPercent(latest.revenueSurprise)}` : "No reported quarter"}
+          label="Latest report"
+          toneClass={latestToneClass}
+          value={pulse.latestLabel}
+        />
+        <PulseCard
+          detail={`${pulse.beatCount} of ${pulse.reportedCount} reported quarters beat EPS estimates`}
+          label="Last four quarters"
+          toneClass={beatRate !== null && beatRate >= 75 ? "app-positive" : beatRate !== null && beatRate <= 25 ? "app-negative" : "app-heading"}
+          value={beatRate === null ? "No estimate data" : `${formatNumber(beatRate, 0)}% beat rate`}
+        />
+        <PulseCard
+          detail={pulse.streak ? `${pulse.streak.count} consecutive EPS ${pulse.streak.kind}${pulse.streak.count === 1 ? "" : "s"}` : "No current beat or miss streak"}
+          label="EPS consistency"
+          toneClass={pulse.streak?.kind === "beat" ? "app-positive" : pulse.streak?.kind === "miss" ? "app-negative" : "app-heading"}
+          value={pulse.averageEpsSurprise === null ? "Not available" : `${formatSignedPercent(pulse.averageEpsSurprise)} average`}
+        />
+        <PulseCard
+          detail={`Revenue ${formatGrowth(pulse.comparableRevenueGrowth)} versus the same quarter last year`}
+          label="Year-over-year growth"
+          toneClass={getChangeClass(pulse.comparableEpsGrowth)}
+          value={`EPS ${formatGrowth(pulse.comparableEpsGrowth)}`}
+        />
+      </div>
+      <p className="mt-3 text-[11px] leading-4 app-muted">
+        Beat rate and average surprise use up to four recent quarters with estimates. Growth compares
+        the latest result with the matching fiscal quarter from the prior year.
+      </p>
+    </div>
+  );
+}
+
+function PulseCard({ detail, label, toneClass, value }: { detail: string; label: string; toneClass: string; value: string }) {
+  return (
+    <div className="rounded-lg border app-subtle p-3">
+      <div className="text-[10px] font-semibold uppercase tracking-wide app-muted">{label}</div>
+      <div className={`mt-1 text-sm font-semibold ${toneClass}`}>{value}</div>
+      <div className="mt-1 text-[11px] leading-4 app-muted">{detail}</div>
+    </div>
+  );
+}
+
+function SurpriseValue({ amount, percent }: { amount?: number | null; percent: number | null }) {
+  if (percent === null) return <span>-</span>;
+
+  return (
+    <span>
+      {amount !== undefined && amount !== null ? `${formatNumber(amount)} / ` : ""}
+      <span className="font-semibold">{formatSignedPercent(percent)}</span>
+    </span>
   );
 }
 
@@ -129,26 +226,6 @@ function ReactionCell({ reaction }: { reaction: EarningsReaction }) {
   );
 }
 
-function getRevenueSurprisePercent(actual: number | null, estimate: number | null) {
-  if (actual === null || estimate === null || estimate === 0) {
-    return null;
-  }
-
-  return ((actual - estimate) / Math.abs(estimate)) * 100;
-}
-
-function formatEpsSurprise(value: number | null, percent: number | null) {
-  if (value === null && percent === null) {
-    return "-";
-  }
-
-  if (percent === null) {
-    return formatNumber(value);
-  }
-
-  return `${formatNumber(value)} / ${formatSignedPercent(percent)}`;
-}
-
 function formatSignedPercent(value: number | null) {
   if (value === null) {
     return "-";
@@ -157,6 +234,16 @@ function formatSignedPercent(value: number | null) {
   const formatted = `${formatNumber(value, 1)}%`;
 
   return value > 0 ? `+${formatted}` : formatted;
+}
+
+function formatGrowth(value: number | null) {
+  return value === null ? "not available" : formatSignedPercent(value);
+}
+
+function getToneClass(tone: EarningsReaction["tone"]) {
+  if (tone === "positive") return "app-positive";
+  if (tone === "negative") return "app-negative";
+  return "app-heading";
 }
 
 function getChangeClass(value: number | null) {
@@ -243,7 +330,7 @@ function getFundamentalOnlyReaction(
 
 function getEarningsScore(item: EarningsQuarterly, revenueSurprise: number | null) {
   let score = 0;
-  const epsSurprise = item.epsSurprisePercent ?? item.epsSurprise;
+  const epsSurprise = epsSurprisePercent(item);
 
   if (epsSurprise !== null) {
     if (epsSurprise >= 5) score += 1;
@@ -256,6 +343,103 @@ function getEarningsScore(item: EarningsQuarterly, revenueSurprise: number | nul
   }
 
   return score;
+}
+
+function buildEarningsPulse(rows: EarningsRow[]): EarningsPulse {
+  const recent = rows.slice(0, 4);
+  const reported = recent.filter((row) => row.epsSurprise !== null);
+  const beatCount = reported.filter((row) => (row.epsSurprise ?? 0) > 0).length;
+  const latest = rows[0];
+  const latestVerdict = getLatestVerdict(latest);
+  const comparable = latest
+    ? rows.find(
+        (row) =>
+          row.item.fiscalQuarter === latest.item.fiscalQuarter &&
+          row.item.fiscalYear === latest.item.fiscalYear - 1
+      )
+    : undefined;
+
+  return {
+    averageEpsSurprise:
+      reported.length > 0
+        ? reported.reduce((sum, row) => sum + (row.epsSurprise ?? 0), 0) / reported.length
+        : null,
+    beatCount,
+    comparableEpsGrowth: growthPercent(latest?.item.epsActual, comparable?.item.epsActual),
+    comparableRevenueGrowth: growthPercent(latest?.revenueActual, comparable?.revenueActual),
+    latestLabel: latestVerdict.label,
+    latestTone: latestVerdict.tone,
+    reportedCount: reported.length,
+    streak: getEpsStreak(rows),
+  };
+}
+
+function getLatestVerdict(row: EarningsRow | undefined): {
+  label: string;
+  tone: EarningsReaction["tone"];
+} {
+  if (!row) return { label: "No report", tone: "neutral" };
+
+  const results = [row.epsSurprise, row.revenueSurprise].filter(
+    (value): value is number => value !== null
+  );
+  const beats = results.filter((value) => value > 0).length;
+  const misses = results.filter((value) => value < 0).length;
+  let label = "In line";
+  let tone: EarningsReaction["tone"] = "neutral";
+
+  if (results.length === 2 && beats === 2) {
+    label = "Double beat";
+    tone = "positive";
+  } else if (results.length === 2 && misses === 2) {
+    label = "Double miss";
+    tone = "negative";
+  } else if (beats > 0 && misses === 0) {
+    label = "Beat estimates";
+    tone = "positive";
+  } else if (misses > 0 && beats === 0) {
+    label = "Missed estimates";
+    tone = "negative";
+  } else if (beats > 0 && misses > 0) {
+    label = "Mixed report";
+  } else if (results.length === 0) {
+    label = "Estimate data unavailable";
+  }
+
+  return { label, tone };
+}
+
+function compareEarningsNewestFirst(left: EarningsQuarterly, right: EarningsQuarterly) {
+  const leftKey = left.reportDate ?? `${left.fiscalYear}-${left.fiscalQuarter}`;
+  const rightKey = right.reportDate ?? `${right.fiscalYear}-${right.fiscalQuarter}`;
+  return rightKey.localeCompare(leftKey);
+}
+
+function getEpsStreak(rows: EarningsRow[]): EarningsPulse["streak"] {
+  const first = rows.find((row) => row.epsSurprise !== null)?.epsSurprise;
+
+  if (first === undefined || first === null || first === 0) return null;
+
+  const kind = first > 0 ? "beat" : "miss";
+  let count = 0;
+
+  for (const row of rows) {
+    if (row.epsSurprise === null) continue;
+    if ((kind === "beat" && row.epsSurprise <= 0) || (kind === "miss" && row.epsSurprise >= 0)) {
+      break;
+    }
+    count += 1;
+  }
+
+  return count > 0 ? { count, kind } : null;
+}
+
+function growthPercent(current: number | null | undefined, previous: number | null | undefined) {
+  if (current === null || current === undefined || previous === null || previous === undefined || previous === 0) {
+    return null;
+  }
+
+  return ((current - previous) / Math.abs(previous)) * 100;
 }
 
 function getReactionTone(initialMove: number, fiveDayMove: number | null): EarningsReaction["tone"] {
