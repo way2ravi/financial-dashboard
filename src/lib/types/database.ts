@@ -9,6 +9,18 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_content_controls: {
+        Row: { id: number; settings: Json; approval: Json | null; revision: number; updated_at: string };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      ai_content_audit: {
+        Row: { id: number; actor_id: string | null; actor_identity: string; changed_at: string; old_value: Json; new_value: Json };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       analyst_price_targets_snapshot: {
         Row: {
           id: number;
@@ -806,6 +818,10 @@ export type Database = {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      get_cached_screener_rows: { Args: Record<string, never>; Returns: { ticker_id: number; symbol: string; name: string | null; exchange: string | null; price: number | null; change: number | null; change_percent: number | null; volume: number | null; market_cap: number | null; pe: number | null; year_high: number | null; year_low: number | null }[] };
+      get_ai_content_policy: { Args: Record<string, never>; Returns: Json };
+      save_ai_content_controls: { Args: { new_settings: Json; new_approval: Json; expected_revision: number }; Returns: number };
+    };
   };
 };

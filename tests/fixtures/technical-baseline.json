@@ -1,0 +1,2050 @@
+{
+  "30-up": {
+    "downside": {
+      "balanced": {
+        "label": "ATR tight",
+        "method": "atr-1.25",
+        "price": 45.77523571409424,
+        "riskPercent": -11.708312022874495,
+        "weight": 2
+      },
+      "confidence": "High",
+      "methods": [
+        {
+          "label": "Support-based",
+          "price": 50.618745382852296,
+          "method": "support",
+          "weight": 3,
+          "riskPercent": -2.366106838849503
+        },
+        {
+          "label": "SMA 20 trend",
+          "price": 48.12419726466195,
+          "method": "sma20",
+          "weight": 2,
+          "riskPercent": -7.177613773971041
+        },
+        {
+          "label": "Fixed 8%",
+          "price": 47.697827306096286,
+          "method": "fixed-8",
+          "weight": 1,
+          "riskPercent": -7.999999999999992
+        },
+        {
+          "label": "ATR tight",
+          "price": 45.77523571409424,
+          "method": "atr-1.25",
+          "weight": 2,
+          "riskPercent": -11.708312022874495
+        },
+        {
+          "label": "ATR conservative",
+          "price": 42.133098464661906,
+          "method": "atr-2",
+          "weight": 3,
+          "riskPercent": -18.733299236599176
+        },
+        {
+          "label": "Swing low",
+          "price": 38.90753858619023,
+          "method": "swing-low",
+          "weight": 2,
+          "riskPercent": -24.954788255690545
+        }
+      ],
+      "position": {
+        "label": "ATR conservative",
+        "price": 42.133098464661906,
+        "method": "atr-2",
+        "weight": 3,
+        "riskPercent": -18.733299236599176
+      },
+      "shortTerm": {
+        "label": "Support-based",
+        "price": 50.618745382852296,
+        "method": "support",
+        "weight": 3,
+        "riskPercent": -2.366106838849503
+      },
+      "suggested": {
+        "label": "ATR tight",
+        "method": "atr-1.25",
+        "price": 45.77523571409424,
+        "riskPercent": -11.708312022874495,
+        "weight": 2
+      }
+    },
+    "upside": {
+      "balanced": {
+        "gainPercent": 13.283291575541462,
+        "label": "20-day high",
+        "method": "swing-high",
+        "price": 58.73224867648183,
+        "weight": 2
+      },
+      "confidence": "High",
+      "methods": [
+        {
+          "label": "ATR near target",
+          "method": "atr-1",
+          "price": 56.70164746239125,
+          "weight": 2,
+          "gainPercent": 9.366649618299595
+        },
+        {
+          "label": "Fixed 10%",
+          "method": "fixed-10",
+          "price": 57.03001090946295,
+          "weight": 1,
+          "gainPercent": 10.000000000000012
+        },
+        {
+          "label": "Bollinger upper",
+          "method": "bollinger-upper",
+          "price": 58.283953828175605,
+          "weight": 2,
+          "gainPercent": 12.41861642420807
+        },
+        {
+          "label": "60-day high",
+          "method": "wide-swing-high",
+          "price": 58.435621157913744,
+          "weight": 1,
+          "gainPercent": 12.71115373930136
+        },
+        {
+          "label": "20-day high",
+          "method": "swing-high",
+          "price": 58.73224867648183,
+          "weight": 2,
+          "gainPercent": 13.283291575541462
+        },
+        {
+          "label": "ATR stretch",
+          "method": "atr-2",
+          "price": 61.55783046163436,
+          "weight": 2,
+          "gainPercent": 18.733299236599176
+        }
+      ],
+      "position": {
+        "label": "ATR stretch",
+        "method": "atr-2",
+        "price": 61.55783046163436,
+        "weight": 2,
+        "gainPercent": 18.733299236599176
+      },
+      "shortTerm": {
+        "label": "ATR near target",
+        "method": "atr-1",
+        "price": 56.70164746239125,
+        "weight": 2,
+        "gainPercent": 9.366649618299595
+      },
+      "suggested": {
+        "gainPercent": 13.283291575541462,
+        "label": "20-day high",
+        "method": "swing-high",
+        "price": 58.73224867648183,
+        "weight": 2
+      }
+    }
+  },
+  "30-down": {
+    "downside": {
+      "balanced": {
+        "label": "ATR conservative",
+        "method": "atr-2",
+        "price": 271.7,
+        "riskPercent": -2.860207365033965,
+        "weight": 3
+      },
+      "confidence": "High",
+      "methods": [
+        {
+          "label": "SMA 20 trend",
+          "price": 277.7595,
+          "method": "sma20",
+          "weight": 2,
+          "riskPercent": -0.6937790489810461
+        },
+        {
+          "label": "ATR tight",
+          "price": 274.7,
+          "method": "atr-1.25",
+          "weight": 2,
+          "riskPercent": -1.787629603146228
+        },
+        {
+          "label": "Swing low",
+          "price": 273.5345,
+          "method": "swing-low",
+          "weight": 2,
+          "riskPercent": -2.204326063639617
+        },
+        {
+          "label": "Support-based",
+          "price": 273.51800000000003,
+          "method": "support",
+          "weight": 3,
+          "riskPercent": -2.210225241329982
+        },
+        {
+          "label": "ATR conservative",
+          "price": 271.7,
+          "method": "atr-2",
+          "weight": 3,
+          "riskPercent": -2.860207365033965
+        },
+        {
+          "label": "Trailing high",
+          "price": 265.5,
+          "method": "trailing-high",
+          "weight": 1,
+          "riskPercent": -5.076868072935284
+        },
+        {
+          "label": "Fixed 8%",
+          "price": 257.324,
+          "method": "fixed-8",
+          "weight": 1,
+          "riskPercent": -7.999999999999992
+        }
+      ],
+      "position": {
+        "label": "ATR conservative",
+        "price": 271.7,
+        "method": "atr-2",
+        "weight": 3,
+        "riskPercent": -2.860207365033965
+      },
+      "shortTerm": {
+        "label": "Support-based",
+        "price": 273.51800000000003,
+        "method": "support",
+        "weight": 3,
+        "riskPercent": -2.210225241329982
+      },
+      "suggested": {
+        "label": "ATR conservative",
+        "method": "atr-2",
+        "price": 271.7,
+        "riskPercent": -2.860207365033965,
+        "weight": 3
+      }
+    },
+    "upside": {
+      "balanced": {
+        "gainPercent": 4.425098319628197,
+        "label": "SMA 20 reclaim",
+        "method": "sma20",
+        "price": 292.07700000000006,
+        "weight": 1
+      },
+      "confidence": "High",
+      "methods": [
+        {
+          "label": "ATR near target",
+          "method": "atr-1",
+          "price": 283.7,
+          "weight": 2,
+          "gainPercent": 1.4301036825169826
+        },
+        {
+          "label": "ATR stretch",
+          "method": "atr-2",
+          "price": 287.7,
+          "weight": 2,
+          "gainPercent": 2.860207365033965
+        },
+        {
+          "label": "20-day high",
+          "method": "swing-high",
+          "price": 292.05,
+          "weight": 2,
+          "gainPercent": 4.415445119771192
+        },
+        {
+          "label": "SMA 20 reclaim",
+          "method": "sma20",
+          "price": 292.07700000000006,
+          "weight": 1,
+          "gainPercent": 4.425098319628197
+        },
+        {
+          "label": "Bollinger upper",
+          "method": "bollinger-upper",
+          "price": 294.4227938162696,
+          "weight": 2,
+          "gainPercent": 5.263780413396348
+        },
+        {
+          "label": "60-day high",
+          "method": "wide-swing-high",
+          "price": 297.46999999999997,
+          "weight": 1,
+          "gainPercent": 6.353235609581688
+        },
+        {
+          "label": "Fixed 10%",
+          "method": "fixed-10",
+          "price": 307.67,
+          "weight": 1,
+          "gainPercent": 10.00000000000001
+        }
+      ],
+      "position": {
+        "label": "Fixed 10%",
+        "method": "fixed-10",
+        "price": 307.67,
+        "weight": 1,
+        "gainPercent": 10.00000000000001
+      },
+      "shortTerm": {
+        "label": "ATR near target",
+        "method": "atr-1",
+        "price": 283.7,
+        "weight": 2,
+        "gainPercent": 1.4301036825169826
+      },
+      "suggested": {
+        "gainPercent": 4.425098319628197,
+        "label": "SMA 20 reclaim",
+        "method": "sma20",
+        "price": 292.07700000000006,
+        "weight": 1
+      }
+    }
+  },
+  "30-flat": {
+    "downside": {
+      "balanced": {
+        "label": "ATR tight",
+        "method": "atr-1.25",
+        "price": 95,
+        "riskPercent": -5,
+        "weight": 2
+      },
+      "confidence": "High",
+      "methods": [
+        {
+          "label": "SMA 20 trend",
+          "price": 97,
+          "method": "sma20",
+          "weight": 2,
+          "riskPercent": -3
+        },
+        {
+          "label": "Swing low",
+          "price": 96.53,
+          "method": "swing-low",
+          "weight": 2,
+          "riskPercent": -3.469999999999999
+        },
+        {
+          "label": "Support-based",
+          "price": 96.03999999999999,
+          "method": "support",
+          "weight": 3,
+          "riskPercent": -3.960000000000008
+        },
+        {
+          "label": "ATR tight",
+          "price": 95,
+          "method": "atr-1.25",
+          "weight": 2,
+          "riskPercent": -5
+        },
+        {
+          "label": "ATR conservative",
+          "price": 92,
+          "method": "atr-2",
+          "weight": 3,
+          "riskPercent": -8
+        },
+        {
+          "label": "Fixed 8%",
+          "price": 92,
+          "method": "fixed-8",
+          "weight": 1,
+          "riskPercent": -8
+        },
+        {
+          "label": "Trailing high",
+          "price": 91.8,
+          "method": "trailing-high",
+          "weight": 1,
+          "riskPercent": -8.200000000000003
+        }
+      ],
+      "position": {
+        "label": "ATR conservative",
+        "price": 92,
+        "method": "atr-2",
+        "weight": 3,
+        "riskPercent": -8
+      },
+      "shortTerm": {
+        "label": "Support-based",
+        "price": 96.03999999999999,
+        "method": "support",
+        "weight": 3,
+        "riskPercent": -3.960000000000008
+      },
+      "suggested": {
+        "label": "ATR tight",
+        "method": "atr-1.25",
+        "price": 95,
+        "riskPercent": -5,
+        "weight": 2
+      }
+    },
+    "upside": {
+      "balanced": {
+        "gainPercent": 4,
+        "label": "ATR near target",
+        "method": "atr-1",
+        "price": 104,
+        "weight": 2
+      },
+      "confidence": "High",
+      "methods": [
+        {
+          "label": "60-day high",
+          "method": "wide-swing-high",
+          "price": 100.47,
+          "weight": 1,
+          "gainPercent": 0.46999999999999886
+        },
+        {
+          "label": "Resistance-based",
+          "method": "resistance",
+          "price": 100.98,
+          "weight": 3,
+          "gainPercent": 0.980000000000004
+        },
+        {
+          "label": "20-day high",
+          "method": "swing-high",
+          "price": 100.98,
+          "weight": 2,
+          "gainPercent": 0.980000000000004
+        },
+        {
+          "label": "SMA 20 reclaim",
+          "method": "sma20",
+          "price": 102,
+          "weight": 1,
+          "gainPercent": 2
+        },
+        {
+          "label": "ATR near target",
+          "method": "atr-1",
+          "price": 104,
+          "weight": 2,
+          "gainPercent": 4
+        },
+        {
+          "label": "ATR stretch",
+          "method": "atr-2",
+          "price": 108,
+          "weight": 2,
+          "gainPercent": 8
+        },
+        {
+          "label": "Fixed 10%",
+          "method": "fixed-10",
+          "price": 110.00000000000001,
+          "weight": 1,
+          "gainPercent": 10.000000000000014
+        }
+      ],
+      "position": {
+        "label": "Fixed 10%",
+        "method": "fixed-10",
+        "price": 110.00000000000001,
+        "weight": 1,
+        "gainPercent": 10.000000000000014
+      },
+      "shortTerm": {
+        "label": "Resistance-based",
+        "method": "resistance",
+        "price": 100.98,
+        "weight": 3,
+        "gainPercent": 0.980000000000004
+      },
+      "suggested": {
+        "gainPercent": 4,
+        "label": "ATR near target",
+        "method": "atr-1",
+        "price": 104,
+        "weight": 2
+      }
+    }
+  },
+  "60-up": {
+    "downside": {
+      "balanced": {
+        "label": "SMA 20 trend",
+        "method": "sma20",
+        "price": 62.96003076517768,
+        "riskPercent": -12.612499221031829,
+        "weight": 2
+      },
+      "confidence": "High",
+      "methods": [
+        {
+          "label": "Support-based",
+          "price": 69.55206078049137,
+          "method": "support",
+          "weight": 3,
+          "riskPercent": -3.4628685569880835
+        },
+        {
+          "label": "Trailing high",
+          "price": 67.47434153310434,
+          "method": "trailing-high",
+          "weight": 1,
+          "riskPercent": -6.346709148278486
+        },
+        {
+          "label": "Fixed 8%",
+          "price": 66.28319586627202,
+          "method": "fixed-8",
+          "weight": 1,
+          "riskPercent": -7.999999999999999
+        },
+        {
+          "label": "ATR tight",
+          "price": 66.15717815068086,
+          "method": "atr-1.25",
+          "weight": 2,
+          "riskPercent": -8.17491054380928
+        },
+        {
+          "label": "SMA 20 trend",
+          "price": 62.96003076517768,
+          "method": "sma20",
+          "weight": 2,
+          "riskPercent": -12.612499221031829
+        },
+        {
+          "label": "ATR conservative",
+          "price": 62.62331382395544,
+          "method": "atr-2",
+          "weight": 3,
+          "riskPercent": -13.079856870094863
+        },
+        {
+          "label": "SMA 50 trend",
+          "price": 55.531268474235674,
+          "method": "sma50",
+          "weight": 1,
+          "riskPercent": -22.923500702395728
+        },
+        {
+          "label": "Swing low",
+          "price": 54.5039051012124,
+          "method": "swing-low",
+          "weight": 2,
+          "riskPercent": -24.349464388709706
+        }
+      ],
+      "position": {
+        "label": "SMA 50 trend",
+        "price": 55.531268474235674,
+        "method": "sma50",
+        "weight": 1,
+        "riskPercent": -22.923500702395728
+      },
+      "shortTerm": {
+        "label": "Support-based",
+        "price": 69.55206078049137,
+        "method": "support",
+        "weight": 3,
+        "riskPercent": -3.4628685569880835
+      },
+      "suggested": {
+        "label": "SMA 20 trend",
+        "method": "sma20",
+        "price": 62.96003076517768,
+        "riskPercent": -12.612499221031829,
+        "weight": 2
+      }
+    },
+    "upside": {
+      "balanced": {
+        "gainPercent": 6.539928435047432,
+        "label": "ATR near target",
+        "method": "atr-1",
+        "price": 76.7587711308571,
+        "weight": 2
+      },
+      "confidence": "High",
+      "methods": [
+        {
+          "label": "Bollinger upper",
+          "method": "bollinger-upper",
+          "price": 73.54313173709457,
+          "weight": 2,
+          "gainPercent": 2.0766731505102345
+        },
+        {
+          "label": "60-day high",
+          "method": "wide-swing-high",
+          "price": 73.84691823345307,
+          "weight": 1,
+          "gainPercent": 2.4983238766063076
+        },
+        {
+          "label": "20-day high",
+          "method": "swing-high",
+          "price": 74.22177568641476,
+          "weight": 2,
+          "gainPercent": 3.018619936893651
+        },
+        {
+          "label": "ATR near target",
+          "method": "atr-1",
+          "price": 76.7587711308571,
+          "weight": 2,
+          "gainPercent": 6.539928435047432
+        },
+        {
+          "label": "Fixed 10%",
+          "method": "fixed-10",
+          "price": 79.2516472314122,
+          "weight": 1,
+          "gainPercent": 10.000000000000007
+        },
+        {
+          "label": "ATR stretch",
+          "method": "atr-2",
+          "price": 81.47059023315765,
+          "weight": 2,
+          "gainPercent": 13.079856870094863
+        }
+      ],
+      "position": {
+        "label": "ATR stretch",
+        "method": "atr-2",
+        "price": 81.47059023315765,
+        "weight": 2,
+        "gainPercent": 13.079856870094863
+      },
+      "shortTerm": {
+        "label": "ATR near target",
+        "method": "atr-1",
+        "price": 76.7587711308571,
+        "weight": 2,
+        "gainPercent": 6.539928435047432
+      },
+      "suggested": {
+        "gainPercent": 6.539928435047432,
+        "label": "ATR near target",
+        "method": "atr-1",
+        "price": 76.7587711308571,
+        "weight": 2
+      }
+    }
+  },
+  "60-down": {
+    "downside": {
+      "balanced": {
+        "label": "ATR conservative",
+        "method": "atr-2",
+        "price": 250.7,
+        "riskPercent": -3.092385001932741,
+        "weight": 3
+      },
+      "confidence": "High",
+      "methods": [
+        {
+          "label": "SMA 20 trend",
+          "price": 257.3895,
+          "method": "sma20",
+          "weight": 2,
+          "riskPercent": -0.5065713181291034
+        },
+        {
+          "label": "ATR tight",
+          "price": 253.7,
+          "method": "atr-1.25",
+          "weight": 2,
+          "riskPercent": -1.9327406262079632
+        },
+        {
+          "label": "Support-based",
+          "price": 252.93800000000002,
+          "method": "support",
+          "weight": 3,
+          "riskPercent": -2.2272902976420457
+        },
+        {
+          "label": "Swing low",
+          "price": 252.84949999999998,
+          "method": "swing-low",
+          "weight": 2,
+          "riskPercent": -2.2614998067259418
+        },
+        {
+          "label": "ATR conservative",
+          "price": 250.7,
+          "method": "atr-2",
+          "weight": 3,
+          "riskPercent": -3.092385001932741
+        },
+        {
+          "label": "Trailing high",
+          "price": 246.6,
+          "method": "trailing-high",
+          "weight": 1,
+          "riskPercent": -4.677232315423268
+        },
+        {
+          "label": "Fixed 8%",
+          "price": 238.004,
+          "method": "fixed-8",
+          "weight": 1,
+          "riskPercent": -8
+        }
+      ],
+      "position": {
+        "label": "ATR conservative",
+        "price": 250.7,
+        "method": "atr-2",
+        "weight": 3,
+        "riskPercent": -3.092385001932741
+      },
+      "shortTerm": {
+        "label": "Support-based",
+        "price": 252.93800000000002,
+        "method": "support",
+        "weight": 3,
+        "riskPercent": -2.2272902976420457
+      },
+      "suggested": {
+        "label": "ATR conservative",
+        "method": "atr-2",
+        "price": 250.7,
+        "riskPercent": -3.092385001932741,
+        "weight": 3
+      }
+    },
+    "upside": {
+      "balanced": {
+        "gainPercent": 5.691068347997521,
+        "label": "Bollinger upper",
+        "method": "bollinger-upper",
+        "price": 273.4227938162696,
+        "weight": 2
+      },
+      "confidence": "High",
+      "methods": [
+        {
+          "label": "ATR near target",
+          "method": "atr-1",
+          "price": 262.7,
+          "weight": 2,
+          "gainPercent": 1.5461925009663704
+        },
+        {
+          "label": "ATR stretch",
+          "method": "atr-2",
+          "price": 266.7,
+          "weight": 2,
+          "gainPercent": 3.092385001932741
+        },
+        {
+          "label": "SMA 20 reclaim",
+          "method": "sma20",
+          "price": 270.65700000000004,
+          "weight": 1,
+          "gainPercent": 4.621955933513743
+        },
+        {
+          "label": "20-day high",
+          "method": "swing-high",
+          "price": 271.26,
+          "weight": 2,
+          "gainPercent": 4.855044453034404
+        },
+        {
+          "label": "Bollinger upper",
+          "method": "bollinger-upper",
+          "price": 273.4227938162696,
+          "weight": 2,
+          "gainPercent": 5.691068347997521
+        },
+        {
+          "label": "SMA 50 reclaim",
+          "method": "sma50",
+          "price": 281.367,
+          "weight": 1,
+          "gainPercent": 8.76188635485119
+        },
+        {
+          "label": "Fixed 10%",
+          "method": "fixed-10",
+          "price": 284.57,
+          "weight": 1,
+          "gainPercent": 10.000000000000002
+        },
+        {
+          "label": "60-day high",
+          "method": "wide-swing-high",
+          "price": 297.46999999999997,
+          "weight": 1,
+          "gainPercent": 14.986470815616537
+        }
+      ],
+      "position": {
+        "label": "60-day high",
+        "method": "wide-swing-high",
+        "price": 297.46999999999997,
+        "weight": 1,
+        "gainPercent": 14.986470815616537
+      },
+      "shortTerm": {
+        "label": "ATR near target",
+        "method": "atr-1",
+        "price": 262.7,
+        "weight": 2,
+        "gainPercent": 1.5461925009663704
+      },
+      "suggested": {
+        "gainPercent": 5.691068347997521,
+        "label": "Bollinger upper",
+        "method": "bollinger-upper",
+        "price": 273.4227938162696,
+        "weight": 2
+      }
+    }
+  },
+  "60-flat": {
+    "downside": {
+      "balanced": {
+        "label": "ATR tight",
+        "method": "atr-1.25",
+        "price": 95,
+        "riskPercent": -5,
+        "weight": 2
+      },
+      "confidence": "High",
+      "methods": [
+        {
+          "label": "SMA 20 trend",
+          "price": 97,
+          "method": "sma20",
+          "weight": 2,
+          "riskPercent": -3
+        },
+        {
+          "label": "SMA 50 trend",
+          "price": 97,
+          "method": "sma50",
+          "weight": 1,
+          "riskPercent": -3
+        },
+        {
+          "label": "Swing low",
+          "price": 96.53,
+          "method": "swing-low",
+          "weight": 2,
+          "riskPercent": -3.469999999999999
+        },
+        {
+          "label": "Support-based",
+          "price": 96.03999999999999,
+          "method": "support",
+          "weight": 3,
+          "riskPercent": -3.960000000000008
+        },
+        {
+          "label": "ATR tight",
+          "price": 95,
+          "method": "atr-1.25",
+          "weight": 2,
+          "riskPercent": -5
+        },
+        {
+          "label": "ATR conservative",
+          "price": 92,
+          "method": "atr-2",
+          "weight": 3,
+          "riskPercent": -8
+        },
+        {
+          "label": "Fixed 8%",
+          "price": 92,
+          "method": "fixed-8",
+          "weight": 1,
+          "riskPercent": -8
+        },
+        {
+          "label": "Trailing high",
+          "price": 91.8,
+          "method": "trailing-high",
+          "weight": 1,
+          "riskPercent": -8.200000000000003
+        }
+      ],
+      "position": {
+        "label": "SMA 50 trend",
+        "price": 97,
+        "method": "sma50",
+        "weight": 1,
+        "riskPercent": -3
+      },
+      "shortTerm": {
+        "label": "Support-based",
+        "price": 96.03999999999999,
+        "method": "support",
+        "weight": 3,
+        "riskPercent": -3.960000000000008
+      },
+      "suggested": {
+        "label": "ATR tight",
+        "method": "atr-1.25",
+        "price": 95,
+        "riskPercent": -5,
+        "weight": 2
+      }
+    },
+    "upside": {
+      "balanced": {
+        "gainPercent": 4,
+        "label": "ATR near target",
+        "method": "atr-1",
+        "price": 104,
+        "weight": 2
+      },
+      "confidence": "High",
+      "methods": [
+        {
+          "label": "60-day high",
+          "method": "wide-swing-high",
+          "price": 100.47,
+          "weight": 1,
+          "gainPercent": 0.46999999999999886
+        },
+        {
+          "label": "Resistance-based",
+          "method": "resistance",
+          "price": 100.98,
+          "weight": 3,
+          "gainPercent": 0.980000000000004
+        },
+        {
+          "label": "20-day high",
+          "method": "swing-high",
+          "price": 100.98,
+          "weight": 2,
+          "gainPercent": 0.980000000000004
+        },
+        {
+          "label": "SMA 20 reclaim",
+          "method": "sma20",
+          "price": 102,
+          "weight": 1,
+          "gainPercent": 2
+        },
+        {
+          "label": "SMA 50 reclaim",
+          "method": "sma50",
+          "price": 102,
+          "weight": 1,
+          "gainPercent": 2
+        },
+        {
+          "label": "ATR near target",
+          "method": "atr-1",
+          "price": 104,
+          "weight": 2,
+          "gainPercent": 4
+        },
+        {
+          "label": "ATR stretch",
+          "method": "atr-2",
+          "price": 108,
+          "weight": 2,
+          "gainPercent": 8
+        },
+        {
+          "label": "Fixed 10%",
+          "method": "fixed-10",
+          "price": 110.00000000000001,
+          "weight": 1,
+          "gainPercent": 10.000000000000014
+        }
+      ],
+      "position": {
+        "label": "Fixed 10%",
+        "method": "fixed-10",
+        "price": 110.00000000000001,
+        "weight": 1,
+        "gainPercent": 10.000000000000014
+      },
+      "shortTerm": {
+        "label": "Resistance-based",
+        "method": "resistance",
+        "price": 100.98,
+        "weight": 3,
+        "gainPercent": 0.980000000000004
+      },
+      "suggested": {
+        "gainPercent": 4,
+        "label": "ATR near target",
+        "method": "atr-1",
+        "price": 104,
+        "weight": 2
+      }
+    }
+  },
+  "180-up": {
+    "downside": {
+      "balanced": {
+        "label": "ATR conservative",
+        "method": "atr-2",
+        "price": 120.24671462708638,
+        "riskPercent": -7.347789943398475,
+        "weight": 3
+      },
+      "confidence": "High",
+      "methods": [
+        {
+          "label": "Support-based",
+          "price": 125.22723089557684,
+          "method": "support",
+          "weight": 3,
+          "riskPercent": -3.5102144975363276
+        },
+        {
+          "label": "ATR tight",
+          "price": 123.82277989278748,
+          "method": "atr-1.25",
+          "weight": 2,
+          "riskPercent": -4.59236871462404
+        },
+        {
+          "label": "Trailing high",
+          "price": 121.05927120889537,
+          "method": "trailing-high",
+          "weight": 1,
+          "riskPercent": -6.721700795481896
+        },
+        {
+          "label": "SMA 20 trend",
+          "price": 121.03952689977105,
+          "method": "sma20",
+          "weight": 2,
+          "riskPercent": -6.736914133177501
+        },
+        {
+          "label": "ATR conservative",
+          "price": 120.24671462708638,
+          "method": "atr-2",
+          "weight": 3,
+          "riskPercent": -7.347789943398475
+        },
+        {
+          "label": "Fixed 8%",
+          "price": 119.4002575754395,
+          "method": "fixed-8",
+          "weight": 1,
+          "riskPercent": -7.999999999999992
+        },
+        {
+          "label": "SMA 50 trend",
+          "price": 113.74391489106031,
+          "method": "sma50",
+          "weight": 1,
+          "riskPercent": -12.358311594379058
+        },
+        {
+          "label": "Swing low",
+          "price": 113.35990561787408,
+          "method": "swing-low",
+          "weight": 2,
+          "riskPercent": -12.654197498233263
+        }
+      ],
+      "position": {
+        "label": "SMA 50 trend",
+        "price": 113.74391489106031,
+        "method": "sma50",
+        "weight": 1,
+        "riskPercent": -12.358311594379058
+      },
+      "shortTerm": {
+        "label": "Support-based",
+        "price": 125.22723089557684,
+        "method": "support",
+        "weight": 3,
+        "riskPercent": -3.5102144975363276
+      },
+      "suggested": {
+        "label": "ATR conservative",
+        "method": "atr-2",
+        "price": 120.24671462708638,
+        "riskPercent": -7.347789943398475,
+        "weight": 3
+      }
+    },
+    "upside": {
+      "balanced": {
+        "gainPercent": 3.673894971699233,
+        "label": "ATR near target",
+        "method": "atr-1",
+        "price": 134.55097568989075,
+        "weight": 2
+      },
+      "confidence": "High",
+      "methods": [
+        {
+          "label": "60-day high",
+          "method": "wide-swing-high",
+          "price": 132.4926468230688,
+          "weight": 1,
+          "gainPercent": 2.087916351611475
+        },
+        {
+          "label": "20-day high",
+          "method": "swing-high",
+          "price": 133.1651983297849,
+          "weight": 2,
+          "gainPercent": 2.6061291249699017
+        },
+        {
+          "label": "Bollinger upper",
+          "method": "bollinger-upper",
+          "price": 133.53593275236568,
+          "weight": 2,
+          "gainPercent": 2.891786522784838
+        },
+        {
+          "label": "ATR near target",
+          "method": "atr-1",
+          "price": 134.55097568989075,
+          "weight": 2,
+          "gainPercent": 3.673894971699233
+        },
+        {
+          "label": "ATR stretch",
+          "method": "atr-2",
+          "price": 139.31906271082553,
+          "weight": 2,
+          "gainPercent": 7.347789943398466
+        },
+        {
+          "label": "Fixed 10%",
+          "method": "fixed-10",
+          "price": 142.76117753585157,
+          "weight": 1,
+          "gainPercent": 10.00000000000001
+        }
+      ],
+      "position": {
+        "label": "Fixed 10%",
+        "method": "fixed-10",
+        "price": 142.76117753585157,
+        "weight": 1,
+        "gainPercent": 10.00000000000001
+      },
+      "shortTerm": {
+        "label": "ATR near target",
+        "method": "atr-1",
+        "price": 134.55097568989075,
+        "weight": 2,
+        "gainPercent": 3.673894971699233
+      },
+      "suggested": {
+        "gainPercent": 3.673894971699233,
+        "label": "ATR near target",
+        "method": "atr-1",
+        "price": 134.55097568989075,
+        "weight": 2
+      }
+    }
+  },
+  "180-down": {
+    "downside": {
+      "balanced": {
+        "label": "ATR tight",
+        "method": "atr-1.25",
+        "price": 169.7,
+        "riskPercent": -2.862049227246709,
+        "weight": 2
+      },
+      "confidence": "High",
+      "methods": [
+        {
+          "label": "Trailing high",
+          "price": 171,
+          "method": "trailing-high",
+          "weight": 1,
+          "riskPercent": -2.117916428162558
+        },
+        {
+          "label": "Support-based",
+          "price": 170.61800000000002,
+          "method": "support",
+          "weight": 3,
+          "riskPercent": -2.336576989124193
+        },
+        {
+          "label": "Swing low",
+          "price": 170.1095,
+          "method": "swing-low",
+          "weight": 2,
+          "riskPercent": -2.627647395535199
+        },
+        {
+          "label": "ATR tight",
+          "price": 169.7,
+          "method": "atr-1.25",
+          "weight": 2,
+          "riskPercent": -2.862049227246709
+        },
+        {
+          "label": "ATR conservative",
+          "price": 166.7,
+          "method": "atr-2",
+          "weight": 3,
+          "riskPercent": -4.579278763594734
+        },
+        {
+          "label": "Fixed 8%",
+          "price": 160.724,
+          "method": "fixed-8",
+          "weight": 1,
+          "riskPercent": -8
+        }
+      ],
+      "position": {
+        "label": "ATR conservative",
+        "price": 166.7,
+        "method": "atr-2",
+        "weight": 3,
+        "riskPercent": -4.579278763594734
+      },
+      "shortTerm": {
+        "label": "Support-based",
+        "price": 170.61800000000002,
+        "method": "support",
+        "weight": 3,
+        "riskPercent": -2.336576989124193
+      },
+      "suggested": {
+        "label": "ATR tight",
+        "method": "atr-1.25",
+        "price": 169.7,
+        "riskPercent": -2.862049227246709,
+        "weight": 2
+      }
+    },
+    "upside": {
+      "balanced": {
+        "gainPercent": 5.882655981682894,
+        "label": "SMA 20 reclaim",
+        "method": "sma20",
+        "price": 184.977,
+        "weight": 1
+      },
+      "confidence": "High",
+      "methods": [
+        {
+          "label": "Resistance-based",
+          "method": "resistance",
+          "price": 174.933,
+          "weight": 3,
+          "gainPercent": 0.133371493989699
+        },
+        {
+          "label": "ATR near target",
+          "method": "atr-1",
+          "price": 178.7,
+          "weight": 2,
+          "gainPercent": 2.289639381797367
+        },
+        {
+          "label": "ATR stretch",
+          "method": "atr-2",
+          "price": 182.7,
+          "weight": 2,
+          "gainPercent": 4.579278763594734
+        },
+        {
+          "label": "SMA 20 reclaim",
+          "method": "sma20",
+          "price": 184.977,
+          "weight": 1,
+          "gainPercent": 5.882655981682894
+        },
+        {
+          "label": "20-day high",
+          "method": "swing-high",
+          "price": 188.1,
+          "weight": 2,
+          "gainPercent": 7.670291929021183
+        },
+        {
+          "label": "Bollinger upper",
+          "method": "bollinger-upper",
+          "price": 189.42279381626955,
+          "weight": 2,
+          "gainPercent": 8.427472132953383
+        },
+        {
+          "label": "Fixed 10%",
+          "method": "fixed-10",
+          "price": 192.17000000000002,
+          "weight": 1,
+          "gainPercent": 10.000000000000016
+        },
+        {
+          "label": "SMA 50 reclaim",
+          "method": "sma50",
+          "price": 195.68699999999998,
+          "weight": 1,
+          "gainPercent": 12.013165426445333
+        },
+        {
+          "label": "60-day high",
+          "method": "wide-swing-high",
+          "price": 214.73,
+          "weight": 1,
+          "gainPercent": 22.913566113337154
+        }
+      ],
+      "position": {
+        "label": "SMA 50 reclaim",
+        "method": "sma50",
+        "price": 195.68699999999998,
+        "weight": 1,
+        "gainPercent": 12.013165426445333
+      },
+      "shortTerm": {
+        "label": "Resistance-based",
+        "method": "resistance",
+        "price": 174.933,
+        "weight": 3,
+        "gainPercent": 0.133371493989699
+      },
+      "suggested": {
+        "gainPercent": 5.882655981682894,
+        "label": "SMA 20 reclaim",
+        "method": "sma20",
+        "price": 184.977,
+        "weight": 1
+      }
+    }
+  },
+  "180-flat": {
+    "downside": {
+      "balanced": {
+        "label": "ATR tight",
+        "method": "atr-1.25",
+        "price": 95,
+        "riskPercent": -5,
+        "weight": 2
+      },
+      "confidence": "High",
+      "methods": [
+        {
+          "label": "SMA 20 trend",
+          "price": 97,
+          "method": "sma20",
+          "weight": 2,
+          "riskPercent": -3
+        },
+        {
+          "label": "SMA 50 trend",
+          "price": 97,
+          "method": "sma50",
+          "weight": 1,
+          "riskPercent": -3
+        },
+        {
+          "label": "Swing low",
+          "price": 96.53,
+          "method": "swing-low",
+          "weight": 2,
+          "riskPercent": -3.469999999999999
+        },
+        {
+          "label": "Support-based",
+          "price": 96.03999999999999,
+          "method": "support",
+          "weight": 3,
+          "riskPercent": -3.960000000000008
+        },
+        {
+          "label": "ATR tight",
+          "price": 95,
+          "method": "atr-1.25",
+          "weight": 2,
+          "riskPercent": -5
+        },
+        {
+          "label": "ATR conservative",
+          "price": 92,
+          "method": "atr-2",
+          "weight": 3,
+          "riskPercent": -8
+        },
+        {
+          "label": "Fixed 8%",
+          "price": 92,
+          "method": "fixed-8",
+          "weight": 1,
+          "riskPercent": -8
+        },
+        {
+          "label": "Trailing high",
+          "price": 91.8,
+          "method": "trailing-high",
+          "weight": 1,
+          "riskPercent": -8.200000000000003
+        }
+      ],
+      "position": {
+        "label": "SMA 50 trend",
+        "price": 97,
+        "method": "sma50",
+        "weight": 1,
+        "riskPercent": -3
+      },
+      "shortTerm": {
+        "label": "Support-based",
+        "price": 96.03999999999999,
+        "method": "support",
+        "weight": 3,
+        "riskPercent": -3.960000000000008
+      },
+      "suggested": {
+        "label": "ATR tight",
+        "method": "atr-1.25",
+        "price": 95,
+        "riskPercent": -5,
+        "weight": 2
+      }
+    },
+    "upside": {
+      "balanced": {
+        "gainPercent": 4,
+        "label": "ATR near target",
+        "method": "atr-1",
+        "price": 104,
+        "weight": 2
+      },
+      "confidence": "High",
+      "methods": [
+        {
+          "label": "60-day high",
+          "method": "wide-swing-high",
+          "price": 100.47,
+          "weight": 1,
+          "gainPercent": 0.46999999999999886
+        },
+        {
+          "label": "Resistance-based",
+          "method": "resistance",
+          "price": 100.98,
+          "weight": 3,
+          "gainPercent": 0.980000000000004
+        },
+        {
+          "label": "20-day high",
+          "method": "swing-high",
+          "price": 100.98,
+          "weight": 2,
+          "gainPercent": 0.980000000000004
+        },
+        {
+          "label": "SMA 20 reclaim",
+          "method": "sma20",
+          "price": 102,
+          "weight": 1,
+          "gainPercent": 2
+        },
+        {
+          "label": "SMA 50 reclaim",
+          "method": "sma50",
+          "price": 102,
+          "weight": 1,
+          "gainPercent": 2
+        },
+        {
+          "label": "ATR near target",
+          "method": "atr-1",
+          "price": 104,
+          "weight": 2,
+          "gainPercent": 4
+        },
+        {
+          "label": "ATR stretch",
+          "method": "atr-2",
+          "price": 108,
+          "weight": 2,
+          "gainPercent": 8
+        },
+        {
+          "label": "Fixed 10%",
+          "method": "fixed-10",
+          "price": 110.00000000000001,
+          "weight": 1,
+          "gainPercent": 10.000000000000014
+        }
+      ],
+      "position": {
+        "label": "Fixed 10%",
+        "method": "fixed-10",
+        "price": 110.00000000000001,
+        "weight": 1,
+        "gainPercent": 10.000000000000014
+      },
+      "shortTerm": {
+        "label": "Resistance-based",
+        "method": "resistance",
+        "price": 100.98,
+        "weight": 3,
+        "gainPercent": 0.980000000000004
+      },
+      "suggested": {
+        "gainPercent": 4,
+        "label": "ATR near target",
+        "method": "atr-1",
+        "price": 104,
+        "weight": 2
+      }
+    }
+  },
+  "220-up": {
+    "downside": {
+      "balanced": {
+        "label": "Trailing high",
+        "method": "trailing-high",
+        "price": 138.078884239046,
+        "riskPercent": -5.644082566892533,
+        "weight": 1
+      },
+      "confidence": "High",
+      "methods": [
+        {
+          "label": "Support-based",
+          "price": 142.67592009109896,
+          "method": "support",
+          "weight": 3,
+          "riskPercent": -2.502707709442133
+        },
+        {
+          "label": "ATR tight",
+          "price": 140.47332294527263,
+          "method": "atr-1.25",
+          "weight": 2,
+          "riskPercent": -4.0078478731632545
+        },
+        {
+          "label": "SMA 20 trend",
+          "price": 140.22385701713327,
+          "method": "sma20",
+          "weight": 2,
+          "riskPercent": -4.178319894628464
+        },
+        {
+          "label": "Trailing high",
+          "price": 138.078884239046,
+          "method": "trailing-high",
+          "weight": 1,
+          "riskPercent": -5.644082566892533
+        },
+        {
+          "label": "ATR conservative",
+          "price": 136.95431209201982,
+          "method": "atr-2",
+          "weight": 3,
+          "riskPercent": -6.412556597061219
+        },
+        {
+          "label": "Fixed 8%",
+          "price": 134.63127375130512,
+          "method": "fixed-8",
+          "weight": 1,
+          "riskPercent": -7.999999999999988
+        },
+        {
+          "label": "SMA 50 trend",
+          "price": 133.1383943774557,
+          "method": "sma50",
+          "weight": 1,
+          "riskPercent": -9.020156005118478
+        },
+        {
+          "label": "Swing low",
+          "price": 132.48920864897687,
+          "method": "swing-low",
+          "weight": 2,
+          "riskPercent": -9.463775718101209
+        }
+      ],
+      "position": {
+        "label": "SMA 50 trend",
+        "price": 133.1383943774557,
+        "method": "sma50",
+        "weight": 1,
+        "riskPercent": -9.020156005118478
+      },
+      "shortTerm": {
+        "label": "Support-based",
+        "price": 142.67592009109896,
+        "method": "support",
+        "weight": 3,
+        "riskPercent": -2.502707709442133
+      },
+      "suggested": {
+        "label": "Trailing high",
+        "method": "trailing-high",
+        "price": 138.078884239046,
+        "riskPercent": -5.644082566892533,
+        "weight": 1
+      }
+    },
+    "upside": {
+      "balanced": {
+        "gainPercent": 4.012920726163305,
+        "label": "Bollinger upper",
+        "method": "bollinger-upper",
+        "price": 152.2107826517053,
+        "weight": 2
+      },
+      "confidence": "High",
+      "methods": [
+        {
+          "label": "SMA 20 reclaim",
+          "method": "sma20",
+          "price": 147.45189088399582,
+          "weight": 1,
+          "gainPercent": 0.7609419664731663
+        },
+        {
+          "label": "ATR near target",
+          "method": "atr-1",
+          "price": 151.030355505031,
+          "weight": 2,
+          "gainPercent": 3.2062782985305995
+        },
+        {
+          "label": "60-day high",
+          "method": "wide-swing-high",
+          "price": 151.11966775051147,
+          "weight": 1,
+          "gainPercent": 3.267309635123177
+        },
+        {
+          "label": "20-day high",
+          "method": "swing-high",
+          "price": 151.8867726629506,
+          "weight": 2,
+          "gainPercent": 3.791509176418204
+        },
+        {
+          "label": "Bollinger upper",
+          "method": "bollinger-upper",
+          "price": 152.2107826517053,
+          "weight": 2,
+          "gainPercent": 4.012920726163305
+        },
+        {
+          "label": "ATR stretch",
+          "method": "atr-2",
+          "price": 155.72236997603474,
+          "weight": 2,
+          "gainPercent": 6.412556597061219
+        },
+        {
+          "label": "Fixed 10%",
+          "method": "fixed-10",
+          "price": 160.97217513743,
+          "weight": 1,
+          "gainPercent": 10.000000000000004
+        }
+      ],
+      "position": {
+        "label": "Fixed 10%",
+        "method": "fixed-10",
+        "price": 160.97217513743,
+        "weight": 1,
+        "gainPercent": 10.000000000000004
+      },
+      "shortTerm": {
+        "label": "ATR near target",
+        "method": "atr-1",
+        "price": 151.030355505031,
+        "weight": 2,
+        "gainPercent": 3.2062782985305995
+      },
+      "suggested": {
+        "gainPercent": 4.012920726163305,
+        "label": "Bollinger upper",
+        "method": "bollinger-upper",
+        "price": 152.2107826517053,
+        "weight": 2
+      }
+    }
+  },
+  "220-down": {
+    "downside": {
+      "balanced": {
+        "label": "ATR tight",
+        "method": "atr-1.25",
+        "price": 141.70000000000002,
+        "riskPercent": -3.4083162917518743,
+        "weight": 2
+      },
+      "confidence": "High",
+      "methods": [
+        {
+          "label": "Trailing high",
+          "price": 145.8,
+          "method": "trailing-high",
+          "weight": 1,
+          "riskPercent": -0.6134969325153412
+        },
+        {
+          "label": "Support-based",
+          "price": 143.17800000000003,
+          "method": "support",
+          "weight": 3,
+          "riskPercent": -2.4008179959100144
+        },
+        {
+          "label": "Swing low",
+          "price": 142.5295,
+          "method": "swing-low",
+          "weight": 2,
+          "riskPercent": -2.8428766189502412
+        },
+        {
+          "label": "ATR tight",
+          "price": 141.70000000000002,
+          "method": "atr-1.25",
+          "weight": 2,
+          "riskPercent": -3.4083162917518743
+        },
+        {
+          "label": "ATR conservative",
+          "price": 138.70000000000002,
+          "method": "atr-2",
+          "weight": 3,
+          "riskPercent": -5.453306066802998
+        },
+        {
+          "label": "Fixed 8%",
+          "price": 134.96400000000003,
+          "method": "fixed-8",
+          "weight": 1,
+          "riskPercent": -7.999999999999992
+        }
+      ],
+      "position": {
+        "label": "ATR conservative",
+        "price": 138.70000000000002,
+        "method": "atr-2",
+        "weight": 3,
+        "riskPercent": -5.453306066802998
+      },
+      "shortTerm": {
+        "label": "Support-based",
+        "price": 143.17800000000003,
+        "method": "support",
+        "weight": 3,
+        "riskPercent": -2.4008179959100144
+      },
+      "suggested": {
+        "label": "ATR tight",
+        "method": "atr-1.25",
+        "price": 141.70000000000002,
+        "riskPercent": -3.4083162917518743,
+        "weight": 2
+      }
+    },
+    "upside": {
+      "balanced": {
+        "gainPercent": 6.623721881390582,
+        "label": "SMA 20 reclaim",
+        "method": "sma20",
+        "price": 156.417,
+        "weight": 1
+      },
+      "confidence": "High",
+      "methods": [
+        {
+          "label": "Resistance-based",
+          "method": "resistance",
+          "price": 147.21300000000002,
+          "weight": 3,
+          "gainPercent": 0.34969325153374586
+        },
+        {
+          "label": "ATR near target",
+          "method": "atr-1",
+          "price": 150.70000000000002,
+          "weight": 2,
+          "gainPercent": 2.726653033401499
+        },
+        {
+          "label": "ATR stretch",
+          "method": "atr-2",
+          "price": 154.70000000000002,
+          "weight": 2,
+          "gainPercent": 5.453306066802998
+        },
+        {
+          "label": "SMA 20 reclaim",
+          "method": "sma20",
+          "price": 156.417,
+          "weight": 1,
+          "gainPercent": 6.623721881390582
+        },
+        {
+          "label": "20-day high",
+          "method": "swing-high",
+          "price": 160.38,
+          "weight": 2,
+          "gainPercent": 9.325153374233112
+        },
+        {
+          "label": "Fixed 10%",
+          "method": "fixed-10",
+          "price": 161.37000000000003,
+          "weight": 1,
+          "gainPercent": 10.00000000000001
+        },
+        {
+          "label": "Bollinger upper",
+          "method": "bollinger-upper",
+          "price": 161.42279381626955,
+          "weight": 2,
+          "gainPercent": 10.035987604819036
+        },
+        {
+          "label": "SMA 50 reclaim",
+          "method": "sma50",
+          "price": 167.127,
+          "weight": 1,
+          "gainPercent": 13.924335378323102
+        },
+        {
+          "label": "60-day high",
+          "method": "wide-swing-high",
+          "price": 187.15,
+          "weight": 1,
+          "gainPercent": 27.573278800272654
+        }
+      ],
+      "position": {
+        "label": "SMA 50 reclaim",
+        "method": "sma50",
+        "price": 167.127,
+        "weight": 1,
+        "gainPercent": 13.924335378323102
+      },
+      "shortTerm": {
+        "label": "Resistance-based",
+        "method": "resistance",
+        "price": 147.21300000000002,
+        "weight": 3,
+        "gainPercent": 0.34969325153374586
+      },
+      "suggested": {
+        "gainPercent": 6.623721881390582,
+        "label": "SMA 20 reclaim",
+        "method": "sma20",
+        "price": 156.417,
+        "weight": 1
+      }
+    }
+  },
+  "220-flat": {
+    "downside": {
+      "balanced": {
+        "label": "ATR tight",
+        "method": "atr-1.25",
+        "price": 95,
+        "riskPercent": -5,
+        "weight": 2
+      },
+      "confidence": "High",
+      "methods": [
+        {
+          "label": "SMA 20 trend",
+          "price": 97,
+          "method": "sma20",
+          "weight": 2,
+          "riskPercent": -3
+        },
+        {
+          "label": "SMA 50 trend",
+          "price": 97,
+          "method": "sma50",
+          "weight": 1,
+          "riskPercent": -3
+        },
+        {
+          "label": "Swing low",
+          "price": 96.53,
+          "method": "swing-low",
+          "weight": 2,
+          "riskPercent": -3.469999999999999
+        },
+        {
+          "label": "Support-based",
+          "price": 96.03999999999999,
+          "method": "support",
+          "weight": 3,
+          "riskPercent": -3.960000000000008
+        },
+        {
+          "label": "ATR tight",
+          "price": 95,
+          "method": "atr-1.25",
+          "weight": 2,
+          "riskPercent": -5
+        },
+        {
+          "label": "ATR conservative",
+          "price": 92,
+          "method": "atr-2",
+          "weight": 3,
+          "riskPercent": -8
+        },
+        {
+          "label": "Fixed 8%",
+          "price": 92,
+          "method": "fixed-8",
+          "weight": 1,
+          "riskPercent": -8
+        },
+        {
+          "label": "Trailing high",
+          "price": 91.8,
+          "method": "trailing-high",
+          "weight": 1,
+          "riskPercent": -8.200000000000003
+        }
+      ],
+      "position": {
+        "label": "SMA 50 trend",
+        "price": 97,
+        "method": "sma50",
+        "weight": 1,
+        "riskPercent": -3
+      },
+      "shortTerm": {
+        "label": "Support-based",
+        "price": 96.03999999999999,
+        "method": "support",
+        "weight": 3,
+        "riskPercent": -3.960000000000008
+      },
+      "suggested": {
+        "label": "ATR tight",
+        "method": "atr-1.25",
+        "price": 95,
+        "riskPercent": -5,
+        "weight": 2
+      }
+    },
+    "upside": {
+      "balanced": {
+        "gainPercent": 4,
+        "label": "ATR near target",
+        "method": "atr-1",
+        "price": 104,
+        "weight": 2
+      },
+      "confidence": "High",
+      "methods": [
+        {
+          "label": "60-day high",
+          "method": "wide-swing-high",
+          "price": 100.47,
+          "weight": 1,
+          "gainPercent": 0.46999999999999886
+        },
+        {
+          "label": "Resistance-based",
+          "method": "resistance",
+          "price": 100.98,
+          "weight": 3,
+          "gainPercent": 0.980000000000004
+        },
+        {
+          "label": "20-day high",
+          "method": "swing-high",
+          "price": 100.98,
+          "weight": 2,
+          "gainPercent": 0.980000000000004
+        },
+        {
+          "label": "SMA 20 reclaim",
+          "method": "sma20",
+          "price": 102,
+          "weight": 1,
+          "gainPercent": 2
+        },
+        {
+          "label": "SMA 50 reclaim",
+          "method": "sma50",
+          "price": 102,
+          "weight": 1,
+          "gainPercent": 2
+        },
+        {
+          "label": "ATR near target",
+          "method": "atr-1",
+          "price": 104,
+          "weight": 2,
+          "gainPercent": 4
+        },
+        {
+          "label": "ATR stretch",
+          "method": "atr-2",
+          "price": 108,
+          "weight": 2,
+          "gainPercent": 8
+        },
+        {
+          "label": "Fixed 10%",
+          "method": "fixed-10",
+          "price": 110.00000000000001,
+          "weight": 1,
+          "gainPercent": 10.000000000000014
+        }
+      ],
+      "position": {
+        "label": "Fixed 10%",
+        "method": "fixed-10",
+        "price": 110.00000000000001,
+        "weight": 1,
+        "gainPercent": 10.000000000000014
+      },
+      "shortTerm": {
+        "label": "Resistance-based",
+        "method": "resistance",
+        "price": 100.98,
+        "weight": 3,
+        "gainPercent": 0.980000000000004
+      },
+      "suggested": {
+        "gainPercent": 4,
+        "label": "ATR near target",
+        "method": "atr-1",
+        "price": 104,
+        "weight": 2
+      }
+    }
+  }
+}

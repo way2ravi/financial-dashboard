@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getContentPolicy } from "@/lib/content/settings";
 import { AppHeader } from "@/components/dashboard/AppHeader";
 import { PageMessage, type PageMessageValue } from "@/components/dashboard/PageMessage";
 import { formatCurrency, formatNumber, formatPercent } from "@/components/dashboard/format";
@@ -37,7 +38,9 @@ type EarningsFilter = "all" | "bullish" | "bearish" | "before-open" | "after-clo
 export default async function EarningsPage({ searchParams }: Props) {
   const resolvedSearchParams = await searchParams;
   const selectedDate = getSelectedDate(resolvedSearchParams);
-  const selectedFilter = getSelectedFilter(resolvedSearchParams);
+  const policy = await getContentPolicy();
+  const requestedFilter = getSelectedFilter(resolvedSearchParams);
+  const selectedFilter = !policy.buySellSignalsEnabled && (requestedFilter === "bullish" || requestedFilter === "bearish") ? "all" : requestedFilter;
   const { items, message, setupError } = await loadEarningsCalendar(
     selectedDate,
     getSearchParam(resolvedSearchParams.refresh) === "1"
@@ -87,7 +90,7 @@ export default async function EarningsPage({ searchParams }: Props) {
               label="Reports"
               value={formatNumber(summary.total, 0)}
             />
-            <Metric
+            {policy.buySellSignalsEnabled ? <><Metric
               active={selectedFilter === "bullish"}
               href={earningsFilterHref(selectedDate, "bullish")}
               label="Bullish"
@@ -98,7 +101,7 @@ export default async function EarningsPage({ searchParams }: Props) {
               href={earningsFilterHref(selectedDate, "bearish")}
               label="Bearish"
               value={formatNumber(summary.bearish, 0)}
-            />
+            /></> : null}
             <Metric
               active={selectedFilter === "before-open"}
               href={earningsFilterHref(selectedDate, "before-open")}
@@ -216,6 +219,8 @@ async function enrichWithAnalystData(
   supabase: SupabaseClient<Database>,
   items: EarningsCalendarItem[]
 ): Promise<EarningsCalendarRow[]> {
+  const policy = await getContentPolicy();
+  const noSignal: EarningsSignal = { label: "Insufficient", score: 0, reasons: [] };
   const tickers = await findTickersBySymbols(
     supabase,
     items.map((item) => item.symbol)
@@ -235,12 +240,12 @@ async function enrichWithAnalystData(
 
         return {
           ...row,
-          signal: scoreEarningsSignal(row),
+          signal: policy.buySellSignalsEnabled ? scoreEarningsSignal(row) : noSignal,
         };
       }
 
       const [analystRatings, analystPriceTargets, quote] = await Promise.all([
-        getLatestAnalystRatings(supabase, ticker.id),
+        policy.buySellSignalsEnabled ? getLatestAnalystRatings(supabase, ticker.id) : Promise.resolve(null),
         getLatestAnalystPriceTargets(supabase, ticker.id),
         getLatestQuote(supabase, ticker.id),
       ]);
@@ -254,7 +259,7 @@ async function enrichWithAnalystData(
 
       return {
         ...row,
-        signal: scoreEarningsSignal(row),
+        signal: policy.buySellSignalsEnabled ? scoreEarningsSignal(row) : noSignal,
       };
     })
   );
@@ -262,7 +267,7 @@ async function enrichWithAnalystData(
   return analystRows;
 }
 
-function EarningsCalendarTable({
+async function EarningsCalendarTable({
   date,
   filter,
   items,
@@ -273,6 +278,7 @@ function EarningsCalendarTable({
   items: EarningsCalendarRow[];
   totalItems: number;
 }) {
+  const policy = await getContentPolicy();
   if (items.length === 0) {
     return (
       <section className="rounded-lg border app-surface p-5">
@@ -322,14 +328,14 @@ function EarningsCalendarTable({
           <thead className="app-subtle">
             <tr className="uppercase tracking-normal app-muted">
               <th className="border-b app-border-soft px-3 py-2 font-semibold">Symbol</th>
-              <th className="border-b app-border-soft px-3 py-2 font-semibold">Signal</th>
+              {policy.buySellSignalsEnabled ? <th className="border-b app-border-soft px-3 py-2 font-semibold">Signal</th> : null}
               <th className="border-b app-border-soft px-3 py-2 font-semibold">Timing</th>
               <th className="border-b app-border-soft px-3 py-2 font-semibold">Fiscal period</th>
-              <th className="border-b app-border-soft px-3 py-2 font-semibold">Rating</th>
+              {policy.buySellSignalsEnabled ? <th className="border-b app-border-soft px-3 py-2 font-semibold">Rating</th> : null}
               <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">Analysts</th>
-              <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">Target mean</th>
-              <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">Target upside</th>
-              <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">Target range</th>
+              <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">Analyst mean estimate</th>
+              <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">Estimate distance</th>
+              <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">Analyst estimate range</th>
               <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">EPS actual</th>
               <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">EPS estimate</th>
               <th className="border-b app-border-soft px-3 py-2 text-right font-semibold">EPS surprise</th>
@@ -350,18 +356,18 @@ function EarningsCalendarTable({
                     {item.symbol}
                   </Link>
                 </td>
-                <td className="border-b app-border-soft px-3 py-2.5">
+                {policy.buySellSignalsEnabled ? <td className="border-b app-border-soft px-3 py-2.5">
                   <SignalPill signal={item.signal} />
-                </td>
+                </td> : null}
                 <td className="border-b app-border-soft px-3 py-2.5">
                   {formatEarningsHour(item.hour)}
                 </td>
                 <td className="border-b app-border-soft px-3 py-2.5">
                   {formatFiscalPeriod(item)}
                 </td>
-                <td className="border-b app-border-soft px-3 py-2.5">
+                {policy.buySellSignalsEnabled ? <td className="border-b app-border-soft px-3 py-2.5">
                   <RatingPill value={item.analystRatings?.consensus ?? null} />
-                </td>
+                </td> : null}
                 <td className="border-b app-border-soft px-3 py-2.5 text-right">
                   {formatNumber(item.analystRatings?.analystCount, 0)}
                 </td>

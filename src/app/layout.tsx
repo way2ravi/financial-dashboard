@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { Geist_Mono, Inter, Montserrat } from "next/font/google";
 import { MobileAppNav } from "@/components/dashboard/MobileAppNav";
+import { InformationDisclosure } from "@/components/dashboard/InformationDisclosure";
+import { isComingSoonMode } from "@/lib/launch";
 import "./globals.css";
 
 const inter = Inter({
@@ -38,20 +41,22 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const comingSoon = isComingSoonMode((await headers()).get("host"));
   return (
     <html
       lang="en"
       className={`${inter.variable} ${montserrat.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col pb-[calc(4.75rem+env(safe-area-inset-bottom))] md:pb-0">
+      <body className={`min-h-full flex flex-col ${comingSoon ? "" : "pb-[calc(4.75rem+env(safe-area-inset-bottom))] md:pb-0"}`}>
         {children}
-        <MobileAppNav />
+        {!comingSoon && <InformationDisclosure />}
+        {!comingSoon && <MobileAppNav />}
       </body>
     </html>
   );

@@ -14,12 +14,12 @@ const categoryMeta: Record<
   { title: string; description: string }
 > = {
   undervalued: {
-    title: "Undervalued",
+    title: "Lower P/E",
     description: "Lower P/E, positive price, actively traded common stocks.",
   },
   overvalued: {
-    title: "Most overvalued",
-    description: "High P/E names that may be pricing in aggressive growth.",
+    title: "Higher P/E",
+    description: "Stocks ordered by reported price-to-earnings ratio, highest first.",
   },
   weekHigh: {
     title: "Near 52-week high",

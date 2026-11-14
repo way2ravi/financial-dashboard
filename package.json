@@ -8,6 +8,7 @@
     "start": "node --use-system-ca node_modules/next/dist/bin/next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "test:content": "node --test tests/content-controls.test.cjs",
     "check": "npm run lint && npm run typecheck && npm run build"
   },
   "dependencies": {

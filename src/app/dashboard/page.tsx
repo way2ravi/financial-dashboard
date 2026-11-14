@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getContentPolicy } from "@/lib/content/settings";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { AppHeader } from "@/components/dashboard/AppHeader";
 import { formatCurrency, formatNumber, formatPercent } from "@/components/dashboard/format";
@@ -38,7 +39,11 @@ export default async function DashboardPage() {
   const watchlistNews = await loadWatchlistNews(supabase, watchlist.items);
   const currency = getPortalCurrencyOption(wealth.dashboard.settings?.baseCurrency).code;
   const portfolioRollup = summarizePortfolios(portfolios.items);
-  const growthRead = buildGrowthRead(wealth.dashboard, portfolioRollup, market.mood);
+  const policy = await getContentPolicy();
+  const growthRead = policy.personalisedAdviceEnabled ? buildGrowthRead(wealth.dashboard, portfolioRollup, market.mood) : {
+    label: "Recorded balance sheet", className: "app-heading",
+    summary: "Assets, liabilities and historical portfolio performance from your recorded entries.",
+  };
   const topAdvice = wealth.dashboard.advice.slice(0, 3);
 
   return (
@@ -98,7 +103,7 @@ export default async function DashboardPage() {
 
         <section className="grid gap-3 lg:grid-cols-[1.05fr_0.95fr]">
           <StockNewsCard news={watchlistNews} watchlistCount={watchlist.items.length} />
-          <AdviceCard advice={topAdvice} setupError={wealth.setupError} />
+          {policy.personalisedAdviceEnabled ? <AdviceCard advice={topAdvice} setupError={wealth.setupError} /> : null}
         </section>
       </div>
     </main>

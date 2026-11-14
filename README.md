@@ -15,6 +15,19 @@ Open `http://localhost:3000/dashboard?symbol=AAPL`.
 
 ## Environment
 
+### Temporary coming soon mode
+
+Coming soon mode is enabled by default only on `way2investing.com` and
+`www.way2investing.com`. Localhost, preview deployments, and all other domains
+continue to serve the normal website. Visitors to application pages on the public domains are temporarily
+redirected to `/coming-soon`, which displays the Way2Investing logo and launch message.
+Public APIs return HTTP 503 while the authenticated `/api/cron/refresh` keeps running.
+Static assets remain available, and dashboard navigation is hidden.
+
+Local testing needs no override. To reopen the public site after testing and
+analysis, set `COMING_SOON_MODE=false` in the hosting environment and redeploy.
+Remove that override or set it to `true` to enable the holding page again.
+
 Copy `.env.example` to `.env.local` and fill in the values:
 
 ```txt

@@ -1,4 +1,8 @@
 import Link from "next/link";
+import { getContentPolicy } from "@/lib/content/settings";
+import { recommendationFeatures } from "@/lib/content/policy";
+import { filterDashboardContent } from "@/lib/content/dashboardPolicy";
+import { NeutralSummary, NeutralAnalyst, NeutralTechnical } from "./NeutralAnalysis";
 import { AnalystPanel } from "@/components/dashboard/AnalystPanel";
 import { EarningsTable } from "@/components/dashboard/EarningsTable";
 import { FundamentalsGrid } from "@/components/dashboard/FundamentalsGrid";
@@ -52,16 +56,21 @@ const tabs: Array<{ id: TabId; label: string }> = [
   { id: "news", label: "News" },
 ];
 
-export function DashboardTabs({
+export async function DashboardTabs({
   activeChartInterval,
   activeChartRange,
   activeChartType,
   activeTab,
   activeTechnicalTab,
-  data,
+  data: rawData,
   isAuthenticated = false,
   showDataSource = false,
 }: Props) {
+  const policy = await getContentPolicy();
+  const data = filterDashboardContent(rawData, policy);
+  // Legacy consolidated views mix multiple recommendation types. Require every
+  // relevant permission before invoking them; partial approvals stay neutral.
+  const consolidatedAllowed = recommendationFeatures.every(key => policy[key]);
   return (
     <section className="space-y-3">
       <div className="research-tabs overflow-x-auto border-b app-border-soft">
@@ -86,10 +95,10 @@ export function DashboardTabs({
       {activeTab === "summary" ? (
         <ProtectedInsight
           isAuthenticated={isAuthenticated}
-          message="Sign in to view the consolidated buy, hold, or sell-style screening summary."
+          message="Sign in to view the consolidated financial data summary."
           title="Summary intelligence locked"
         >
-          <SummaryPanel data={data} />
+          {consolidatedAllowed ? <SummaryPanel data={data} /> : <NeutralSummary data={data} />}
         </ProtectedInsight>
       ) : null}
 
@@ -126,11 +135,11 @@ export function DashboardTabs({
           title="Technical analysis locked"
         >
           <div className="space-y-3">
-            <TechnicalAnalysisPanel
+            {!policy.informationalAnalysisEnabled ? <p className="py-4 text-sm app-muted">Technical analysis is currently unavailable.</p> : consolidatedAllowed ? <TechnicalAnalysisPanel
               activeSubTab={activeTechnicalTab}
               ohlc={data.ohlc}
               showDataSource={showDataSource}
-            />
+            /> : <NeutralTechnical ohlc={data.ohlc} />}
           </div>
         </ProtectedInsight>
       ) : null}
@@ -141,12 +150,12 @@ export function DashboardTabs({
           message="Sign in to view analyst ratings, rating distribution, and target price data."
           title="Analyst insight locked"
         >
-          <AnalystPanel
+          {consolidatedAllowed ? <AnalystPanel
             ratings={data.analystRatings}
             targets={data.analystPriceTargets}
             quote={data.quote}
             showDataSource={showDataSource}
-          />
+          /> : <NeutralAnalyst data={data} />}
         </ProtectedInsight>
       ) : null}
 

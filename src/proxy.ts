@@ -1,8 +1,40 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/lib/types/database";
+import { isComingSoonMode } from "@/lib/launch";
 
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  if (isComingSoonMode(request.headers.get("host") ?? request.nextUrl.hostname)) {
+    // Keep launch assets and the authenticated scheduled refresh available.
+    if (
+      pathname === "/coming-soon" ||
+      pathname === "/manifest.webmanifest" ||
+      pathname === "/api/cron/refresh"
+    ) {
+      return NextResponse.next();
+    }
+
+    if (pathname === "/api" || pathname.startsWith("/api/")) {
+      return NextResponse.json(
+        { error: "Way2Investing is coming soon. Testing and analysis are in progress." },
+        { status: 503, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
+    const destination = request.nextUrl.clone();
+    destination.pathname = "/coming-soon";
+    destination.search = "";
+    const redirect = NextResponse.redirect(destination, 307);
+    redirect.headers.set("Cache-Control", "no-store");
+    return redirect;
+  }
+
+  if (pathname === "/coming-soon") {
+    return NextResponse.next();
+  }
+
   let response = NextResponse.next({
     request,
   });

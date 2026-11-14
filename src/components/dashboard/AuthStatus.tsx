@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { signOut } from "@/app/auth/actions";
 import { createClient } from "@/lib/supabase/server";
+import { currentUserIsAdmin } from "@/lib/services/userRoleService";
+import { Settings } from "lucide-react";
 
 export async function AuthStatus() {
   const supabase = await createClient();
@@ -29,9 +31,11 @@ export async function AuthStatus() {
 
   const email = user.email ?? "Signed in";
   const initial = email.slice(0, 1).toUpperCase();
+  const isAdmin = await currentUserIsAdmin(supabase);
 
   return (
     <div className="flex min-w-0 flex-wrap items-center gap-2">
+      {isAdmin ? <Link href="/admin/settings" aria-label="Content settings" title="Content settings" className="inline-flex h-10 w-10 items-center justify-center rounded border app-secondary-button"><Settings size={18} /></Link> : null}
       <span
         className="flex min-w-0 items-center gap-2 rounded-lg border app-subtle px-2.5 py-1.5"
         title={email}

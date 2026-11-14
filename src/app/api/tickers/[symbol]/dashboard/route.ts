@@ -2,6 +2,8 @@ import { jsonError } from "@/app/api/_shared/jsonError";
 import { getDashboardBySymbol } from "@/lib/services";
 import { AppError } from "@/lib/services";
 import { createClient } from "@/lib/supabase/server";
+import { getContentPolicy } from "@/lib/content/settings";
+import { filterDashboardContent } from "@/lib/content/dashboardPolicy";
 
 export async function GET(
   _request: Request,
@@ -20,7 +22,11 @@ export async function GET(
 
     const dashboard = await getDashboardBySymbol(supabase, symbol);
 
-    return Response.json({ data: dashboard });
+    const policy = await getContentPolicy();
+    const filtered = filterDashboardContent(dashboard, policy);
+    const information = { ...filtered } as Partial<typeof filtered>;
+    if (!policy.buySellSignalsEnabled) delete information.analystRatings;
+    return Response.json({ data: information }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     return jsonError(error);
   }

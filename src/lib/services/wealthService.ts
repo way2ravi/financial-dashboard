@@ -1,4 +1,5 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
+import { getContentPolicy } from "@/lib/content/settings";
 import {
   createWealthItem,
   deleteWealthItem,
@@ -48,7 +49,8 @@ export async function getWealthDashboardForUser(
   ]);
   const items = [...wealthItems, ...buildPortfolioWealthItems(user.id, portfolioSummaries)];
 
-  const dashboard = buildWealthDashboard(settings, items);
+  const policy = await getContentPolicy();
+  const dashboard = buildWealthDashboard(settings, items, policy.personalisedAdviceEnabled);
   const snapshots = await getSnapshotsSafely(supabase, user.id, dashboard);
 
   return {
@@ -139,7 +141,8 @@ type WealthItemInput = {
 
 function buildWealthDashboard(
   settings: WealthUserSettings | null,
-  items: WealthItem[]
+  items: WealthItem[],
+  adviceEnabled = false
 ): WealthDashboard {
   const assets = items.filter((item) => item.recordType === "asset");
   const liabilities = items.filter((item) => item.recordType === "liability");
@@ -205,7 +208,7 @@ function buildWealthDashboard(
     liabilityAllocation,
     categoryTotals,
     snapshots: [],
-    advice: buildWealthAdvice({
+    advice: adviceEnabled ? buildWealthAdvice({
       settings,
       totalAssets,
       totalLiabilities,
@@ -216,7 +219,7 @@ function buildWealthDashboard(
       monthlyDebtPayments,
       highInterestDebt,
       liabilities,
-    }, settings?.baseCurrency ?? "USD"),
+    }, settings?.baseCurrency ?? "USD") : [],
   };
 
   return metrics;

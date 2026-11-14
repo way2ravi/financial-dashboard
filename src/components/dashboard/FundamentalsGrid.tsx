@@ -5,6 +5,7 @@ import type {
   FundamentalsSnapshot,
 } from "@/lib/types";
 import { asPercent } from "@/lib/financial/metrics";
+import { getContentPolicy } from "@/lib/content/settings";
 import { DataFreshness } from "./DataFreshness";
 import { formatCurrency, formatNumber, formatPercent } from "./format";
 
@@ -14,19 +15,15 @@ type Props = {
   showDataSource?: boolean;
 };
 
-export function FundamentalsGrid({
+export async function FundamentalsGrid({
   financialStatements,
   fundamentals,
   showDataSource = false,
 }: Props) {
-  const peAnalysis = analyzePeRatio(fundamentals);
+  const policy = await getContentPolicy();
   const roe = asPercent(fundamentals?.roe);
   const annualStatementRows = mergeStatementRows(financialStatements.annual);
   const quarterlyStatementRows = mergeStatementRows(financialStatements.quarterly);
-  const statementAnalysis = analyzeFinancialStatements(
-    annualStatementRows,
-    quarterlyStatementRows
-  );
   const metrics = [
     metric("Market cap", formatCurrency(fundamentals?.marketCap, true), "neutral", null),
     metric("P/E", formatNumber(fundamentals?.pe), peTone(fundamentals?.pe), scoreRange(fundamentals?.pe, 0, 40, true)),
@@ -40,10 +37,10 @@ export function FundamentalsGrid({
 
   return (
     <div className="space-y-3">
-      <FundamentalAdvicePanel
-        peAnalysis={peAnalysis}
-        statementAnalysis={statementAnalysis}
-      />
+      {policy.buySellSignalsEnabled && policy.stockRankingsEnabled ? <FundamentalAdvicePanel
+        peAnalysis={analyzePeRatio(fundamentals)}
+        statementAnalysis={analyzeFinancialStatements(annualStatementRows, quarterlyStatementRows)}
+      /> : null}
 
       <section className="rounded-lg border app-surface p-4 shadow-sm">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">

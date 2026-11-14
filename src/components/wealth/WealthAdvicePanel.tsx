@@ -1,4 +1,5 @@
 import type { WealthAdviceItem } from "@/lib/types/wealth";
+import { getContentPolicy } from "@/lib/content/settings";
 
 type Props = {
   advice: WealthAdviceItem[];
@@ -36,7 +37,12 @@ const moduleOrder: WealthAdviceItem["module"][] = [
   "planning",
 ];
 
-export function WealthAdvicePanel({ advice }: Props) {
+export async function WealthAdvicePanel({ advice }: Props) {
+  const policy = await getContentPolicy();
+  if (!policy.personalisedAdviceEnabled) return <section className="border-t app-border-soft py-4">
+    <h2 className="text-sm font-semibold app-heading">Balance-Sheet Observations</h2>
+    <p className="mt-2 text-xs app-muted">Recorded balances, allocation percentages and historical changes are shown without personalised investment instructions.</p>
+  </section>;
   const groupedAdvice = moduleOrder
     .map((module) => ({
       module,

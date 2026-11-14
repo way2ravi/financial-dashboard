@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { getContentPolicy } from "@/lib/content/settings";
+import { recommendationFeatures } from "@/lib/content/policy";
+import { globalMarketDefinitions, type MarketOverview } from "@/lib/services/marketOverviewService";
 import { AppHeader } from "@/components/dashboard/AppHeader";
 import { formatCurrency, formatNumber, formatPercent } from "@/components/dashboard/format";
 import {
@@ -25,9 +28,10 @@ const regions: GlobalMarketRegion[] = [
 export default async function MarketPage({ searchParams }: Props) {
   const params = await searchParams;
   const refresh = getSearchParam(params.refresh) === "1";
-  const overview = await getMarketOverview(createAdminClient(), { refresh });
+  const { overview, dataUnavailable } = await loadMarketOverview(refresh);
   const regionSummaries = summarizeRegions(overview.markets);
-  const readiness = buildFoReadiness(overview.markets, overview.mood);
+  const policy = await getContentPolicy();
+  const readiness = !dataUnavailable && recommendationFeatures.every(key => policy[key]) ? buildFoReadiness(overview.markets, overview.mood) : null;
 
   return (
     <main className="min-h-screen app-bg">
@@ -38,6 +42,7 @@ export default async function MarketPage({ searchParams }: Props) {
       />
 
       <div className="mx-auto max-w-7xl space-y-3 px-4 py-4 sm:px-6 lg:px-8">
+        {dataUnavailable ? <p role="status" className="border-b app-border-soft py-3 text-sm app-muted">Market data is currently unavailable. No market assessment is available until the data connection is restored.</p> : null}
         <section className="grid gap-3 xl:grid-cols-[360px_1fr]">
           <FearGreedGauge mood={overview.mood} refreshedAt={overview.refreshedAt} />
 
@@ -69,12 +74,24 @@ export default async function MarketPage({ searchParams }: Props) {
           </div>
         </section>
 
-        <MarketReadinessPanel readiness={readiness} />
+        {readiness ? <MarketReadinessPanel readiness={readiness} /> : null}
 
         <MarketTable markets={overview.markets} />
       </div>
     </main>
   );
+}
+
+async function loadMarketOverview(refresh: boolean): Promise<{ overview: MarketOverview; dataUnavailable: boolean }> {
+  try {
+    return { overview: await getMarketOverview(createAdminClient(), { refresh }), dataUnavailable: false };
+  } catch {
+    return { dataUnavailable: true, overview: {
+      markets: globalMarketDefinitions.map(market => ({ ...market, quote: null, ticker: null })),
+      mood: { averageChange: null, advancers: 0, decliners: 0, label: "Unavailable", score: 50, summary: "Market data is unavailable; this midpoint is a placeholder, not a market assessment.", tone: "neutral" },
+      refreshedAt: null,
+    } };
+  }
 }
 
 function MarketReadinessPanel({ readiness }: { readiness: FoReadiness }) {

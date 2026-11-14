@@ -494,7 +494,7 @@ function getWealthHealth({
       score: boundedScore,
       label: "Strong",
       summary:
-        "Your wealth picture looks resilient. The next focus is optimization: diversification, tax efficiency, protection, and steady contributions.",
+        "The recorded balance sheet falls in the upper band of this illustrative liquidity and debt metric.",
       badgeClass: "border-emerald-500/45 bg-emerald-500/10 text-emerald-300",
       barClass: "bg-emerald-500",
     };
@@ -505,7 +505,7 @@ function getWealthHealth({
       score: boundedScore,
       label: "Stable",
       summary:
-        "Your balance sheet has a workable base. Improve liquidity, reduce expensive debt, and keep growth assets aligned with your time horizon.",
+        "The recorded balance sheet falls in the middle band of this illustrative liquidity and debt metric.",
       badgeClass: "border-amber-500/45 bg-amber-500/10 text-amber-300",
       barClass: "bg-amber-500",
     };
@@ -515,7 +515,7 @@ function getWealthHealth({
     score: boundedScore,
     label: "Needs attention",
     summary:
-      "The current picture needs defensive work first. Build cash reserves, control high-rate debt, and avoid adding risk until the basics are steadier.",
+      "The recorded balance sheet falls in the lower band of this illustrative liquidity and debt metric. This is not a suitability assessment.",
     badgeClass: "border-rose-500/45 bg-rose-500/10 text-rose-300",
     barClass: "bg-rose-500",
   };
