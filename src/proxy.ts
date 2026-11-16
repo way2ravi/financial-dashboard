@@ -5,12 +5,15 @@ import { isComingSoonMode } from "@/lib/launch";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const privateResearch=pathname==="/institutional-intelligence" || pathname.startsWith("/institutional-intelligence/") || pathname==="/api/institutional-intelligence" || pathname.startsWith("/api/institutional-intelligence/");
+  request.headers.set("x-way2-private-research",privateResearch ? "1" : "0");
 
-  if (isComingSoonMode(request.headers.get("host") ?? request.nextUrl.hostname)) {
+  if (!privateResearch && isComingSoonMode(request.headers.get("host") ?? request.nextUrl.hostname)) {
     // Keep launch assets and the authenticated scheduled refresh available.
     if (
       pathname === "/coming-soon" ||
       pathname === "/manifest.webmanifest" ||
+      pathname === "/robots.txt" ||
       pathname === "/api/cron/refresh"
     ) {
       return NextResponse.next();
@@ -65,6 +68,11 @@ export async function proxy(request: NextRequest) {
   );
 
   await supabase.auth.getUser();
+
+  if(privateResearch) {
+    response.headers.set("X-Robots-Tag","noindex, nofollow, noarchive");
+    response.headers.set("Cache-Control","private, no-store, max-age=0");
+  }
 
   return response;
 }

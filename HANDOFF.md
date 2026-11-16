@@ -1,6 +1,53 @@
-# Financial Dashboard Handoff
+# Way2Investing Handoff
 
-For the current full status, including completed work, verification status, and pending items, see [PROJECT_STATUS.md](./PROJECT_STATUS.md). The notes below are an older milestone handoff and may not include the latest wealth, market, Zerodha, screener, and multi-asset portfolio work.
+Updated: 16 November 2026. Main record: [PROJECT_STATUS.md](./PROJECT_STATUS.md).
+
+## Current Checkpoint
+
+Local preview: http://localhost:3004/institutional-intelligence.
+Owner: `way2investing9@gmail.com`. Sign-in and password recovery work. The public
+site remains coming-soon, Information Only Mode remains on, comparisons remain
+unverified, and private scheduled jobs remain disabled.
+
+- Berkshire: March and June 13Fs parsed; GOOGL mapped.
+- Vanguard Capital Management: March original and both amendments plus June
+  parsed; all 14 watchlist stocks mapped on both dates. Not all Vanguard affiliates.
+- BlackRock: registered but not imported; March quarantined, June discovered.
+- 28 point-in-time mappings in total; no new corporate-action or independence attestations.
+- Finnhub quotes work; historical splits denied by current access.
+- Massive read-only split check works; zero GOOGL split events for March-June.
+  This is not proof of complete corporate-action coverage.
+
+## Next Task
+
+Build a bounded large-filing worker for BlackRock's approximately 23 MB tables.
+Do not raise the 12 MB web-import limit just to clear the error. Stage and
+reconcile files, commit atomically, test idempotency/amendments/retries, and check
+interactive-read capacity. Then review additional affiliates/overlap, complete
+action/identifier continuity and import licensed historical/benchmark market data.
+
+No SQL reruns, key re-entry or additional subscriptions are needed from the owner
+now. Do not repeatedly retry oversized files or tick coverage without evidence.
+
+## Verification and Release
+
+Latest code checks: 61 tests, scoped ESLint, production build with TypeScript, and
+desktop/tablet/mobile browser checks passed. Live SEC/provider and database
+read-back checks were separate. Documentation changes did not rerun application tests.
+The backup exports/hashes are verified, but restore testing remains pending.
+Known critical Next.js dependency advisories require a reviewed upgrade before
+deployment. Review branch: `codex/intelligence-information-only-beta1`; main and
+production are not approved for this release. Preview status needs a separate check.
+
+See [coverage details](docs/PRIVATE-COVERAGE-STATUS.md),
+[backfill steps](docs/BACKFILL-PRIVATE-13F.md),
+[split check](docs/CHECK-PRIVATE-SPLITS.md), and
+[recovery](docs/RESET-PRIVATE-PASSWORD.md).
+
+## Historical September Handoff
+
+The remainder records the older milestone only. Its setup and next-step lists
+are not current instructions: do not rerun SQL or repeat completed owner setup.
 
 ## Built
 

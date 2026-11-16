@@ -3,6 +3,7 @@
     {
       "path": "/api/cron/refresh?limit=5",
       "schedule": "0 8 * * 1-5"
-    }
+    },
+    { "path": "/api/institutional-intelligence/jobs", "schedule": "0 9 * * 1-5" }
   ]
 }

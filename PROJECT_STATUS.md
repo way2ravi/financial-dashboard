@@ -1,6 +1,6 @@
 # Financial Dashboard Project Status
 
-Last reviewed: 2026-09-03
+Last reviewed: 2026-11-16
 
 This document summarizes what has been built in this repository, what is needed to run it, and what remains pending.
 
@@ -8,9 +8,76 @@ This document summarizes what has been built in this repository, what is needed 
 
 The project is a Next.js 16 App Router financial dashboard backed by Supabase and designed for Vercel deployment. It includes stock research, cached market data, watchlists, daily earnings, stock screening, portfolio tracking, wealth/net-worth tracking, and a consolidated personal dashboard.
 
-Dependencies are installed in the workspace. Lint and TypeScript checks pass, and the Next.js 16.2.6 production build completes successfully. The dependency audit currently reports seven high-severity advisories; no automated audit fix has been applied because dependency upgrades need separate review.
+Recent work is running locally at `http://localhost:3004/institutional-intelligence`.
+The public domain remains in coming-soon mode. The work is prepared on review
+branch `codex/intelligence-information-only-beta1`, not merged to main or approved
+for production deployment. Its Supabase migrations and research-data changes are
+live in the configured database. Preview deployment status needs a separate check.
+
+The latest code verification passed 61 automated tests, scoped ESLint, a production
+build including TypeScript, and desktop/tablet/mobile browser checks. Next.js
+remains 16.2.6 with previously identified critical dependency advisories unresolved.
+The old September advisory count is not a current audit. Rerun the audit and apply
+reviewed upgrades before deployment; do not use an unreviewed forced fix.
+
+Pre-push audit on 16 November: 17 advisories (1 critical, 8 high, 8 moderate).
+No dependency fixes were applied. See the
+[review-branch test checklist](docs/REVIEW-BRANCH-TESTING.md) before hosted testing.
+
+## November Checkpoint
+
+| Area | Current state |
+| --- | --- |
+| Information Only Mode | Applied; recommendation permissions remain off |
+| Private owner | `way2investing9@gmail.com`; confirmed email and owner grant checked |
+| Password recovery | Implemented, tested, and confirmed working by owner |
+| Database setup | Content controls and private migrations applied; owner transferred |
+| Backup | Roles/schema/data exports and hashes verified; restore rehearsal pending |
+| Permission checks | Owner/previous-owner/anonymous database checks passed during setup |
+| Berkshire | March and June 2026 13Fs parsed; GOOGL mapped at both dates |
+| Vanguard | Capital Management only; March original plus two amendments and June parsed |
+| Watchlist coverage | 14 stocks mapped at each quarter-end; 28 dated mapping records |
+| BlackRock | Registered; March quarantined and June discovered, neither imported |
+| Finnhub | Local quotes passed; historical splits denied by current access |
+| Massive | Read-only split check working; live GOOGL query returned zero events |
+| Corporate actions | No coverage attestations; comparisons remain unverified |
+| Historical market bars | Not imported into the private module |
+| Private scheduled jobs | Disabled |
+| Release | Security/configuration checks and approved push/deployment pending |
+
+Vanguard Capital Management is not all Vanguard affiliates. Tracked-manager counts
+are not total institutional ownership and affiliated entities must not be counted
+as independent without evidence. All snapshots remain informational.
+
+## Next Actions In Order
+
+1. Build a bounded large-filing worker for BlackRock's approximately 23 MB tables;
+   retain size safeguards, stage and reconcile complete files, commit atomically,
+   test retries/amendments and verify interactive-read capacity. Do not keep
+   retrying oversized filings or simply raise the web-request limit.
+2. Verify additional Vanguard affiliates and reporting overlap before expanding
+   coverage or assigning independence groups.
+3. Establish complete corporate-action and identifier-continuity evidence before
+   enabling quarter comparisons. An empty split query is not a full attestation.
+4. Confirm data rights and import historical prices/volumes plus benchmark bars.
+5. Address dependency advisories, rerun tests and recheck hosted auth/RLS/settings.
+6. Only then prepare an approved GitHub push and Vercel deployment. Reopening the
+   public site and enabling scheduled jobs remain separate decisions.
+
+No manual SQL reruns or new subscriptions are currently required from the owner.
+Refresh Configuration/Watchlist to inspect existing observations.
+
+Guides: [coverage detail](docs/PRIVATE-COVERAGE-STATUS.md),
+[historical backfill](docs/BACKFILL-PRIVATE-13F.md),
+[split check](docs/CHECK-PRIVATE-SPLITS.md),
+[recovery](docs/RESET-PRIVATE-PASSWORD.md), and
+[private architecture](src/modules/institutional-intelligence/README.md).
 
 ## Completed Work
+
+The public-module inventory below records implemented capabilities. Some older
+advice-oriented displays are disabled or replaced by neutral views under the
+current global Information Only policy; implemented does not mean enabled.
 
 ### Foundation and Architecture
 
@@ -184,7 +251,29 @@ Notes:
 
 ## Verification Status
 
-Last verified on 2026-09-03:
+Latest private-work verification on 2026-11-16:
+
+```bash
+npm run test:content
+npm run test:institutional
+npm run test:recovery
+npm run test:backfill
+npm run test:splits
+npm run typecheck
+npm run build
+```
+
+- 61 tests passed across these five suites.
+- Scoped ESLint passed on changed private routes/components/providers and tests.
+- Production build passed, including TypeScript; Google Fonts required network access.
+- Browser checks passed at 1440, 768 and 390 pixels, using real unauthenticated
+  routes and isolated client fixtures, not an owner-auth bypass.
+- Live checks separately confirmed owner sign-in/recovery (owner reported), SEC
+  imports/read-back coverage, Finnhub quotes, and Massive's empty GOOGL split
+  result. No production deployment or restore rehearsal is implied.
+- This documentation-only update did not rerun the application test suite.
+
+Historical public-module verification on 2026-09-03:
 
 ```bash
 npm run check
@@ -196,7 +285,9 @@ Result:
 - TypeScript `tsc --noEmit` passed.
 - Next.js 16.2.6 production build passed and generated all 20 application routes.
 - The first sandboxed build could not download Google Fonts; rerunning with network access succeeded.
-- `npm install` reported seven high-severity dependency advisories. Review with `npm audit` before choosing targeted upgrades; avoid an unreviewed forced audit fix.
+- That historical install reported seven high-severity advisories. The later
+  private-module review also identified critical Next.js advisories. The old
+  count must not be treated as the current security assessment.
 
 `npm run check` runs lint, TypeScript, and the production build.
 
@@ -204,10 +295,10 @@ Result:
 
 ### Setup and Validation
 
-- Run the Supabase SQL files against the target Supabase project.
-- Confirm RLS policies against real user accounts.
-- Confirm at least one admin user's `users_profile.role` is set to `admin`.
-- Add all required environment variables in local `.env.local` and in Vercel.
+- Do not repeat completed private migrations or owner setup. Inspect remaining
+  public-module installation state before assuming every SQL file is applied.
+- Recheck RLS with owner and unauthorized sessions on the eventual hosted build.
+- Reconcile Vercel server variables with local setup without exposing keys.
 - Test an admin full refresh for a known symbol such as `AAPL`.
 - Test Vercel deployment and scheduled cron execution with `CRON_SECRET`.
 
@@ -230,7 +321,7 @@ Result:
 
 ### Testing and Reliability
 
-- Review the seven high-severity dependency advisories and apply tested, targeted upgrades where appropriate.
+- Rerun the dependency audit, including known critical Next.js issues, and apply tested targeted upgrades.
 - Add unit tests for portfolio average cost and P/L, wealth aggregation and advice rules, technical indicators, and refresh summaries.
 - Add unit tests for Earnings Pulse classification, streaks, year-over-year comparisons, and provider surprise fallbacks.
 - Add route-handler tests for auth, admin, and cron access paths.

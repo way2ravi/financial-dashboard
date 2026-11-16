@@ -9,22 +9,30 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test:content": "node --test tests/content-controls.test.cjs",
+    "test:institutional": "node --test tests/institutional-intelligence.test.cjs",
+    "test:recovery": "node --test tests/institutional-recovery.test.cjs",
+    "test:backfill": "node --test tests/institutional-backfill.test.cjs",
+    "test:splits": "node --test tests/institutional-splits.test.cjs",
     "check": "npm run lint && npm run typecheck && npm run build"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.2",
     "@vercel/analytics": "^2.0.1",
+    "fast-xml-parser": "^5.12.1",
     "lucide-react": "^1.72.0",
     "next": "16.2.6",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "recharts": "^3.10.1",
+    "technicalindicators": "^3.1.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "^0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",

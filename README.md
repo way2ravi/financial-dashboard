@@ -4,6 +4,27 @@ Next.js, Supabase, and Vercel stock research dashboard with watchlists, analyst 
 
 For a current summary of completed and pending work, see [PROJECT_STATUS.md](./PROJECT_STATUS.md).
 
+## Current Checkpoint: 16 November 2026
+
+The public site is held in coming-soon mode. Recent private research changes are
+tested locally and prepared on `codex/intelligence-information-only-beta1` for
+review, not a production release. Do not treat a successful local build as
+production/security approval.
+
+- [Current handoff and next actions](./HANDOFF.md)
+- [Review-branch test and release checklist](./docs/REVIEW-BRANCH-TESTING.md)
+- [Review-branch test and release checklist](./docs/REVIEW-BRANCH-TESTING.md)
+- [Private holdings coverage and BlackRock blocker](./docs/PRIVATE-COVERAGE-STATUS.md)
+- [Password recovery](./docs/RESET-PRIVATE-PASSWORD.md)
+- [Historical 13F backfill](./docs/BACKFILL-PRIVATE-13F.md)
+- [Read-only Massive split check](./docs/CHECK-PRIVATE-SPLITS.md)
+
+Private preview: `http://localhost:3004/institutional-intelligence`.
+Sign in as the configured owner; there is no public navigation link. All 14
+watchlist stocks have March/June Vanguard Capital Management observations.
+GOOGL also has Berkshire observations. BlackRock is registered but its oversized
+tables are not imported. Comparisons remain unverified and signals disabled.
+
 ## Local Setup
 
 ```bash
@@ -28,7 +49,8 @@ Local testing needs no override. To reopen the public site after testing and
 analysis, set `COMING_SOON_MODE=false` in the hosting environment and redeploy.
 Remove that override or set it to `true` to enable the holding page again.
 
-Copy `.env.example` to `.env.local` and fill in the values:
+Use the existing ignored `.env.local` for local configuration. Do not replace it
+or share its contents. For a new environment, configure the applicable names below:
 
 ```txt
 NEXT_PUBLIC_SUPABASE_URL=
@@ -36,6 +58,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 NEXT_PUBLIC_SITE_URL=
 SUPABASE_SERVICE_ROLE_KEY=
 FINNHUB_API_KEY=
+MASSIVE_API_KEY=
 MARKETDATA_API_KEY=
 ZERODHA_API_KEY=
 ZERODHA_ACCESS_TOKEN=
@@ -43,6 +66,18 @@ CRON_SECRET=
 ```
 
 `SUPABASE_SERVICE_ROLE_KEY` and provider keys must stay server-only.
+
+The private module additionally uses server-only `INSTITUTIONAL_OWNER_EMAIL`,
+`INSTITUTIONAL_OWNER_USER_ID`, `INSTITUTIONAL_AUTH_ORIGIN`, `SEC_USER_AGENT`, and
+`INSTITUTIONAL_JOBS_ENABLED`. Local recovery origin is `http://localhost:3004`;
+its exact `/institutional-intelligence/auth/callback` must be allowlisted in
+Supabase. Private jobs remain `false`. Configure a real HTTPS origin separately
+before deployment; do not copy localhost into production.
+
+Finnhub quotes and Massive split queries have passed live local checks. Finnhub
+historical splits returned access denied for the current key. Massive is used only
+for an owner-only, read-only split observation, not automatic coverage verification
+or public redistribution. Private historical price bars are still missing.
 
 `FINNHUB_API_KEY` is required for the admin `Full` refresh, `Quick` refresh, and scheduled cron refresh.
 `CRON_SECRET` is required only for `/api/cron/refresh`; use a long random value and set the same value in Vercel.
@@ -52,6 +87,10 @@ CRON_SECRET=
 ## Supabase Setup
 
 Run these SQL files in Supabase:
+
+These are installation instructions, not a request to rerun setup. The current
+private database migrations, owner grant and transfer have already been applied.
+For an existing project, check state and back up before any schema changes.
 
 ```txt
 src/lib/supabase/schema.sql
@@ -152,8 +191,9 @@ provision `noreply@way2investing.com` and use its mailbox credentials. Other SMT
 providers may permit this From address through domain verification without a mailbox.
 Keep SMTP credentials in the provider/Supabase configuration, not in the repository.
 
-The template is prepared locally; SMTP, DNS, and the hosted Supabase template
-have not been changed, and no test email has been sent.
+The template was prepared locally. Subsequent manual SMTP setup and confirmation
+delivery were reported working by the owner; private password recovery was also
+confirmed working. Automated tests do not certify the current SMTP/DNS configuration.
 
 Reference: [Supabase custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp).
 
@@ -188,6 +228,11 @@ npm.cmd run check
 ```
 
 ## Deployment
+
+Deployment is pending a reviewed dependency-security update, hosted environment
+and auth checks, and explicit approval to push/deploy. Keep coming-soon enabled,
+private jobs disabled, and recommendation permissions off. See
+[current release gates](./PROJECT_STATUS.md#next-actions-in-order).
 
 Deploy through Vercel. Add all environment variables above to the Vercel project.
 
